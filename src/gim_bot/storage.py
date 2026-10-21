@@ -6,7 +6,7 @@ from datetime import timedelta
 from time import time
 from uuid import uuid4
 
-from sqlalchemy import and_, delete, or_, select, update
+from sqlalchemy import String, and_, cast, delete, or_, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -210,6 +210,20 @@ class Store:
                 Application.id == application_id, Application.status == 'completed',
                 Application.analysis_status == 'queued').values(analysis_status='processing'))
             return result.rowcount == 1
+
+    async def requeue_analysis(self, application_id):
+        """Только явный операторский повтор отсутствующей аналитики, без изменения ответов."""
+        async with self.transaction() as session:
+            changed = await session.execute(update(Application).where(
+                Application.id == application_id, Application.status == 'completed',
+                Application.analysis_status == 'no_analytics',
+                or_(Application.analysis.is_(None), cast(Application.analysis, String) == 'null')
+            ).values(analysis_status='queued'))
+            if changed.rowcount != 1:
+                return False
+            session.add(BackgroundJob(key=f'reanalysis:{application_id}:{uuid4().hex}',
+                                      kind='analyze_application', payload={'args': [application_id]}))
+            return True
 
     async def save_analysis(self, application_id, analysis, score, rubric_version):
         async with self.transaction() as session:

@@ -1,0 +1,23 @@
+{
+  "applications": [
+    {
+      "id": 2,
+      "status": "ready",
+      "has_summary": true,
+      "criteria_count": 5,
+      "summary_in_staff_card": true
+    },
+    {
+      "id": 1,
+      "status": "ready",
+      "has_summary": true,
+      "criteria_count": 5,
+      "summary_in_staff_card": true
+    }
+  ],
+  "xlsx_summaries": 2,
+  "answers_and_followups_unchanged": true,
+  "ordinary_user_has_no_staff_card": true,
+  "configured_model": "deepseek/deepseek-v4.1-flash-1017",
+  "key_present": true
+}

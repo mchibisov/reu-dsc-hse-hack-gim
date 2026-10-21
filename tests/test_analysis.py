@@ -91,3 +91,20 @@ async def test_valid_provider_result_has_server_calculated_score():
     assert analysis['score'] == 3
     assert analysis['rubric_version'] == 'gim-5-v1'
     await provider.close()
+
+
+async def test_polza_reasoning_can_be_disabled_without_affecting_other_providers():
+    requests = []
+
+    def respond(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json={'choices': [{'message': {'content': json.dumps(result())}}]})
+
+    for extra in ({'llm_reasoning_enabled': False, 'llm_max_tokens': 4096}, {}):
+        provider = Provider(Settings(_env_file=None, llm_api_key='test', llm_model='test', **extra),
+                            transport=httpx.MockTransport(respond))
+        assert await provider.analyze({'experience': 'Снимал мероприятия'}) is not None
+        await provider.close()
+    assert requests[0]['reasoning'] == {'enabled': False}
+    assert requests[0]['max_tokens'] == 4096
+    assert 'reasoning' not in requests[1]

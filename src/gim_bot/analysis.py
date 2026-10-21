@@ -118,6 +118,8 @@ FOLLOWUP_PROMPT = '''Ты составляешь короткие уточняю
 Не повторяй уже сообщённые факты или заданные вопросы; не задавай нерелевантные вопросы.
 Каждый вопрос должен ссылаться на field и точную anchor из ответа, от которого он зависит.
 Не повторяй один topic. Для фондов уточни альтернативы с учётом ограниченного числа мест.
+topic бери только из library: ровно один вопрос на один уникальный topic, не нужно заполнять три места.
+Если в library один topic, верни только один вопрос. Не спрашивай о предпочтениях вместо прошлого опыта.
 Всего до трёх коротких вопросов: полный опрос должен укладываться в 5–7 минут.
 Напиши на естественном русском JSON по схеме.'''
 
@@ -139,14 +141,17 @@ class Provider:
         for model in models[:2]:
             started = time.monotonic()
             try:
+                request = {'model': model, 'temperature': 0, 'max_tokens': cfg.llm_max_tokens,
+                           'messages': [{'role': 'system', 'content': system},
+                                        {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)}],
+                           'response_format': {'type': 'json_schema', 'json_schema': {
+                               'name': task, 'strict': True, 'schema': schema}}}
+                if cfg.llm_reasoning_enabled is not None:
+                    request['reasoning'] = {'enabled': cfg.llm_reasoning_enabled}
                 async with self.limit:
                     response = await self.client.post(cfg.llm_base_url.rstrip('/') + '/chat/completions',
                         headers={'Authorization': f'Bearer {cfg.llm_api_key}'},
-                        json={'model': model, 'temperature': 0, 'max_tokens': 1800,
-                              'messages': [{'role': 'system', 'content': system},
-                                           {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)}],
-                              'response_format': {'type': 'json_schema', 'json_schema': {
-                                  'name': task, 'strict': True, 'schema': schema}}})
+                        json=request)
                     response.raise_for_status()
                     body = response.json()
                     raw = json.loads(body['choices'][0]['message']['content'])

@@ -47,6 +47,13 @@
 
 | Дата | Что проверялось | Отчёт |
 | --- | --- | --- |
+| 2026-10-17 | Наличие документов SDD и целостность локальных ссылок | [bootstrap-documentation-01](../results/2026-10-17-bootstrap-documentation-01/report.md) |
+| 2026-10-19 | Доступность среды редактирования PPTX, ограничения runtime и PowerPoint | [presentation-environment-01](../results/2026-10-19-bootstrap-presentation-environment-01/report.md) |
+| 2026-10-19 | Первая сборка презентации: найдены namespace и переполнения | [presentation-layout-01](../results/2026-10-19-bootstrap-presentation-layout-01/report.md) |
+| 2026-10-19 | Повторная проверка после исправлений, найдена длинная подпись столбца | [presentation-layout-02](../results/2026-10-19-bootstrap-presentation-layout-02/report.md) |
+| 2026-10-19 | Итоговая структура, геометрия, палитра и содержание: проверки пройдены с ограничением нативного рендера | [presentation-layout-03](../results/2026-10-19-bootstrap-presentation-layout-03/report.md) |
+| 2026-10-19 | Ошибка загрузки у пользователя: сохранённая версия прочитана целиком, выбран прямой URL скачивания | [presentation-delivery-01](../results/2026-10-19-bootstrap-presentation-delivery-01/report.md) |
+| 2026-10-19 | Пустые слайды PowerPoint: обнаружен неверный graphicData URI, проверка совместимости | [powerpoint-compatibility-01](../results/2026-10-19-bootstrap-powerpoint-compatibility-01/report.md) |
 | 2026-10-21 | gim-analysis-01 | [отчёт](../results/2026-10-21-bootstrap-gim-analysis-01/report.md) |
 | 2026-10-21 | gim-analysis-02 | [отчёт](../results/2026-10-21-bootstrap-gim-analysis-02/report.md) |
 | 2026-10-21 | gim-analysis-03 | [отчёт](../results/2026-10-21-bootstrap-gim-analysis-03/report.md) |
@@ -99,15 +106,42 @@
 | 2026-10-21 | gim-no-key-02: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-02/report.md) |
 | 2026-10-21 | gim-no-key-03: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-03/report.md) |
 | 2026-10-21 | gim-no-key-04: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-04/report.md) |
+| 2026-10-21 | S003 dialog RED: отсутствующий SharedService | [dialog-01](../results/2026-10-21-s003-dialog-01/report.md) |
+| 2026-10-21 | S003 dialog: 10 fake Repository контрактов | [dialog-02](../results/2026-10-21-s003-dialog-02/report.md) |
+| 2026-10-21 | S003 dialog: найден нестабильный XLSX timestamp, 25/26 тестов | [dialog-03](../results/2026-10-21-s003-dialog-03/report.md) |
+| 2026-10-21 | S003 dialog: исправление immutable XLSX, 26 unit GREEN | [dialog-04](../results/2026-10-21-s003-dialog-04/report.md) |
+| 2026-10-21 | S003 dialog: расширение unit и безопасный conditional DB test | [dialog-05](../results/2026-10-21-s003-dialog-05/report.md) |
+| 2026-10-21 | S003 dialog: Windows Proactor не совместим с psycopg async | [dialog-06](../gim_shared/results/2026-10-21-s003-dialog-06/report.md) |
+| 2026-10-21 | S003 dialog: private-role опрос пройден, XLSX assertion выявил повреждение SQL ключей | [dialog-07](../gim_shared/results/2026-10-21-s003-dialog-07/report.md) |
+| 2026-10-21 | S003 dialog: диагностика структуры snapshot, ошибка Windows stdin encoding | [dialog-08](../gim_shared/results/2026-10-21-s003-dialog-08/report.md) |
+| 2026-10-21 | S003 dialog: read-only установлено mojibake SQL ключей, 22 сохранённых ответа | [dialog-09](../gim_shared/results/2026-10-21-s003-dialog-09/report.md) |
+| 2026-10-21 | S003 dialog: RED incomplete snapshot должен отклоняться до Storage | [dialog-10](../gim_shared/results/2026-10-21-s003-dialog-10/report.md) |
+| 2026-10-21 | S003 dialog: GREEN fail-closed неполного snapshot | [dialog-11](../gim_shared/results/2026-10-21-s003-dialog-11/report.md) |
+| 2026-10-21 | S003 dialog: 29 тестов GREEN, реальные private роли/SQLQueue/replay/submit/XLSX после UTF8 bootstrap | [dialog-12](../gim_shared/results/2026-10-21-s003-dialog-12/report.md) |
+| 2026-10-21 | S003 dialog: 29 GREEN после candidate confirmation copy | [dialog-13](../gim_shared/results/2026-10-21-s003-dialog-13/report.md) |
+| 2026-10-21 | S003 dialog: RED отказ терял следующее согласие | [dialog-14](../gim_shared/results/2026-10-21-s003-dialog-14/report.md) |
+| 2026-10-21 | S003 dialog: 31 GREEN, consent refusal retry + invalid date/directions | [dialog-15](../gim_shared/results/2026-10-21-s003-dialog-15/report.md) |
+| 2026-10-21 | S003 dialog: RED directed interest обходил проверку past experience | [dialog-16](../gim_shared/results/2026-10-21-s003-dialog-16/report.md) |
+| 2026-10-21 | S003 dialog: 32 GREEN, past AND has_experience AND permitted direction | [dialog-17](../gim_shared/results/2026-10-21-s003-dialog-17/report.md) |
+
+| 2026-10-21 | S003: все технические проверки интеграции общей БД, включая отрицательные | [журнал](../gim_shared/docs/hypotheses.md) |
+| 2026-10-21 | Состояние процесса и наличие конфигурации перед инструкцией проверки сервиса | [отчёт](../results/2026-10-21-bootstrap-s003-service-state-01/report.md) |
+| 2026-10-21 | Groq: официальный API и synthetic Provider analyze/followups успешно | [отчёт](../results/2026-10-21-bootstrap-gim-groq-01/report.md) |
+| 2026-10-21 | Groq regression:15 targeted tests и parser скрытого launcher | [отчёт](../results/2026-10-21-bootstrap-gim-groq-02/report.md) |
+| 2026-10-21 | S004: независимое ревью hidden Excel ACL и managed launcher | [отчёт](../results/2026-10-21-bootstrap-s004-review-01/report.md) |
+| 2026-10-21 | S004:70passed1skipped, broad ruff выявил старый import-order | [отчёт](../results/2026-10-21-bootstrap-s004-final-01/report.md) |
+| 2026-10-21 | Polza:200 models/JSON, полный Provider пока невалиден | [отчёт](../results/2026-10-21-bootstrap-gim-polza-01/report.md) |
 | 2026-10-21 | S004 hidden-export-01: до реализации проверка скрытой команды, изоляции, replay и ротации | [отчёт](../results/2026-10-21-bootstrap-hidden-export-01/report.md) |
 | 2026-10-21 | S004 hidden-export-02: повтор RED после исправления аргумента тестовой fixture | [отчёт](../results/2026-10-21-bootstrap-hidden-export-02/report.md) |
 | 2026-10-21 | S004 hidden-export-03: после реализации durable разрешений и rate limiter; targeted/full regression | [отчёт](../results/2026-10-21-bootstrap-hidden-export-03/report.md) |
 | 2026-10-21 | S004 hidden-export-04: RED rolling-window границы, replay попыток, concurrency и admin regression | [отчёт](../results/2026-10-21-bootstrap-hidden-export-04/report.md) |
 | 2026-10-21 | S004 hidden-export-05: GREEN rolling-window, targeted/full suite, lint | [отчёт](../results/2026-10-21-bootstrap-hidden-export-05/report.md) |
-| 2026-10-21 | 2026-10-21-bootstrap-gim-groq-01 | [отчёт](../results/2026-10-21-bootstrap-gim-groq-01/report.md) |
-| 2026-10-21 | 2026-10-21-bootstrap-gim-groq-02 | [отчёт](../results/2026-10-21-bootstrap-gim-groq-02/report.md) |
-| 2026-10-21 | 2026-10-21-bootstrap-gim-polza-01 | [отчёт](../results/2026-10-21-bootstrap-gim-polza-01/report.md) |
-| 2026-10-21 | 2026-10-21-bootstrap-gim-polza-02 | [отчёт](../results/2026-10-21-bootstrap-gim-polza-02/report.md) |
-| 2026-10-21 | 2026-10-21-bootstrap-s004-review-01 | [отчёт](../results/2026-10-21-bootstrap-s004-review-01/report.md) |
-| 2026-10-21 | 2026-10-21-bootstrap-s004-final-01 | [отчёт](../results/2026-10-21-bootstrap-s004-final-01/report.md) |
-| 2026-10-21 | Переносимый HANDOFF | [отчёт](../results/2026-10-21-bootstrap-handoff-01/report.md) |
+| 2026-10-21 | Polza: установлен reason length/пустой content,1800reasoning tokens | [отчёт](../results/2026-10-21-bootstrap-gim-polza-02/report.md) |
+| 2026-10-21 | HANDOFF: самодостаточный контекст, ссылки и отсутствие секретов проверены | [отчёт](../results/2026-10-21-bootstrap-handoff-01/report.md) |
+| 2026-10-21 | Текущий путь сообщения/Excel,2no_analytics и0summary | [отчёт](../results/2026-10-21-bootstrap-gim-service-flow-01/report.md) |
+| 2026-10-21 | gim-polza-03: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-polza-03/report.md) |
+| 2026-10-21 | gim-polza-04: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-polza-04/report.md) |
+| 2026-10-21 | gim-polza-05: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-polza-05/report.md) |
+| 2026-10-21 | gim-reanalysis-01: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-reanalysis-01/report.md) |
+| 2026-10-21 | gim-reanalysis-02: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-reanalysis-02/report.md) |
+| 2026-10-21 | gim-summary-live-01: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-summary-live-01/report.md) |

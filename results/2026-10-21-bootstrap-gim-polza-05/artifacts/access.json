@@ -1,0 +1,76 @@
+{
+  "provider": "Polza",
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "scope": "synthetic only",
+  "models_http_status": 200,
+  "model_available": true,
+  "generation_http_status": 200,
+  "generation_duration_ms": 1094,
+  "structured_json_valid": true,
+  "total_tokens": 20,
+  "provider_analysis_valid": true,
+  "provider_analysis_duration_ms": 5125,
+  "criteria_count": 5,
+  "synthetic_score": 3,
+  "provider_followups_valid": true,
+  "provider_followups_duration_ms": 2516,
+  "followup_count": 1,
+  "provider_response_metadata": [
+    {
+      "http_status": 200,
+      "finish_reason": "stop",
+      "content_length": 2618,
+      "content_type": "str",
+      "usage": {
+        "prompt_tokens": 683,
+        "completion_tokens": 727,
+        "total_tokens": 1410,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0,
+          "accepted_prediction_tokens": null,
+          "rejected_prediction_tokens": null
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 640,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "server_tool_use": null,
+        "cost_rub": 0.04354456,
+        "cost": 0.04354456,
+        "plugins": null
+      }
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "stop",
+      "content_length": 307,
+      "content_type": "str",
+      "usage": {
+        "prompt_tokens": 457,
+        "completion_tokens": 92,
+        "total_tokens": 549,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0,
+          "accepted_prediction_tokens": null,
+          "rejected_prediction_tokens": null
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "server_tool_use": null,
+        "cost_rub": 0.01394138,
+        "cost": 0.01394138,
+        "plugins": null
+      }
+    }
+  ]
+}

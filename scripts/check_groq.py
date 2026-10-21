@@ -51,6 +51,8 @@ async def probe(model, provider_probe=False, *, base_url=BASE_URL,
             }
             if provider_name == 'Groq':
                 payload['reasoning_effort'] = 'low'
+            elif provider_name == 'Polza':
+                payload['reasoning'] = {'enabled': False}
             response = await client.post(base_url + '/chat/completions', headers=headers, json=payload)
             result.update(generation_http_status=response.status_code,
                           generation_duration_ms=round((time.monotonic() - started) * 1000))
@@ -68,7 +70,9 @@ async def probe(model, provider_probe=False, *, base_url=BASE_URL,
             return result
     if provider_probe:
         settings = Settings(_env_file=None, llm_api_key=key, llm_model=model, llm_base_url=base_url,
-                            llm_timeout=20, gateway_url='', internal_api_key='')
+                            llm_timeout=30, followup_timeout=8, gateway_url='', internal_api_key='',
+                            llm_reasoning_enabled=False if provider_name == 'Polza' else None,
+                            llm_max_tokens=4096)
         provider = Provider(settings)
         response_metadata = []
 

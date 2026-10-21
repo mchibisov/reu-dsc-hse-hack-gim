@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     llm_base_url: str = 'https://openrouter.ai/api/v1'
     llm_model: str = ''
     llm_fallback_model: str = ''
+    llm_reasoning_enabled: bool | None = None
+    llm_max_tokens: int = Field(default=1800, ge=256, le=8192)
     llm_timeout: float = 12
     followup_timeout: float = 3
     llm_concurrency: int = Field(default=4, ge=1, le=32)
