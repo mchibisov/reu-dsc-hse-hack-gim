@@ -439,6 +439,8 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         event_id=str(uuid4())
         normalized=dict(type='message_new',group_id=self.group,event_id=event_id,
                         object={'message':dict(from_id=actor,peer_id=actor,text=text)})
+        from gim.shared_export_access import seal_export
+        normalized=seal_export(normalized,getattr(self.service.settings,'excel_access_code',''))
         async with self.worker.pool.connection() as c:
             return await emit(c,None,'vk.incoming','synthetic:'+event_id,
                 {'event':normalized,'group_id':self.group,'serial_key':f'{self.group}:{actor}'})
@@ -522,6 +524,52 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         exported=list(wb['Анкеты'].values)
         self.assertEqual(exported[1][exported[0].index('score')],'2')
         self.vk.upload.assert_awaited_once()
+
+
+    async def test_secret_code_exports_without_staff_membership(self):
+        self.service.settings.excel_access_code='synthetic-export-secret'
+        app=await self.bot.start_application(self.rid,self.candidate)
+        event=await self.enqueue('/export synthetic-export-secret')
+        self.assertNotIn('synthetic-export-secret',str(event['payload']))
+        await self.drain()
+        self.vk.upload.assert_awaited_once()
+        self.assertEqual(self.vk.upload.call_args.args[0],self.candidate)
+        self.assertIsNone(await self.service._staff(self.candidate))
+        meta=await (await self.owner.execute("SELECT * FROM gim.files WHERE recruitment_id=%s",(self.rid,))).fetchone()
+        self.assertIsNone(meta['requested_by_staff_id'])
+        from openpyxl import load_workbook
+        wb=load_workbook(io.BytesIO(self.objects[meta['storage_key']]))
+        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка'])
+        self.assertIn(str(app['id']),str(list(wb['Анкеты'].values)))
+        self.assertIn('summary',next(wb['Анкеты'].values))
+        await self.enqueue('/top')
+        await self.drain()
+        self.assertIsNone(await self.service._staff(self.candidate))
+        self.assertEqual(self.vk.upload.await_count,1)
+
+    async def test_five_bad_codes_block_even_correct_code(self):
+        self.service.settings.excel_access_code='synthetic-export-secret'
+        for _ in range(5):
+            await self.enqueue('/export wrong-code')
+            await self.drain()
+        await self.enqueue('/export synthetic-export-secret')
+        await self.drain()
+        self.vk.upload.assert_not_awaited()
+        self.assertIsNone(await self.service._staff(self.candidate))
+
+    async def test_rotation_revokes_pending_delivery_and_retry_does_not_duplicate_file(self):
+        from gim_db.outbox import run_once
+        self.service.settings.excel_access_code='synthetic-export-secret'
+        event=await self.enqueue('/export synthetic-export-secret')
+        claimed=await self.queue.claim(['vk.incoming'])
+        await self.service.incoming(claimed)
+        await self.service.incoming(claimed)
+        count=await (await self.owner.execute('SELECT count(*) AS n FROM gim.files WHERE recruitment_id=%s',(self.rid,))).fetchone()
+        self.assertEqual(count['n'],1)
+        await self.queue.finish(claimed['id'],claimed['lease_token'],True)
+        self.service.settings.excel_access_code='rotated-synthetic-code'
+        await self.drain()
+        self.vk.upload.assert_not_awaited()
 
 class WorkbookEncodingTests(unittest.TestCase):
     def test_xml_control_character_is_recoverable(self):
