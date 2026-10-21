@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    profiles: [local]
+    environment:
+      POSTGRES_PASSWORD: ${LOCAL_POSTGRES_PASSWORD:?set LOCAL_POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: gim
+    ports: ["127.0.0.1:55432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gim"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+  redis:
+    image: redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    command: ["redis-server", "--appendonly", "yes"]
+    # No public port; workers share the internal Docker network.
+    volumes: ["redisdata:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+  migrate:
+    build: .
+    profiles: [tools]
+    environment:
+      DATABASE_ADMIN_URL: ${DATABASE_ADMIN_URL:?set operator DSN}
+    command: ["python", "-m", "gim_db.migrate"]
+  publisher:
+    build: .
+    environment:
+      DATABASE_WORKER_URL: ${DATABASE_WORKER_URL:?set least-privilege worker DSN}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+  worker:
+    build: .
+    profiles: [workers]
+    environment:
+      DATABASE_WORKER_URL: ${DATABASE_WORKER_URL:?set least-privilege worker DSN}
+      REDIS_URL: redis://redis:6379/0
+      GIM_HANDLERS_MODULE: ${GIM_HANDLERS_MODULE:?set Python module with HANDLERS}
+    # Team image must COPY/install its handler module. This DB image deliberately has no fake LLM.
+    command: ["arq", "gim_db.outbox.WorkerSettings"]
+    depends_on:
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+volumes:
+  pgdata:
+  redisdata:
