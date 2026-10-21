@@ -55,6 +55,8 @@ class Database:
             return await self._ingest(c, event)
 
     async def _ingest(self, c, event):
+            await c.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',
+                (f"{event['group_id']}:{event['object']['message']['peer_id']}",))
             # This transaction commits before the gateway advances Long Poll ts.
             row = await (await c.execute('''INSERT INTO inbox_events(group_id,event_id) VALUES(%s,%s)
                 ON CONFLICT DO NOTHING RETURNING event_id''', (event['group_id'], event['event_id']))).fetchone()

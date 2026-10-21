@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 import uuid
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from unittest.mock import patch
@@ -21,7 +22,14 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         self.db.group_id = self.group
         self.vk_id = uuid.uuid4().int % 100000000 + 100000000
         self.settings = SimpleNamespace(group_id=self.group, campaign='test', consent_text='Тестовое согласие',
-                                        storage_dir=tempfile.mkdtemp(prefix='gim-test-'), scoring_url='', scoring_token='')
+                                        storage_dir=tempfile.mkdtemp(prefix='gim-test-'), scoring_url='', scoring_token='',
+                                        followup_url='https://questions.test/next', service_token='', max_followups=3)
+        from pathlib import Path
+        rubric_path = Path(self.settings.storage_dir) / 'rubric.json'
+        rubric_path.write_text(json.dumps({'version': 'team-v1', 'criteria': [
+            {'code': 'experience', 'description': 'Критерий команды для теста', 'max_score': 3}]}))
+        self.settings.rubric_path = str(rubric_path)
+        self.auto_ai = True
         self.vk = SimpleNamespace(send=AsyncMock(), upload=AsyncMock(return_value='doc1_2'))
         self.s = Service(self.db, self.vk, self.settings)
 
@@ -36,6 +44,23 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         job = await self.db.claim(kinds=['dialog'])
         self.assertIsNotNone(job)
         await self.s.dialog(job)
+        if self.auto_ai:
+            ai_job = await self.db.claim(kinds=['prepare_followups'])
+            if ai_job:
+                import httpx
+                import json
+                async def endpoint(request):
+                    payload = json.loads(request.content)
+                    if any(a['question_code'].startswith('followup_') for a in payload['answers']):
+                        result = {'action': 'finish'}
+                    else:
+                        result = {'action': 'ask', 'direction': payload['selected_directions'][0],
+                                  'question': 'Расскажите, как вы проверяли точность записей в конкретном проекте?'}
+                    return httpx.Response(200, json=result)
+                factory = httpx.AsyncClient
+                with patch('gim.service.httpx.AsyncClient', lambda **kwargs: factory(transport=httpx.MockTransport(endpoint), **kwargs)):
+                    await self.s.prepare_followups(ai_job)
+                await self.db.finish(ai_job)
         return job
 
     async def test_answers_and_submission_survive_new_service_instance(self):
@@ -83,7 +108,7 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
                      '5 часов', 'Книги', 'Аккуратность', 'VK', 'Проверял дважды', 'Медиа']:
             await self.process(text)
         async with self.db.pool.connection() as c:
-            answer = await (await c.execute("SELECT question_text FROM answers an JOIN applications a ON a.id=an.application_id WHERE a.group_id=%s AND question_code='followup_funds'", (self.group,))).fetchone()
+            answer = await (await c.execute("SELECT question_text FROM answers an JOIN applications a ON a.id=an.application_id WHERE a.group_id=%s AND question_code='followup_ai_1'", (self.group,))).fetchone()
         self.assertIn('проверяли точность', answer['question_text'])
 
     async def test_resume_document_is_linked_without_advancing_empty_answer(self):
@@ -218,7 +243,7 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
             evidence = next(a for a in payload['answers'] if a['question_code'] == 'experience')
             return httpx.Response(200, json={'score': 2, 'rubric_version': 'team-v1',
                 'rubric_snapshot': {'criteria': [{'code': 'experience'}]},
-                'criteria_results': [{'criterion': 'experience', 'reason': 'Опыт архива', 'answer_id': evidence['id'], 'quote': 'Архив'}],
+                'criteria_results': [{'criterion': 'experience', 'points': 2, 'reason': 'Опыт архива', 'answer_id': evidence['id'], 'quote': 'Архив'}],
                 'summary': 'Релевантный опыт', 'interview_questions': ['Какие документы обрабатывали?'], 'recommended_directions': ['funds']})
         factory = httpx.AsyncClient
         with patch('gim.service.httpx.AsyncClient', lambda **kwargs: factory(transport=httpx.MockTransport(endpoint), **kwargs)):
@@ -238,8 +263,9 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(row['summary'], 'Релевантный опыт')
         self.assertEqual(row['manual_reason'], 'Требуется собеседование')
 
-    async def test_followup_service_failure_uses_contextual_fallback(self):
+    async def test_followup_service_failure_preserves_answers_without_pattern_fallback(self):
         import httpx
+        self.auto_ai = False
         self.settings.followup_url = 'https://questions.test/select'
         self.settings.service_token = ''
         for text in ['Старт', 'Согласен', 'Иван', 'История', 'Архив и документы', 'Нет', '3',
@@ -249,9 +275,115 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         factory = httpx.AsyncClient
         with patch('gim.service.httpx.AsyncClient', lambda **kwargs: factory(transport=httpx.MockTransport(
                 lambda request: httpx.Response(503)), **kwargs)):
-            with self.assertLogs('gim.service', level='WARNING'):
+            with self.assertRaises(httpx.HTTPStatusError):
                 await self.s.prepare_followups(job)
         async with self.db.pool.connection() as c:
             app = await (await c.execute('SELECT * FROM applications WHERE group_id=%s', (self.group,))).fetchone()
-        self.assertEqual(app['state']['step'], 'followup_funds')
-        self.assertIn('проверяли точность', app['questionnaire']['followup_funds'])
+        self.assertEqual(app['state']['step'], 'planning')
+        self.assertEqual(app['revision'], 10)
+        self.assertNotIn('followup_ai_1', app['questionnaire'])
+
+    async def test_limit_finishes_clarifications_without_another_model_call(self):
+        self.settings.max_followups = 1
+        for text in ['Старт', 'Согласен', 'Иван', 'История', 'Архив', 'Нет', '3',
+                     'Помогать', '5 часов', 'Книги', 'Аккуратность', 'VK', 'Проверял дважды']:
+            await self.process(text)
+        async with self.db.pool.connection() as c:
+            app = await (await c.execute('SELECT state FROM applications WHERE group_id=%s', (self.group,))).fetchone()
+            count = await (await c.execute("SELECT count(*) n FROM jobs WHERE kind='prepare_followups'")).fetchone()
+        self.assertEqual(app['state']['step'], 'expectations')
+        self.assertEqual(count['n'], 1)
+
+    async def test_extra_message_while_model_thinks_is_saved_and_stale_result_ignored(self):
+        self.auto_ai = False
+        for text in ['Старт', 'Согласен', 'Иван', 'История', 'Архив', 'Нет', '3',
+                     'Помогать', '5 часов', 'Книги', 'Аккуратность', 'VK']:
+            await self.process(text)
+        old_job = await self.db.claim(kinds=['prepare_followups'])
+        # A concurrent incoming event is processed while HTTP generation is in flight.
+        await self.process('Дополню: ещё составлял описи монет')
+        await self.s.prepare_followups(old_job)
+        async with self.db.pool.connection() as c:
+            app = await (await c.execute('SELECT * FROM applications WHERE group_id=%s', (self.group,))).fetchone()
+            extra = await (await c.execute("SELECT answer_text FROM answers WHERE question_kind='supplement'")).fetchone()
+        self.assertEqual(app['revision'], 11)
+        self.assertEqual(app['state']['step'], 'planning')
+        self.assertIn('описи монет', extra['answer_text'])
+
+    async def test_queued_addition_prevents_publication_of_stale_question(self):
+        import httpx
+        self.auto_ai = False
+        for text in ['Старт', 'Согласен', 'Иван', 'История', 'Архив', 'Нет', '3',
+                     'Помогать', '5 часов', 'Книги', 'Аккуратность', 'VK']:
+            await self.process(text)
+        ai_job = await self.db.claim(kinds=['prepare_followups'])
+        async def endpoint(request):
+            await self.db.ingest({'type': 'message_new', 'group_id': self.group, 'event_id': str(uuid.uuid4()),
+                'object': {'message': {'from_id': self.vk_id, 'peer_id': self.vk_id, 'text': 'Дополнение ещё до вопроса'}}})
+            return httpx.Response(200, json={'action': 'ask', 'direction': 'funds', 'question': 'Какие предметы вы описывали?'})
+        factory = httpx.AsyncClient
+        with patch('gim.service.httpx.AsyncClient', lambda **kwargs: factory(transport=httpx.MockTransport(endpoint), **kwargs)):
+            with self.assertRaises(RuntimeError):
+                await self.s.prepare_followups(ai_job)
+        async with self.db.pool.connection() as c:
+            app = await (await c.execute('SELECT state FROM applications WHERE group_id=%s', (self.group,))).fetchone()
+        self.assertEqual(app['state']['step'], 'planning')
+
+    async def test_scoring_adapter_cannot_invent_criteria_or_skip_evidence(self):
+        import httpx
+        for text in ['Старт', 'Согласен', 'Иван', 'История', 'Архив', 'Нет', '3',
+                     'Помогать', '5 часов', 'Книги', 'Аккуратность', 'VK', 'Каталогизировал', 'Медиа']:
+            await self.process(text)
+        ai_job = await self.db.claim(kinds=['score'])
+        self.settings.scoring_url = 'https://scoring.test/evaluate'
+        result = {'score': 3, 'rubric_version': 'invented', 'rubric_snapshot': {'anything': True},
+                  'criteria_results': [{'criterion': 'invented', 'reason': 'Потому что так'}],
+                  'summary': 'Без доказательств', 'interview_questions': [], 'recommended_directions': ['funds']}
+        factory = httpx.AsyncClient
+        with patch('gim.service.httpx.AsyncClient', lambda **kwargs: factory(transport=httpx.MockTransport(
+                lambda request: httpx.Response(200, json=result)), **kwargs)):
+            with self.assertRaises(ValueError):
+                await self.s.score(ai_job)
+
+    async def test_direct_model_builds_final_summary_from_full_dialog(self):
+        import httpx
+        for text in ['Старт', 'Согласен', 'Иван', 'История', 'Архив', 'Нет', '3',
+                     'Помогать', '5 часов', 'Книги', 'Аккуратность', 'VK', 'Каталогизировал', 'Медиа']:
+            await self.process(text)
+        ai_job = await self.db.claim(kinds=['score'])
+        self.settings.llm_api_key, self.settings.llm_model = 'test-secret', 'test-model'
+        self.settings.llm_base_url = 'https://model.test/v1'
+        async def endpoint(request):
+            payload = json.loads(json.loads(request.content)['messages'][1]['content'])
+            self.assertEqual(payload['answers'][-1]['question_code'], 'expectations')
+            evidence = next(a for a in payload['answers'] if a['question_code'] == 'experience')
+            result = {'score': 2, 'criteria_results': [{'criterion': 'experience', 'points': 2,
+                'reason': 'Работал в архиве', 'answer_id': evidence['id'], 'quote': 'Архив'}],
+                'summary': 'Итог после всех ответов', 'interview_questions': ['Какие документы?'], 'recommended_directions': ['funds']}
+            return httpx.Response(200, json={'choices': [{'message': {'content': json.dumps(result)}}]})
+        factory = httpx.AsyncClient
+        with patch('gim.llm.httpx.AsyncClient', lambda **kwargs: factory(transport=httpx.MockTransport(endpoint), **kwargs)):
+            await self.s.score(ai_job)
+        async with self.db.pool.connection() as c:
+            evaluation = await (await c.execute('SELECT * FROM evaluations WHERE application_id=%s', (ai_job['application_id'],))).fetchone()
+            frozen = await (await c.execute('SELECT payload FROM jobs WHERE id=%s', (ai_job['id'],))).fetchone()
+        self.assertEqual(evaluation['summary'], 'Итог после всех ответов')
+        self.assertEqual(frozen['payload']['rubric']['version'], 'team-v1')
+
+    async def test_pre_upgrade_job_without_revision_remains_processable(self):
+        import httpx
+        self.auto_ai = False
+        for text in ['Старт', 'Согласен', 'Иван', 'История', 'Архив', 'Нет', '3',
+                     'Помогать', '5 часов', 'Книги', 'Аккуратность', 'VK']:
+            await self.process(text)
+        ai_job = await self.db.claim(kinds=['prepare_followups'])
+        ai_job['payload'].pop('revision')
+        async with self.db.pool.connection() as c:
+            await c.execute("UPDATE applications SET state=state-'max_followups' WHERE id=%s", (ai_job['application_id'],))
+        factory = httpx.AsyncClient
+        with patch('gim.service.httpx.AsyncClient', lambda **kwargs: factory(transport=httpx.MockTransport(
+                lambda request: httpx.Response(200, json={'action': 'finish'})), **kwargs)):
+            await self.s.prepare_followups(ai_job)
+        async with self.db.pool.connection() as c:
+            app = await (await c.execute('SELECT state FROM applications WHERE group_id=%s', (self.group,))).fetchone()
+        self.assertEqual(app['state']['step'], 'expectations')
