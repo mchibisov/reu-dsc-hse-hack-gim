@@ -1,0 +1,100 @@
+name: gim-volunteers
+
+x-app: &app
+  build: .
+  image: gim-volunteer-bot:local
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+asyncpg://gim:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/gim
+    REDIS_URL: redis://redis:6379/0
+    GATEWAY_URL: http://llm-gateway:8100
+    INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY}
+  restart: unless-stopped
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp:size=64m
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: gim
+      POSTGRES_USER: gim
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U gim -d gim"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    command: [redis-server, --appendonly, "yes"]
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  init-db:
+    <<: *app
+    command: [python, -m, gim_bot.init_db]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  llm-gateway:
+    <<: *app
+    command: [uvicorn, gim_bot.gateway:app, --host, 0.0.0.0, --port, "8100", --no-access-log]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8100/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+  bot:
+    <<: *app
+    command: [python, -m, gim_bot.bot]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://gim:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/gim
+      REDIS_URL: redis://redis:6379/0
+      GATEWAY_URL: http://llm-gateway:8100
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY}
+      VK_TOKEN: ${VK_TOKEN:?Set VK_TOKEN}
+      VK_GROUP_ID: ${VK_GROUP_ID:?Set VK_GROUP_ID}
+      ADMIN_IDS: ${ADMIN_IDS:?Set ADMIN_IDS}
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+      llm-gateway:
+        condition: service_healthy
+  worker:
+    <<: *app
+    command: [arq, gim_bot.worker.WorkerSettings]
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      llm-gateway:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
