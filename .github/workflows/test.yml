@@ -1,7 +1,7 @@
 name: Tests
 on:
   push:
-    branches: [feat/vk-bot-storage-export]
+    branches: [Vova]
   pull_request:
 jobs:
   test:
