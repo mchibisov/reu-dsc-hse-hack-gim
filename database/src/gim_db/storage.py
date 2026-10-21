@@ -85,7 +85,12 @@ class FileRepository:
             # App first, then file: same lock order as answer/evaluation to avoid deadlocks.
             f=await one(c,'SELECT * FROM gim.files WHERE id=%s',(file_id,))
             if not f: raise LookupError('File not found')
-            if f['application_id']: await app_lock(c,f['application_id'])
+            if f['application_id']:
+                if f['kind']=='xlsx':
+                    # Explicit staff audit exports may read archived attempts; never edit their answers.
+                    await one(c,'SELECT id FROM gim.applications WHERE id=%s FOR UPDATE',(f['application_id'],))
+                else:
+                    await app_lock(c,f['application_id'])
             f=await one(c,'SELECT * FROM gim.files WHERE id=%s FOR UPDATE',(file_id,))
             if f['status']=='ready':
                 if (f['sha256'],f['size_bytes'],f['extracted_text'],f['extraction_version'])==(sha256,size_bytes,extracted_text,extraction_version): return f

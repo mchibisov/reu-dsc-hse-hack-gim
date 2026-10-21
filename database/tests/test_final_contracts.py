@@ -173,3 +173,14 @@ async def test_final_expired_analysis_lease_notifies_once(env):
     assert await q.claim(['application.analyze']) is None
     with psycopg.connect(DSN) as c:
         assert c.execute("SELECT count(*) FROM gim.outbox_events WHERE application_id=%s AND payload->>'kind'='analysis_unavailable'",(a['id'],)).fetchone()[0]==1
+
+async def test_staff_can_finish_explicit_archived_application_export(env):
+    from gim_db.storage import FileRepository
+    import hashlib
+    bot,worker,staff,r,t,admin,sid=env
+    own=await bot.start_application(r['id'],admin)
+    await staff.reset_own_application(admin,r['id'],request_key='export-old')
+    fid=await staff.request_export(admin,r['id'],application_id=own['id'],request_key='audit-export')
+    meta=await FileRepository(worker.pool).finish(fid,size_bytes=4,sha256=hashlib.sha256(b'xlsx').hexdigest())
+    assert meta['status']=='ready'
+    assert (await staff.staff_file(admin,fid))['application_id']==own['id']
