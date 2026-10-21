@@ -180,7 +180,10 @@ class Repository:
             if not 0<=revision<=a['answers_revision']: raise ValueError('Invalid snapshot revision')
             r=await one(c,'SELECT rubric,rubric_version FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
             snapshot=await one(c,'SELECT gim.snapshot(%s,%s) AS data',(app_id,revision))
-            answers=await all_rows(c,'SELECT id,question_id,revision,answer_text,value FROM gim.answers WHERE id=ANY(%s::uuid[])',(snapshot['data']['answer_ids'],))
+            answers=await all_rows(c,'''SELECT a.id,a.question_id,a.revision,a.answer_text,a.value,
+                CASE WHEN q.source='base' THEN q.target_slot ELSE 'clarification_'||q.position::text END AS target_slot
+                FROM gim.answers a JOIN gim.dialog_questions q ON q.id=a.question_id
+                WHERE a.id=ANY(%s::uuid[]) ORDER BY a.revision''',(snapshot['data']['answer_ids'],))
             files=await all_rows(c,'SELECT id,sha256,extracted_text,extraction_version FROM gim.files WHERE id=ANY(%s::uuid[])',([f['id'] for f in snapshot['data']['files']],))
             return {'input_snapshot':snapshot['data'],**r,'answers':answers,'files':files}
 

@@ -14,3 +14,4 @@ work/
 runtime/
 .ruff_cache/
 *.egg-info/
+!.env.legacy.example

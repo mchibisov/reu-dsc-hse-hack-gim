@@ -1,4 +1,4 @@
-"""Запуск существующего VK клиента с private БД, без Redis и LLM."""
+"""Запуск VK клиента с private PostgreSQL и SQL-воркерами, без Redis."""
 import argparse
 import asyncio
 import json
@@ -43,7 +43,8 @@ async def check_database(settings, pools):
         await c.execute('SELECT group_id,ts,lease_token,lease_until FROM gim.gateway_checkpoints LIMIT 0')
         await c.execute('SELECT lease_until,lease_token,attempts,failed_at FROM gim.outbox_events LIMIT 0')
     return {'schema': 'gim', 'recruitment_id': str(settings.recruitment_id), 'base_questions': len(templates),
-            'analysis': 'disabled', 'redis': False, 'storage': 'local-private'}
+            'analysis': 'configured' if settings.llm_api_key else 'disabled',
+            'redis': False, 'storage': 'local-private'}
 
 
 async def worker_loop(service, pool, group_id):
@@ -95,7 +96,7 @@ async def run(mode, settings):
         storage = LocalPrivateStorage(settings.storage_dir)
         stack.push_async_callback(storage.close)
         service = SharedService(*(Repository(pool) for pool in pools), vk, settings, storage)
-        log.info('shared_runtime_start group_id=%s mode=%s workers=%s analysis=disabled', settings.group_id, mode, settings.concurrency)
+        log.info('shared_runtime_start group_id=%s mode=%s workers=%s analysis=%s', settings.group_id, mode, settings.concurrency,info['analysis'])
         async with asyncio.TaskGroup() as tasks:
             if mode in {'run', 'gateway'}:
                 tasks.create_task(gateway_loop(vk, pools[0], settings.group_id))
@@ -105,7 +106,7 @@ async def run(mode, settings):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='VK-бот: private PostgreSQL, SQL очередь, без LLM')
+    parser = argparse.ArgumentParser(description='VK-бот: private PostgreSQL, SQL очередь, без Redis')
     parser.add_argument('mode', choices=('check-db', 'check-vk', 'run', 'gateway', 'worker'))
     args = parser.parse_args()
     load_dotenv()

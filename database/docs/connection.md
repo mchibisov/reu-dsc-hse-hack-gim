@@ -111,3 +111,5 @@ SQL worker проверяет outbox, арендует событие на 60 с
 Резервирование данных и Storage требуется настроить отдельно: приватные `pg_dump --format=custom --schema=gim --schema=gim_meta` через operator session/direct connection и отдельная копия файлов через Storage API. Не считать тариф Free гарантией PITR/HA. Проверять восстановление на отдельной тестовой БД; дампы/файлы не класть в Git.
 
 Источники технических ограничений: [Supabase connections](https://supabase.com/docs/guides/database/connecting-to-postgres), [Storage schema](https://supabase.com/docs/guides/storage/schema/design).
+
+Для основного shared runtime текущий оценщик поддерживает только явно утверждённую аддитивную рубрику: `scoring_method: "sum_round_half_up"`, сумма `max_points` равна 3, итог — сумма с округлением 0.5 вверх. Без явного метода автоматический балл не сохраняется. Не меняйте frozen-рубрику действующего набора: согласуйте конфигурацию до его активации.

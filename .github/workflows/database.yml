@@ -1,9 +1,8 @@
 name: database
 on:
   push:
-    paths: ['database/**', 'gim/shared_*.py', 'tests/test_shared*.py', '.github/workflows/database.yml']
+    branches: [main]
   pull_request:
-    paths: ['database/**', 'gim/shared_*.py', 'tests/test_shared*.py', '.github/workflows/database.yml']
 permissions:
   contents: read
 jobs:
@@ -36,3 +35,5 @@ jobs:
       - run: uv run --project database python -m unittest discover -s tests -p 'test_shared*.py' -v
         working-directory: .
       - run: docker build -t gim-db:test .
+      - run: docker build -t gim-bot:test .
+        working-directory: .

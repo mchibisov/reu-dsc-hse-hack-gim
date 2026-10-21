@@ -96,6 +96,27 @@ async def test_worker_group_never_claims_another_community(env):
     assert await queue.claim() is None
 
 
+async def test_outgoing_retry_preserves_order_between_reply_and_question(env):
+    bot,repo,_,r,t,*_=env
+    app=await bot.start_application(r['id'],r['group_id'])
+    with psycopg.connect(DSN,row_factory=dict_row) as c:
+        first=c.execute('''INSERT INTO gim.outbox_events(application_id,topic,payload,dedupe_key)
+            VALUES(%s,'vk.send',%s,%s) RETURNING *''',
+            (app['id'],Jsonb({'group_id':r['group_id'],'peer_id':r['group_id'],'text':'Сначала это'}),str(uuid.uuid4()))).fetchone()
+    await bot.prepare_question(app['id'],request_key='ordered',expected_revision=0,template_id=t['id'])
+    queue=SQLQueue(repo.pool,r['group_id'])
+    event=await queue.claim(['vk.send','question.send'])
+    assert event['id']==first['id']
+    await queue.finish(event['id'],event['lease_token'],False,'synthetic_timeout')
+    assert await queue.claim(['vk.send','question.send']) is None
+    with psycopg.connect(DSN) as c:
+        c.execute('UPDATE gim.outbox_events SET available_at=now() WHERE id=%s',(first['id'],))
+    event=await queue.claim(['vk.send','question.send'])
+    assert event['id']==first['id']
+    await queue.finish(event['id'],event['lease_token'],True)
+    assert (await queue.claim(['vk.send','question.send']))['topic']=='question.send'
+
+
 async def test_question_dispatch_loads_exact_saved_question_and_marks_asked(env):
     bot, repo, _, recruitment, template, *_ = env
     app = await bot.start_application(recruitment['id'], recruitment['group_id'])
@@ -107,6 +128,21 @@ async def test_question_dispatch_loads_exact_saved_question_and_marks_asked(env)
     assert sent[0][:2] == (question['id'], 'Опишите опыт')
     with psycopg.connect(DSN) as c:
         assert c.execute('SELECT asked_at IS NOT NULL FROM gim.dialog_questions WHERE id=%s', (question['id'],)).fetchone()[0]
+
+
+async def test_answered_question_is_not_sent_by_delayed_job(env):
+    bot,repo,_,r,t,*_=env
+    app=await bot.start_application(r['id'],r['group_id'])
+    q=await bot.prepare_question(app['id'],request_key='delayed',expected_revision=0,template_id=t['id'])
+    await bot.record_answer(app['id'],q['id'],group_id=r['group_id'],event_id='answered-before-send',
+                           text='Ответ',expected_revision=0)
+    sent=[]
+    async def send(event):
+        sent.append(event)
+    await run_once({'repository':repo,'handlers':{'question.send':send}},SQLQueue(repo.pool,r['group_id']))
+    assert sent==[]
+    with psycopg.connect(DSN) as c:
+        assert c.execute("SELECT last_error_code FROM gim.outbox_events WHERE application_id=%s AND topic='question.send'",(app['id'],)).fetchone()[0]=='question_no_longer_active'
 
 
 async def test_notification_checks_revocation_at_send_boundary(env):
