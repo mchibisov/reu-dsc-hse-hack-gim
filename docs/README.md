@@ -2,6 +2,8 @@
 
 Текущий запуск: [инструкция с общей БД](../README-SHARED.md).
 
+Ветки уже опубликованы; последние требования S004 (скрытый Excel код и Polza) реализуются в работающем gim_bot и пока не перенесены в shared runtime. Актуальный контекст — [HANDOFF](../HANDOFF.md).
+
 - [Спецификация S003](specs/S003-shared-db-integration.md).
 - [План и статус S003](plans/S003-shared-db-integration.md).
 - [Промпт агенту для настройки Supabase и запуска](prompts/S003-cloud-setup-agent.md).

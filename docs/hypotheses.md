@@ -51,3 +51,4 @@
 | 2026-10-21-s003-sql-10 | [отчёт](../results/2026-10-21-s003-sql-10/report.md) |
 | 2026-10-21-s003-publication-02 | [отчёт](../results/2026-10-21-s003-publication-02/report.md) |
 | 2026-10-21-bootstrap-s003-agent-prompt-01 | [отчёт](../results/2026-10-21-bootstrap-s003-agent-prompt-01/report.md) |
+| 2026-10-21 | Переносимый HANDOFF | [отчёт](../results/2026-10-21-bootstrap-handoff-01/report.md) |
