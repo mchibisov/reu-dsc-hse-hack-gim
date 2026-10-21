@@ -76,3 +76,44 @@ async def test_code_export_excludes_archived_attempts(env):
         bundle=await (await c.execute(EXPORT_QUERY,(r['id'],r['id']))).fetchone()
     data=next(iter(bundle.values()))
     assert str(own['id']) not in [a['application_id'] for a in data['Анкеты']]
+
+async def test_gateway_captures_same_prompt_for_rapid_fragments(env):
+    from gim.shared_gateway import GatewayLedger
+    bot,worker,staff,r,t,admin,sid=env
+    a=await bot.start_application(r['id'],admin)
+    q=await bot.prepare_question(a['id'],request_key='receipt-q',expected_revision=0,template_id=t['id'])
+    with psycopg.connect(DSN) as c:c.execute('UPDATE gim.dialog_questions SET asked_at=now() WHERE id=%s',(q['id'],))
+    ledger=GatewayLedger(bot.pool,r['group_id']);await ledger.acquire()
+    events=[{'group_id':r['group_id'],'type':'message_new','event_id':str(uuid.uuid4()),'object':{'message':{'from_id':admin,'peer_id':admin,'text':text}}} for text in ('Первый фрагмент','Второй фрагмент')]
+    await ledger.ingest_batch(events,r['group_id'],'2');await ledger.release()
+    with psycopg.connect(DSN) as c:
+        rows=c.execute("SELECT payload->'receipt' FROM gim.outbox_events WHERE payload->>'serial_key'=%s",(f"vk:{r['group_id']}:{admin}",)).fetchall()
+    assert len(rows)==2 and all(row[0]['question_id']==str(q['id']) for row in rows)
+
+async def test_postgres_exports_are_private_immutable_and_retry_safe(env):
+    from gim.serverless import PostgresPrivateStorage
+    bot,worker,staff,r,t,admin,sid=env
+    fid=await staff.request_export(admin,r['id'],kind='xlsx',request_key='bytes')
+    async with worker.pool.connection() as c:meta=await (await c.execute('SELECT * FROM gim.files WHERE id=%s',(fid,))).fetchone()
+    store=PostgresPrivateStorage(worker.pool)
+    await store.upload(meta,b'test-xlsx');await store.upload(meta,b'test-xlsx')
+    assert await store.read(meta)==b'test-xlsx'
+    with pytest.raises(ValueError):await store.upload(meta,b'changed')
+    async with bot.pool.connection() as c:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):await c.execute('SELECT * FROM gim.file_contents')
+
+async def test_delayed_callback_uses_vk_order_not_arrival_time(env):
+    from gim.shared_gateway import enqueue_events
+    bot,worker,staff,r,t,admin,sid=env
+    a=await bot.start_application(r['id'],admin)
+    old=await bot.prepare_question(a['id'],request_key='old-visible',expected_revision=0,template_id=t['id'])
+    await bot.record_answer(a['id'],old['id'],group_id=r['group_id'],event_id='first-fragment',text='Первый фрагмент',value=None,expected_revision=0)
+    new=await bot.prepare_question(a['id'],request_key='new-visible',expected_revision=1,text='Следующий вопрос',target_slot='details')
+    with psycopg.connect(DSN) as c:
+        c.execute('UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=40 WHERE id=%s',(old['id'],))
+        c.execute('UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=50 WHERE id=%s',(new['id'],))
+    event={'group_id':r['group_id'],'type':'message_new','event_id':'delayed','object':{'message':{'from_id':admin,'peer_id':admin,'conversation_message_id':49,'text':'Второй фрагмент'}}}
+    async with bot.pool.connection() as c,c.transaction():await enqueue_events(c,[event],r['group_id'],'')
+    with psycopg.connect(DSN) as c:
+        receipt=c.execute("SELECT payload->'receipt' FROM gim.outbox_events WHERE dedupe_key=%s",(f"vk-in:{r['group_id']}:message:{admin}:49",)).fetchone()[0]
+    assert receipt['question_id']==str(old['id'])

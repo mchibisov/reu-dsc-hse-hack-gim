@@ -1,0 +1,12 @@
+.env*
+_env*
+.git
+.venv
+runtime
+work
+.superpowers
+outputs
+data
+*.xlsx
+*.pdf
+**/__pycache__

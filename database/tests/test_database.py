@@ -10,7 +10,7 @@ pytestmark = pytest.mark.skipif(not DSN, reason='set TEST_DATABASE_URL to dispos
 def test_thirteen_private_tables():
     with psycopg.connect(DSN) as c:
         tables = c.execute("SELECT tablename FROM pg_tables WHERE schemaname='gim'").fetchall()
-        assert {r[0] for r in tables} == {'users','staff_members','recruitments','question_templates','applications','dialog_questions','answers','evaluations','files','inbox_events','outbox_events','audit_log','gateway_checkpoints'}
+        assert {r[0] for r in tables} == {'users','staff_members','recruitments','question_templates','applications','dialog_questions','answers','evaluations','files','inbox_events','outbox_events','audit_log','gateway_checkpoints','file_contents','runtime_leases'}
 
 
 def test_no_public_or_staff_table_access():

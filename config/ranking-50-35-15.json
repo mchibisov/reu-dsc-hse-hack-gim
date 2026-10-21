@@ -1,0 +1,25 @@
+{
+  "version": "gim-ranking-50-35-15-v1",
+  "rubric": {
+    "approved_by": "mchibisov: formula supplied 2026-10-22",
+    "scoring_method": "binary_50_35_15",
+    "scoring_rule": "S = 3 × (0.50 × max(0, Σm − p)/4 + 0.35 × Σe/5 + 0.15 × Σa/2), p=1 только при исключительном интересе к фондам И отказе от альтернатив. Целый балл округляется 0.5 вверх; рейтинг сортируется по S.",
+    "criteria": [
+      {
+        "code": "motivation",
+        "name": "Мотивация и осознанность",
+        "max_points": 1.5
+      },
+      {
+        "code": "experience",
+        "name": "Опыт и навыки",
+        "max_points": 1.05
+      },
+      {
+        "code": "availability",
+        "name": "Обучение и нагрузка",
+        "max_points": 0.45
+      }
+    ]
+  }
+}

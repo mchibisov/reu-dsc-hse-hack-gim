@@ -129,7 +129,7 @@ async def analyze(llm,snapshot,*,scored=None):
           'needs_review':not known,'evidence':ev,'facts':items})
     if scored is not None:
         facts_by_group={c['code']:c['facts'] for c in criteria}
-        criteria=[{**c,'name':GROUPS.get(c['code'],c['code']),'facts':facts_by_group.get(c['code'],[])} for c in scored['criteria']]
+        criteria=[{**c,'name':GROUPS.get(c['code'],c['code']),'facts':[{k:v for k,v in f.items() if k!='contribution'} for f in facts_by_group.get(c['code'],[])]} for c in scored['criteria']]
         maximum={c['code']:c['max_points'] for c in rubric['criteria']}
         observed=sum(maximum[c['code']] for c in criteria if not c.get('needs_review'))
         points=sum(c['points'] for c in criteria)

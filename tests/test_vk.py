@@ -67,3 +67,14 @@ class VKDeliveryTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(args['random_id'],99)
             self.assertEqual(args['attachment'],'doc_synthetic')
         finally:await vk.close()
+
+    async def test_question_delivery_returns_conversation_order(self):
+        from gim.vk import VK
+        vk=VK(SimpleNamespace(vk_token='synthetic',api_version='5.199',group_id=17))
+        vk.call=AsyncMock(return_value=[{'peer_id':42,'message_id':123,'conversation_message_id':50}])
+        try:
+            sent=await vk.send(42,'Вопрос',99,want_cmid=True)
+            self.assertEqual(sent['conversation_message_id'],50)
+            self.assertEqual(vk.call.call_args.kwargs['peer_ids'],'42')
+            self.assertNotIn('peer_id',vk.call.call_args.kwargs)
+        finally:await vk.close()

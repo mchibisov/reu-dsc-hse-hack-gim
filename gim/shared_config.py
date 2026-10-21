@@ -26,7 +26,7 @@ class SharedSettings:
     llm_model: str = 'deepseek/deepseek-v4.1-flash-1017'
     excel_access_code: str = field(default='',repr=False)
     llm_reasoning_effort: str = 'low'
-    analysis_rubric_path: str = ''
+    analysis_rubric_path: str = 'config/ranking-50-35-15.json'
     expectations_check: bool = True
     enhanced_reports: bool = True
 
@@ -68,6 +68,6 @@ class SharedSettings:
                    os.environ.get('LLM_MODEL','deepseek/deepseek-v4.1-flash-1017'),
                    os.environ.get('EXCEL_ACCESS_CODE',''),
                    os.environ.get('LLM_REASONING_EFFORT','low'),
-                   os.environ.get('ANALYSIS_RUBRIC_PATH',''),
+                   os.environ.get('ANALYSIS_RUBRIC_PATH','config/ranking-50-35-15.json'),
                    os.environ.get('EXPECTATIONS_CHECK','true').lower()=='true',
                    os.environ.get('ENHANCED_REPORTS','true').lower()=='true')

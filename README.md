@@ -87,3 +87,7 @@ docker compose up --build -d
 [Кандидату](docs/user-guide.md) · [Куратору](docs/admin-guide.md) · [Демо](docs/demo-guide.md) · [Качество оценивания](docs/evaluation-report.md) · [Безопасность](docs/security-review.md) · [QA](docs/qa-matrix.md) · [Особенности](docs/killer-features.md).
 
 Новая модель не превысила majority baseline на независимых 22 анкетах и **не включается автоматически**. `ANALYSIS_RUBRIC_PATH` оставьте пустым. Действующий бот сохраняет закреплённую рубрику, дополненную доказательным AI-отчётом; окончательное решение принимает сотрудник.
+
+## Финальный выпуск
+
+[Открыть бота](https://vk.me/club242476311) · [Страница запуска](https://gim-volunteer-bot.vercel.app) · [Результаты, требования и киллерфичи](output/README.md) · [Эксплуатация](docs/deployment-guide.md).

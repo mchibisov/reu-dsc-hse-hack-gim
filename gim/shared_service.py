@@ -9,6 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 import logging
+import time
 from datetime import date
 from uuid import UUID
 
@@ -143,8 +144,13 @@ class SharedService:
             return
         # Prefer durable binding even if an earlier execution advanced the application.
         binding=payload.get('binding')
-        qid=binding['question_id'] if binding else ctx['application']['current_question_id']
+        receipt=payload.get('receipt')
+        if receipt and receipt.get('app_id') not in (None,str(app['id'])):
+            return # queued message from an archived attempt cannot answer a new attempt
+        qid=binding['question_id'] if binding else (receipt.get('question_id') if receipt is not None else ctx['application']['current_question_id'])
         if qid is None:
+            if receipt is not None and ctx['application']['current_question_id']:
+                return # a prompt is still being delivered; do not resend it
             await self._advance(event,actor,ctx,resume=True)
             return
         q=next((q for q in ctx['questions'] if str(q['id'])==str(qid)),None)
@@ -155,8 +161,14 @@ class SharedService:
         if not text.strip():
             await self._emit(event,actor,'Ответьте, пожалуйста, текстом. Исходный ответ будет сохранён полностью.',app_id=app['id'])
             return
+        late=bool(receipt and q['status']=='answered' and str(ctx['application']['current_question_id'])!=str(qid))
+        if late and not binding:
+            previous=next((a for a in reversed(ctx['answers']) if str(a['question_id'])==str(qid)),None)
+            if previous:text=previous['answer_text']+'\n'+text
         binding=await self._bind(event,{'app_id':str(app['id']),'question_id':str(q['id']),
-                                        'revision':ctx['application']['answers_revision']})
+                                        'revision':ctx['application']['answers_revision'],'text':text,'late':late})
+        text=binding.get('text',text)
+        late=binding.get('late',late)
         if str(app['id'])!=binding['app_id'] or str(q['id'])!=binding['question_id']:
             # Persisted binding belongs to the previous state; never silently reassign.
             q=next((q for q in ctx['questions'] if str(q['id'])==binding['question_id']),None)
@@ -166,6 +178,10 @@ class SharedService:
         await self.bot_repo.record_answer(app['id'],q['id'],group_id=self.settings.group_id,
                     event_id=incoming['event_id'],text=text,value=value,expected_revision=binding['revision'])
         ctx=await self.bot_repo.dialog_context(app['id'])
+        if late:
+            # Keep the next prompt waiting; preserve all fragments as a revision
+            # of the question visible when the event arrived.
+            return
         if error:
             await self._emit(event,actor,error,app_id=app['id'])
             # Like any invalid base answer, refusal must leave a persisted
@@ -313,6 +329,8 @@ class SharedService:
             await self._emit(event,actor,'Готовлю файл Excel (.xlsx). Он придёт отдельным вложением в этот диалог.',staff=True)
             return
         bundle=await self.staff_repo.export_bundle(actor,self.settings.recruitment_id,application_id=app_id,**({'filters':{'status':'submitted'}} if command=='/new' else {}))
+        from gim.ranking import ranked_bundle
+        bundle=ranked_bundle(bundle)
         if command=='/stats':
             stats=bundle['Сводка']
             text=f'Всего: {stats["total"]}. С оценкой: {stats["scored"]}. Без оценки: {stats["unscored"]}. Средний балл: {stats.get("average_score") if stats.get("average_score") is not None else "нет"}.'
@@ -326,6 +344,8 @@ class SharedService:
             for r in rows[(page-1)*5:page*5] if not app_id else rows[:1]:
                 status={'draft':'черновик','submitted':'подана','withdrawn':'отозвана'}.get(r['status'],r['status'])
                 card=f'{r["application_id"]} | {r.get("full_name") or "имя не указано"} | {status} | балл: {r.get("score") if r.get("score") is not None else "не оценена"}'
+                if r.get('ranking_score') is not None:
+                    card+=f' | рейтинг S: {r["ranking_score"]:.3f}/3'
                 if not app_id:
                     summary=' '.join((r.get('summary') or '').split())
                     card+='\nAI-сводка: '+(summary[:300]+('…' if len(summary)>300 else '') if summary else 'пока нет; оценка не выставлена')
@@ -348,6 +368,9 @@ class SharedService:
                         text+=f'\n  {fact.get("label",fact["code"])}: '+{'yes':'да','no':'нет','unknown':'недостаточно данных'}[fact['status']]+(f' — «{fact["quote"]}»' if fact.get('quote') else '')
                     if item.get('calculation'):
                         calc=item['calculation']
+                        if calc.get('kind')=='binary_50_35_15':
+                            text+=f'\nРасчёт S: 3 × (0.50 × max(0, {calc["m"]} − {calc["penalty"]})/4 + 0.35 × {calc["e"]}/5 + 0.15 × {calc["a"]}/2) = {calc["raw"]:.3f}/3; целый балл {calc["score"]}/3. Неизвестно: {calc["unknown"]}. Это полнота данных, не вероятность. Штраф применяется только к исключительному интересу к фондам вместе с явным отказом от альтернатив.'
+                            continue
                         if calc.get('kind')=='weighted_sum':
                             text+=f'\nРасчёт: 3 × {calc["points"]:.3f} / {calc["observed"]:.3f} = {calc["raw"]:.3f}; округление 0.5 вверх → {calc["score"]}/3. Неизвестные группы исключены. Это не вероятность.'
                             continue
@@ -356,6 +379,9 @@ class SharedService:
                             continue
                         text+=f'\nРасчёт: базовый уровень {calc["intercept"]:.3f} + вклады фактов = {calc["raw"]:.3f}; ограничение 0–3, округление 0.5 вверх → {calc["score"]}/3. Подтверждено фактов: {calc["observed_facts"]}/{calc["total_facts"]} (это полнота данных, не вероятность успеха).'
                 interviews=bundle.get('Собеседование',[])
+                if interviews and interviews[0].get('expectations'):
+                    latest=interviews[0]['expectations'][-1]
+                    text+='\n\nСовпали ли ожидания?\n'+str(latest.get('answer') or 'Ответ не получен.')
                 if interviews:
                     text+='\nСобеседование: '+str(interviews[0].get('interview_questions',interviews[0]))
         await self._emit(event,actor,text,staff=True)
@@ -377,7 +403,10 @@ class SharedService:
         q=event['question']
         if q['group_id']!=self.settings.group_id:
             return
-        await self.vk.send(q['vk_id'],question_text(q,q['vk_id']),event['vk_random_id'],question_slot=q['target_slot'])
+        sent=await self.vk.send(q['vk_id'],question_text(q,q['vk_id']),event['vk_random_id'],question_slot=q['target_slot'],want_cmid=True)
+        if isinstance(sent,dict) and sent.get('conversation_message_id'):
+            async with self.worker_repo.pool.connection() as c:
+                await c.execute('UPDATE gim.dialog_questions SET sent_cmid=COALESCE(sent_cmid,%s) WHERE id=%s',(sent['conversation_message_id'],q['id']))
 
     async def notify(self,event):
         from gim_db.outbox import send_staff_notification
@@ -396,9 +425,14 @@ class SharedService:
         await send_staff_notification(self.worker_repo,event,send)
 
     async def analyze(self,event):
+        analysis_started=time.monotonic()
         if not getattr(self.settings,'llm_api_key',''):
             raise ModelUnavailable('Set LLM_API_KEY to enable analysis')
         snapshot=event['snapshot']
+        if snapshot['rubric'].get('scoring_method')=='binary_50_35_15':
+            from gim.ranking import analyze
+            checked=await analyze(self.llm,snapshot)
+            return {**checked,'model':self.settings.llm_model,'prompt_version':'binary-50-35-15-v1'}
         if snapshot['rubric'].get('scoring_method')=='fixed_facts_ridge':
             from gim.evidence import analyze
             checked=await analyze(self.llm,snapshot)
@@ -422,7 +456,13 @@ class SharedService:
             checked=validate_result(result,snapshot,safe)
         if getattr(self.settings,'enhanced_reports',False):
             from gim.evidence import analyze
-            checked=await analyze(self.llm,snapshot,scored=checked)
+            try:
+                budget=max(0,min(35,165-(time.monotonic()-analysis_started)))
+                async with asyncio.timeout(budget):
+                    checked=await analyze(self.llm,snapshot,scored=checked)
+            except (ModelUnavailable,ValueError,TimeoutError) as exc:
+                logging.getLogger(__name__).warning('enhancement_unavailable error_type=%s',type(exc).__name__)
+                checked={**checked,'summary':checked['summary']+'\n\nРасширенный отчёт временно недоступен; сохранён проверенный базовый анализ.'}
         return {**checked,
                 'model':self.settings.llm_model,'prompt_version':'shared-analysis-v1'}
 

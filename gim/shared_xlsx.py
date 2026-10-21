@@ -15,7 +15,7 @@ HEADERS={
     'birth_date':'Дата рождения','birth_date_raw':'Дата рождения (ответ)',
     'status':'Статус','decision':'Решение сотрудника','selected_directions':'Выбранные направления',
     'undecided':'Направление не выбрано','answers_revision':'Версия ответов','submitted_at':'Подана',
-    'evaluation_id':'ID оценки','score':'Балл 0–3','evaluation_source':'Источник оценки',
+    'evaluation_id':'ID оценки','ranking_score':'Рейтинг S 0–3','score':'Балл 0–3','evaluation_source':'Источник оценки',
     'reviewer_staff_id':'ID сотрудника','reviewer_name':'Сотрудник','summary':'AI-сводка',
     'recommended_directions':'Рекомендованные направления','criteria_results':'Критерии и цитаты',
     'evaluation_revision':'Версия оценки','evaluated_at':'Дата оценки','evaluation_stale':'Оценка устарела',
@@ -26,12 +26,12 @@ HEADERS={
     'expectations':'Ответы об ожиданиях','metric':'Показатель','value':'Значение',
     'continuation_part':'Часть текста','continuation_total':'Всего частей','field_encodings':'Кодировка полей',
 }
-HEADERS.update({'ai_score':'Исходный балл AI','ai_summary':'Исходное резюме AI','criterion':'Критерий','criterion_status':'Статус критерия','reason':'Обоснование','quote':'Подтверждающая цитата','points':'Вклад в оценку','source_id':'ID исходного ответа','full_ai_report':'Полный AI-отчёт'})
+HEADERS.update({'ai_score':'Исходный балл AI','ai_summary':'Исходное резюме AI','criterion':'Критерий','criterion_status':'Статус критерия','reason':'Обоснование','quote':'Подтверждающая цитата','points':'Вклад в оценку','source_id':'ID исходного ответа','fact':'Проверяемый факт','group_points':'Баллы группы','full_ai_report':'Полный AI-отчёт'})
 ORDER={
- 'Анкеты':['full_name','score','ai_score','status','decision','selected_directions','recommended_directions','summary','ai_summary','email','submitted_at','evaluated_at','criteria_results'],
+ 'Анкеты':['full_name','ranking_score','score','ai_score','status','decision','selected_directions','recommended_directions','summary','ai_summary','email','submitted_at','evaluated_at','criteria_results'],
  'Ответы':['application_id','position','question_text','answer_text','question_source','purpose','target_slot','is_latest'],
  'Собеседование':['application_id','summary','expectations','interview_questions'],
- 'Оценка':['full_name','criterion','criterion_status','points','reason','quote','application_id','source_id'],
+ 'Оценка':['full_name','criterion','fact','criterion_status','group_points','points','reason','quote','application_id','source_id'],
  'Сводка':['metric','value'],
 }
 LABELS={
@@ -53,6 +53,8 @@ def _text(value):
 
 
 def snapshot_xlsx(snapshot):
+    from gim.ranking import ranked_bundle
+    snapshot=ranked_bundle({**snapshot,'Анкеты':[dict(r) for r in snapshot.get('Анкеты',[])]})
     wb=Workbook()
     wb.remove(wb.active)
     wb.properties.created=wb.properties.modified=datetime(2000,1,1)
@@ -60,12 +62,12 @@ def snapshot_xlsx(snapshot):
     for app in snapshot.get('Анкеты',[]):
         for criterion in app.get('criteria_results') or []:
             items=criterion.get('facts') or [criterion]
-            for item in items:
+            for index,item in enumerate(items):
                 ev=item.get('evidence',criterion.get('evidence',[]))
                 proof.append({'full_name':app.get('full_name'),'application_id':app['application_id'],
-                    'criterion':item.get('label',criterion.get('name',item.get('code'))),
+                    'criterion':criterion.get('name',criterion.get('code')),'fact':item.get('label',''),
                     'criterion_status':{'yes':'Да','no':'Нет','unknown':'Недостаточно данных'}.get(item.get('status'),'Нужно уточнить' if criterion.get('needs_review') else 'Оценён'),
-                    'points':item.get('contribution',criterion.get('points')),'reason':criterion.get('reason',''),
+                    'group_points':criterion.get('points') if index==0 else None,'points':item.get('contribution'),'reason':criterion.get('reason','') if index==0 else '',
                     'quote':item.get('quote') or '\n'.join(e.get('quote','') for e in ev),
                     'source_id':item.get('source_id') or ', '.join(str(e.get('source_id','')) for e in ev)})
     snapshot={**snapshot,'Оценка':proof}
@@ -119,7 +121,7 @@ def snapshot_xlsx(snapshot):
                 sheet.append(values+[str(n+1),str(total)])
                 for cell,k in zip(sheet[sheet.max_row],columns):
                     raw=row.get(k)
-                    if n==0 and k in {'score','ai_score','position','points','answers_revision'} and type(raw) in (int,float):
+                    if n==0 and k in {'ranking_score','score','ai_score','position','points','group_points','answers_revision'} and type(raw) in (int,float):
                         cell.value=raw
                     else:cell.data_type='s'
                     cell.alignment=Alignment(wrap_text=True,vertical='top')

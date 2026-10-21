@@ -58,8 +58,10 @@ class FakeRepository:
                  revision=self.app['answers_revision'])
         self.answers.append(a)
         self.events[kw['event_id']] = a
-        self.app['current_question_id'] = None
-        next(q for q in self.questions if q['id'] == question_id)['status'] = 'answered'
+        q=next(q for q in self.questions if q['id']==question_id)
+        if q['status']=='active':
+            self.app['current_question_id']=None
+            q['status']='answered'
         return a
 
     async def set_consent(self, app_id, version):
@@ -135,6 +137,22 @@ class SharedServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.repo.answers),1)
         self.assertEqual(self.repo.app['current_question_id'],current)
         self.assertEqual(self.repo.questions[-1]['target_slot'],'full_name')
+
+    async def test_fast_fragments_do_not_answer_the_next_question(self):
+        # Both messages arrived while the same question was visible.
+        await self.s.incoming(self.event('/start'))
+        await self.s.incoming(self.event('Согласен'))
+        q=self.repo.questions[-1]
+        receipt={'app_id':str(self.repo.app['id']),'question_id':str(q['id'])}
+        first=self.event('Максим');first['payload']['receipt']=receipt
+        second=self.event('Чибисов');second['payload']['receipt']=receipt
+        await self.s.incoming(first)
+        current=self.repo.app['current_question_id']
+        await self.s.incoming(second)
+        self.assertEqual(self.repo.answers[-1]['question_id'],q['id'])
+        self.assertEqual(self.repo.answers[-1]['answer_text'],'Максим\nЧибисов')
+        self.assertEqual(self.repo.app['current_question_id'],current)
+        self.assertEqual(self.repo.questions[-1]['target_slot'],'email')
 
     async def test_raw_is_never_truncated_and_contacts_require_consent(self):
         await self.s.incoming(self.event('/start'))
