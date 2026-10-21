@@ -1,0 +1,18 @@
+{
+  "scope": "synthetic data; real application classes; mocked VK HTTP",
+  "completed": true,
+  "raw_fields_saved": 18,
+  "answered_followups": 3,
+  "analysis_status": "no_analytics",
+  "score": null,
+  "llm_http_calls": 0,
+  "xlsx_valid": true,
+  "xlsx_candidate_rows": 1,
+  "uploads_after_replay": 1,
+  "vk_methods": [
+    "docs.getMessagesUploadServer",
+    "docs.save",
+    "messages.send",
+    "xlsx"
+  ]
+}

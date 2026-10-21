@@ -94,3 +94,8 @@
 | 2026-10-21 | gim-no-redis-06 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-06/report.md) |
 | 2026-10-21 | gim-no-redis-review-01 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-review-01/report.md) |
 | 2026-10-21 | gim-vk-start-01 | [отчёт](../results/2026-10-21-bootstrap-gim-vk-start-01/report.md) |
+| 2026-10-21 | gim-openai-01: проверка предоставленного ключа, HTTP 401 | [отчёт](../results/2026-10-21-bootstrap-gim-openai-01/report.md) |
+| 2026-10-21 | gim-no-key-01: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-01/report.md) |
+| 2026-10-21 | gim-no-key-02: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-02/report.md) |
+| 2026-10-21 | gim-no-key-03: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-03/report.md) |
+| 2026-10-21 | gim-no-key-04: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-04/report.md) |
