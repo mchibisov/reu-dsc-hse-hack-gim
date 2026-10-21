@@ -1,10 +1,7 @@
 import asyncio
 import logging
 
-from arq import cron
-from arq.connections import RedisSettings
-
-from .analysis import GatewayClient
+from .analysis import create_model_client
 from .config import get_settings
 from .delivery import deliver_reply
 from .export import build_excel
@@ -14,9 +11,16 @@ from .vk import VKClient
 logger = logging.getLogger(__name__)
 
 
+class AnalysisBusy(RuntimeError):
+    pass
+
+
 async def analyze_application(ctx, application_id: int):
     store = ctx['store']
     if not await store.claim_analysis(application_id):
+        existing = await store.get(application_id)
+        if existing and existing.analysis_status == 'processing':
+            raise AnalysisBusy('application lease is still active')
         return
     app = await store.get(application_id)
     if not app:
@@ -25,6 +29,9 @@ async def analyze_application(ctx, application_id: int):
         analysis = await ctx['gateway'].analyze(app.answers, app.followups)
         await store.save_analysis(application_id, analysis, analysis.get('score') if analysis else None,
                                   analysis.get('rubric_version') if analysis else None)
+    except asyncio.CancelledError:
+        await asyncio.shield(store.save_analysis(application_id, None, None, None))
+        raise
     except Exception as error:
         logger.warning('analysis_failed application_id=%d type=%s', application_id, type(error).__name__)
         await store.save_analysis(application_id, None, None, None)
@@ -65,44 +72,70 @@ async def reconcile(ctx):
     await store.recover_stale()
     for app in await store.list_applications():
         if app.analysis_status == 'queued':
-            await ctx['redis'].enqueue_job('analyze_application', app.id, _job_id=f'analysis:{app.id}')
+            await store.enqueue_job(f'analysis:{app.id}', 'analyze_application', [app.id])
         for admin_id in ctx['settings'].admins:
             if admin_id not in app.notified_admins:
-                await ctx['redis'].enqueue_job('notify_admin', app.id, admin_id,
-                                                _job_id=f'notify:{app.id}:{admin_id}')
+                await store.enqueue_job(f'notify:{app.id}:{admin_id}', 'notify_admin', [app.id, admin_id])
     for request in await store.pending_exports():
-        await ctx['redis'].enqueue_job('export_applications', request.id, request.admin_id,
-                                       _job_id=f'export:{request.id}')
-    for reply in await store.pending_replies():
-        await ctx['redis'].enqueue_job('deliver_candidate_reply', reply.key, _job_id='reply:' + reply.key)
+        await store.enqueue_job(f'export:{request.id}', 'export_applications', [request.id, request.admin_id])
+    for reply in await store.pending_replies(due_only=True):
+        await store.enqueue_job(f'reply:{reply.key}:{reply.attempts}', 'deliver_candidate_reply', [reply.key])
 
 
-async def startup(ctx):
+HANDLERS = {fn.__name__: fn for fn in (
+    analyze_application, notify_admin, export_applications, deliver_candidate_reply)}
+
+
+async def execute_job(ctx, job):
+    try:
+        await asyncio.wait_for(HANDLERS[job.kind](ctx, *job.payload['args']), timeout=120)
+    except asyncio.CancelledError:
+        raise
+    except Exception as error:
+        logger.warning('job_failed kind=%s attempt=%d type=%s', job.kind, job.attempts, type(error).__name__)
+        await ctx['store'].finish_job(job.key, job.lease_token, False,
+                                      retry_delay=600 if job.kind == 'analyze_application' else None)
+    else:
+        await ctx['store'].finish_job(job.key, job.lease_token, True)
+
+
+async def run_once(ctx):
+    await reconcile(ctx)
+    jobs = []
+    for _ in range(ctx['settings'].worker_max_jobs):
+        job = await ctx['store'].claim_job()
+        if job is None:
+            break
+        jobs.append(job)
+    await asyncio.gather(*(execute_job(ctx, job) for job in jobs))
+    return len(jobs)
+
+
+async def run_loop(ctx):
+    while True:
+        try:
+            await run_once(ctx)
+        except asyncio.CancelledError:
+            raise
+        except Exception as error:
+            logger.error('worker_cycle_failed type=%s', type(error).__name__)
+        await asyncio.sleep(ctx['settings'].worker_poll_interval)
+
+
+async def main():
     from .bot import configure_logging
     configure_logging()
     settings = get_settings()
-    ctx['settings'] = settings
-    ctx['store'] = Store(settings.database_url, settings)
-    await ctx['store'].initialize()
-    ctx['gateway'] = GatewayClient(settings)
-    ctx['vk'] = VKClient(settings)
-    await reconcile(ctx)
+    store = Store(settings.database_url, settings)
+    await store.initialize()
+    gateway, vk = create_model_client(settings), VKClient(settings)
+    try:
+        await run_loop({'settings': settings, 'store': store, 'gateway': gateway, 'vk': vk})
+    finally:
+        await store.close()
+        await gateway.close()
+        await vk.close()
 
 
-async def shutdown(ctx):
-    for key in ('store', 'gateway', 'vk'):
-        await ctx[key].close()
-
-
-class WorkerSettings:
-    functions = [analyze_application, notify_admin, export_applications, deliver_candidate_reply]
-    on_startup = startup
-    on_shutdown = shutdown
-    redis_settings = RedisSettings.from_dsn(get_settings().redis_url)
-    cron_jobs = [cron(reconcile, second={0, 30}, run_at_startup=False)]
-    max_jobs = get_settings().worker_max_jobs
-    job_timeout = 120
-    max_tries = 3
-    keep_result = 0
-    health_check_interval = 30
-    log_results = False
+if __name__ == '__main__':
+    asyncio.run(main())

@@ -10,3 +10,5 @@ data
 *.csv
 *.xlsx
 exports
+vk-process.lock
+runtime

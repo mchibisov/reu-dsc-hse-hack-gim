@@ -4,7 +4,6 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import Field
-from redis.asyncio import Redis
 
 from .analysis import Provider, StrictModel
 from .config import get_settings
@@ -21,11 +20,11 @@ class FollowupRequest(AnalysisRequest):
 @asynccontextmanager
 async def lifespan(app):
     settings = get_settings()
-    cache = Redis.from_url(settings.redis_url, socket_timeout=1, socket_connect_timeout=1)
-    app.state.provider = Provider(settings, cache=cache)
-    yield
-    await app.state.provider.close()
-    await cache.aclose()
+    app.state.provider = Provider(settings)
+    try:
+        yield
+    finally:
+        await app.state.provider.close()
 
 
 app = FastAPI(title='GIM internal LLM gateway', lifespan=lifespan, docs_url=None, redoc_url=None)

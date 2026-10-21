@@ -1,5 +1,4 @@
 import asyncio
-import hashlib
 import json
 import logging
 import re
@@ -124,9 +123,8 @@ FOLLOWUP_PROMPT = '''Ты составляешь короткие уточняю
 
 
 class Provider:
-    def __init__(self, settings: Settings, transport=None, cache=None):
+    def __init__(self, settings: Settings, transport=None):
         self.settings = settings
-        self.cache = cache
         self.client = httpx.AsyncClient(transport=transport, timeout=settings.llm_timeout)
         self.limit = asyncio.Semaphore(settings.llm_concurrency)
 
@@ -138,15 +136,6 @@ class Provider:
         if not cfg.llm_api_key or not cfg.llm_model:
             return None
         models = list(dict.fromkeys(x for x in (cfg.llm_model, cfg.llm_fallback_model) if x))
-        cache_key = 'llm:' + hashlib.sha256(json.dumps(
-            [task, RUBRIC_VERSION, models, payload], sort_keys=True, ensure_ascii=False).encode()).hexdigest()
-        if self.cache:
-            try:
-                cached = await self.cache.get(cache_key)
-                if cached:
-                    return json.loads(cached)
-            except Exception:
-                logger.warning('llm_cache_unavailable')
         for model in models[:2]:
             started = time.monotonic()
             try:
@@ -163,11 +152,6 @@ class Provider:
                     raw = json.loads(body['choices'][0]['message']['content'])
                 logger.info('llm_call task=%s model=%s duration_ms=%d tokens=%s', task, model,
                             int((time.monotonic() - started) * 1000), body.get('usage', {}).get('total_tokens'))
-                if self.cache:
-                    try:
-                        await self.cache.set(cache_key, json.dumps(raw, ensure_ascii=False), ex=3600)
-                    except Exception:
-                        logger.warning('llm_cache_write_failed')
                 return raw
             except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError):
                 logger.warning('llm_failed task=%s model=%s', task, model)
@@ -235,3 +219,9 @@ class GatewayClient:
         except (httpx.HTTPError, ValueError, TypeError):
             logger.warning('gateway_unavailable task=%s', path)
             return None
+
+
+def create_model_client(settings: Settings):
+    if settings.gateway_url and settings.llm_api_key and settings.llm_model:
+        return GatewayClient(settings)
+    return Provider(settings)

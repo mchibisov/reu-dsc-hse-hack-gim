@@ -1,23 +1,14 @@
 import asyncio
 import logging
 
-from arq import create_pool
-from arq.connections import RedisSettings
-
 from .admin import Admin
-from .analysis import GatewayClient
+from .analysis import create_model_client
 from .config import Settings, get_settings
 from .delivery import deliver_reply
 from .storage import Store
 from .vk import VKClient, VKError
 
 logger = logging.getLogger(__name__)
-
-
-async def connect_queue(settings):
-    connection = RedisSettings.from_dsn(settings.redis_url)
-    connection.conn_retries = 1
-    return await create_pool(connection)
 
 
 def configure_logging():
@@ -27,12 +18,11 @@ def configure_logging():
 
 
 class Bot:
-    def __init__(self, settings: Settings, store, vk, gateway, queue=None):
+    def __init__(self, settings: Settings, store, vk, gateway=None):
         self.settings = settings
         self.store = store
         self.vk = vk
         self.gateway = gateway
-        self.queue = queue
         self.admin = Admin(store, settings)
         self.limit = asyncio.Semaphore(settings.bot_concurrency)
         self.locks: dict[int, asyncio.Lock] = {}
@@ -64,21 +54,12 @@ class Bot:
                 return
             if reply.personalize:
                 app = await self.store.get_by_user(user_id)
-                questions = await self.gateway.followups(app.answers, app.followups) if app else None
+                questions = await self.gateway.followups(app.answers, app.followups) if app and self.gateway else None
                 intro = self._direction_intro((app.answers if app else {}).get('directions', ''))
                 adjusted = await self.store.replace_followups(user_id, questions or [], event_id, prefix=intro)
                 reply = adjusted or reply
             delivery_key = await self.store.queue_reply(user_id, reply.text, f'reply:{event_id}')
             await deliver_reply(self.store, self.vk, delivery_key)
-            if reply.completed and self.queue:
-                try:
-                    await self.queue.enqueue_job('analyze_application', reply.application_id,
-                                                 _job_id=f'analysis:{reply.application_id}')
-                    for admin_id in self.settings.admins:
-                        await self.queue.enqueue_job('notify_admin', reply.application_id, admin_id,
-                                                     _job_id=f'notify:{reply.application_id}:{admin_id}')
-                except Exception as error:
-                    logger.warning('queue_failed type=%s', type(error).__name__)
 
     @staticmethod
     def _direction_intro(direction):
@@ -127,28 +108,29 @@ class Bot:
                 await asyncio.sleep(3)
 
 
-async def main():
+async def main(with_worker=False):
     configure_logging()
     settings = get_settings()
     if not settings.vk_token or not settings.vk_group_id or not settings.admins:
         raise SystemExit('Заполните VK_TOKEN, VK_GROUP_ID и ADMIN_IDS в .env.')
-    if not settings.internal_api_key:
+    if settings.gateway_url and settings.llm_api_key and settings.llm_model and not settings.internal_api_key:
         raise SystemExit('Заполните INTERNAL_API_KEY в .env.')
     store = Store(settings.database_url, settings)
     await store.initialize()
-    vk, gateway, queue = VKClient(settings), GatewayClient(settings), None
+    vk, gateway = VKClient(settings), create_model_client(settings)
     try:
-        try:
-            queue = await connect_queue(settings)
-        except Exception:
-            logger.warning('redis_unavailable_saved_applications_will_be_reconciled')
-        await Bot(settings, store, vk, gateway, queue).run()
+        bot = Bot(settings, store, vk, gateway)
+        if with_worker:
+            from .worker import run_loop
+            async with asyncio.TaskGroup() as tasks:
+                tasks.create_task(bot.run())
+                tasks.create_task(run_loop({'store': store, 'vk': vk, 'gateway': gateway, 'settings': settings}))
+        else:
+            await bot.run()
     finally:
         await store.close()
         await vk.close()
         await gateway.close()
-        if queue:
-            await queue.aclose()
 
 
 if __name__ == '__main__':

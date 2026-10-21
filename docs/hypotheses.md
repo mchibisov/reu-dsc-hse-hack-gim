@@ -82,3 +82,15 @@
 | 2026-10-21 | gim-launcher-02: наличие файлов и запуск | [отчёт](../results/2026-10-21-bootstrap-gim-launcher-02/report.md) |
 | 2026-10-21 | gim-launcher-03: наличие файлов и запуск | [отчёт](../results/2026-10-21-bootstrap-gim-launcher-03/report.md) |
 | 2026-10-21 | gim-launcher-04: наличие файлов и запуск | [отчёт](../results/2026-10-21-bootstrap-gim-launcher-04/report.md) |
+| 2026-10-21 | gim-openrouter-01 | [отчёт](../results/2026-10-21-bootstrap-gim-openrouter-01/report.md) |
+| 2026-10-21 | gim-openrouter-02 | [отчёт](../results/2026-10-21-bootstrap-gim-openrouter-02/report.md) |
+| 2026-10-21 | gim-openrouter-03 | [отчёт](../results/2026-10-21-bootstrap-gim-openrouter-03/report.md) |
+| 2026-10-21 | gim-vk-live-01 | [отчёт](../results/2026-10-21-bootstrap-gim-vk-live-01/report.md) |
+| 2026-10-21 | gim-no-redis-01 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-01/report.md) |
+| 2026-10-21 | gim-no-redis-02 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-02/report.md) |
+| 2026-10-21 | gim-no-redis-03 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-03/report.md) |
+| 2026-10-21 | gim-no-redis-04 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-04/report.md) |
+| 2026-10-21 | gim-no-redis-05 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-05/report.md) |
+| 2026-10-21 | gim-no-redis-06 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-06/report.md) |
+| 2026-10-21 | gim-no-redis-review-01 | [отчёт](../results/2026-10-21-bootstrap-gim-no-redis-review-01/report.md) |
+| 2026-10-21 | gim-vk-start-01 | [отчёт](../results/2026-10-21-bootstrap-gim-vk-start-01/report.md) |

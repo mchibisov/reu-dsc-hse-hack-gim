@@ -8,14 +8,6 @@ class NoModel:
         return None
 
 
-class Queue:
-    def __init__(self):
-        self.jobs = []
-
-    async def enqueue_job(self, name, *args, **kwargs):
-        self.jobs.append((name, args, kwargs))
-
-
 async def test_no_model_retains_application_without_score(store):
     app = await finish(store)
     await analyze_application({'store': store, 'gateway': NoModel()}, app.id)
@@ -29,6 +21,7 @@ async def test_no_model_retains_application_without_score(store):
 
 async def test_reconcile_picks_up_saved_application_after_queue_failure(store):
     app = await finish(store)
-    queue = Queue()
-    await reconcile({'store': store, 'redis': queue, 'settings': type('S', (), {'admins': []})()})
-    assert any(name == 'analyze_application' and args == (app.id,) for name, args, _ in queue.jobs)
+    await reconcile({'store': store, 'settings': type('S', (), {'admins': []})()})
+    job = await store.claim_job()
+    assert job.kind == 'analyze_application'
+    assert job.payload['args'] == [app.id]

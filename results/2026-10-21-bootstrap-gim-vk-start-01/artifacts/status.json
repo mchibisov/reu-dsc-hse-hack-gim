@@ -1,0 +1,10 @@
+{
+  "group_id": 242476311,
+  "admin_configured": true,
+  "llm_enabled": false,
+  "redis_installed": false,
+  "arq_installed": false,
+  "long_poll_state_saved": true,
+  "sql_jobs_table_created": true,
+  "database": "gim.db"
+}

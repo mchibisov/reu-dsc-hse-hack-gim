@@ -74,3 +74,15 @@ class OutgoingReply(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     next_attempt: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+
+
+class BackgroundJob(Base):
+    __tablename__ = 'background_jobs'
+    key: Mapped[str] = mapped_column(String(180), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(50))
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(20), default='queued', index=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, index=True)
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_token: Mapped[str] = mapped_column(String(32), default='')

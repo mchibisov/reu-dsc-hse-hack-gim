@@ -5,13 +5,13 @@
 - Спецификация: [S002](../specs/S002-gim-vk-bot.md).
 - Статус: в работе.
 - Цель: сквозной опрос в ВК с персональными уточнениями, оценкой и Excel.
-- Архитектура: bot + внутренний gateway + масштабируемые workers, PostgreSQL и Redis. Локальная SQLite только для быстрых тестов; production — PostgreSQL.
-- Стек: Python 3.12, FastAPI, httpx, SQLAlchemy async, asyncpg, aiosqlite (тесты), ARQ, openpyxl, pytest.
+- Архитектура: bot + внутренний gateway + масштабируемые workers, PostgreSQL и SQL-очередь. Локальная SQLite только для быстрых тестов; production — PostgreSQL.
+- Стек: Python 3.12, FastAPI, httpx, SQLAlchemy async, asyncpg, aiosqlite (тесты), SQL worker, openpyxl, pytest.
 - Каталог реализации: `gim_bot`, ветка `codex/gim-mvp`; корневая папка проекта сама не является Git checkout.
 
 ## Общие ограничения
 
-Все тексты на русском. Пять групп критериев. Оценки 0–3, `null` при отсутствии аналитики. Без сайта, профиля ВК, PDF, файлов резюме, ручного редактирования результатов. Персональные исходники остаются вне Git. Потеря очереди не теряет сохранённую заявку. Цели 5–7 минут и 90 пользователей не объявлять достигнутыми по unit-тестам.
+Все тексты на русском. Пять групп критериев. Оценки 0–3, `null` при отсутствии аналитики. Без сайта, профиля ВК, PDF, файлов резюме, ручного редактирования результатов. Персональные исходники остаются вне Git. Задачи хранятся в SQL вместе с заявками. Цели 5–7 минут и 90 пользователей не объявлять достигнутыми по unit-тестам.
 
 ## Фокус ревью
 
@@ -51,7 +51,7 @@
 - Файлы: `src/gim_bot/{vk,bot,admin,export,worker}.py`, `tests/test_admin.py`, `tests/test_vk.py`, `tests/test_worker.py`.
 - Интерфейсы: VK client `call/send/upload_document`; worker `analyze_application(ctx, application_id)`, job IDs по ID заявки; команды читают Store и проверяют ACL до запроса.
 - [x] RED: чужой ID/общий чат, formula injection, схема XLSX, fake VK upload, LLM failure → no_analytics, duplicate job, восстановление очереди.
-- [x] Реализовать Long Poll failed-коды, ограниченную конкурентность, сохранение до уведомления, ARQ jobs, outbox ответов и периодическую сверку.
+- [x] Реализовать Long Poll failed-коды, ограниченную конкурентность, сохранение до уведомления, SQL jobs, outbox ответов и периодическую сверку.
 - [x] GREEN `python -m pytest tests/test_admin.py tests/test_vk.py tests/test_worker.py -q`.
 
 ### 5. Развёртывание и проверка — R013–R017
@@ -63,7 +63,7 @@
 - [x] Ошибка→GREEN для синтетических 90 разных заявок и дублирующихся событий; отчёты H002-01/02.
 - [x] Весь suite, compileall, ruff, pip check; YAML разобран, отсутствие Docker отмечено.
 - [x] Независимое ревью, исправления F1–F3 через RED→GREEN и весь suite.
-- [ ] Живой VK smoke, PostgreSQL/Redis, Docker build/up, backup/restore.
+- [ ] Живой VK smoke, PostgreSQL, Docker build/up, backup/restore.
 - [ ] H001 на людях, H003 с выбранной моделью, серверная нагрузка и фактические затраты.
 
 ## Зависимости и риски
@@ -77,3 +77,15 @@
 ## Уточнение: запуск обычными файлами
 
 Пользователь просит обычные файлы и минимальный запуск без саммари. Добавляется main.py и run_bot.cmd в корне и в каталоге gim_bot; двойной клик запускает локальный опрос в консоли на SQLite, без Docker, Redis, VK и LLM. Исходные вопросы и ответы сохраняются; это проверка диалога, не подключённое сообщество VK. Конец ввода и /quit завершают процесс без traceback. Основной entry point допускает выбор файла БД для проверки без пользовательских данных. Проверка: сначала RED двух subprocess-тестов, затем GREEN и весь suite; дополнительно фактический запуск корневого .cmd. Для настоящего VK остаётся отдельный запуск по runbook и токен сообщества.
+
+## План удаления Redis (R011–R015, R017)
+
+- [x] RED: tests/test_jobs.py — дедупликация SQL-заданий, конкурирующие Store/аренда, восстановление после перезапуска, ограниченные попытки и защита старого lease_token; regression без Redis/ARQ в production-коде, зависимостях и Compose.
+- [x] models.py/storage.py: BackgroundJob, enqueue_job/claim_job/finish_job; только технические ID, атомарные claims и retry.
+- [x] worker.py/bot.py/gateway.py: опрос SQL-очереди, finite retry, без Redis-кэша и ARQ; bot не зависит от брокера. Сохранить outbox сообщений, ACL и экспорт.
+- [x] config.py/.env.example/compose.yaml/pyproject.toml/requirements.lock/.github/workflows/checks.yml: убрать сервис, пакеты и переменные; worker командой Python.
+- [x] main.py/run_vk.cmd: запуск VK+SQL worker из одного процесса на ПК без модели; валидация ключей, Python/SQLite, без Docker и внутреннего API-ключа. Демо не менять по умолчанию.
+- [x] GREEN целевых тестов, полный pytest/ruff/compileall/pip check и YAML-проверка; обновить README/промпт, сохранить каждый результат в results. Реальный VK/Docker/PG не объявлять пройденными.
+- [x] Независимое read-only ревью, исправить существенные замечания, сохранить отдельный локальный коммит.
+
+Результаты изменения: no-redis-01..06, no-redis-review-01, vk-live-01 и vk-start-01. Доступ VK и фоновый тестовый запуск проверены; реальный диалог/Excel, Docker и PostgreSQL остаются непроверенными. Внешних доступов для теста на текущем ПК больше не требуется.

@@ -7,13 +7,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
     database_url: str = Field(default='sqlite+aiosqlite:///gim.db', repr=False)
-    redis_url: str = Field(default='redis://localhost:6379/0', repr=False)
     vk_token: str = Field(default='', repr=False)
     vk_group_id: int = 0
     vk_api_version: str = '5.199'
     admin_ids: str = ''
     internal_api_key: str = Field(default='', repr=False)
-    gateway_url: str = 'http://localhost:8100'
+    gateway_url: str = ''
     llm_api_key: str = Field(default='', repr=False)
     llm_base_url: str = 'https://openrouter.ai/api/v1'
     llm_model: str = ''
@@ -26,6 +25,7 @@ class Settings(BaseSettings):
     consent_text: str = 'Согласны на обработку анкеты по политике https://shm.ru/politika-konfidentsialnosti/?'
     consent_version: str = 'museum-policy-2026-10-21'
     worker_max_jobs: int = Field(default=5, ge=1, le=20)
+    worker_poll_interval: float = Field(default=1, ge=0.1, le=30)
     bot_concurrency: int = Field(default=20, ge=1, le=100)
 
     @property

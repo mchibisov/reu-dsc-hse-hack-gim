@@ -1,0 +1,6 @@
+{
+  "model": "liquid/lfm-2.5-2.6b:free",
+  "status": 200,
+  "data": "synthetic connectivity probe only",
+  "valid_json": true
+}

@@ -57,14 +57,17 @@ async def test_duplicate_vk_event_has_one_transition(store):
     assert vk.sent == sent_before_replay
 
 
-async def test_queue_uses_supported_arq_connection_interface(monkeypatch):
-    from gim_bot.bot import connect_queue
-    seen = []
-
-    async def fake_pool(settings):
-        seen.append(settings)
-        return 'pool'
-
-    monkeypatch.setattr('gim_bot.bot.create_pool', fake_pool)
-    assert await connect_queue(Settings()) == 'pool'
-    assert seen[0].conn_retries == 1
+async def test_bot_can_use_library_followups_without_model_or_broker(store):
+    vk = FakeVK()
+    bot = Bot(Settings(), store, vk)
+    await bot.process_update(event('Согласен', 1))
+    for i in range(40):
+        app = await store.get_by_user(123)
+        if app.status == 'completed':
+            break
+        key = await store.current_key(123)
+        await bot.process_update(event(ANSWERS.get(key, 'Снимал музейные мероприятия'), i + 2))
+    saved = await store.get_by_user(123)
+    assert saved.status == 'completed'
+    assert saved.score is None
+    assert all(q['source'] == 'museum' for q in saved.followups)

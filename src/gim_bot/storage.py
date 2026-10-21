@@ -3,13 +3,17 @@ import hashlib
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from datetime import timedelta
+from uuid import uuid4
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import and_, delete, or_, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from .config import Settings
 from .models import (
     Application,
+    BackgroundJob,
     Base,
     DeletedEvent,
     ExportRequest,
@@ -249,9 +253,12 @@ class Store:
                 session.add(OutgoingReply(key=key, user_id=user_id, text=text))
         return key
 
-    async def pending_replies(self):
+    async def pending_replies(self, due_only=False):
         async with self.sessions() as session:
-            return list(await session.scalars(select(OutgoingReply).where(OutgoingReply.status == 'queued')))
+            statement = select(OutgoingReply).where(OutgoingReply.status == 'queued')
+            if due_only:
+                statement = statement.where(OutgoingReply.next_attempt <= now())
+            return list(await session.scalars(statement))
 
     async def claim_reply(self, key):
         async with self.transaction() as session:
@@ -288,3 +295,42 @@ class Store:
                 saved.value = value
             else:
                 session.add(RuntimeState(key=key, value=value))
+
+    async def enqueue_job(self, key: str, kind: str, args: list):
+        insert = pg_insert if self.engine.dialect.name == 'postgresql' else sqlite_insert
+        async with self.transaction() as session:
+            await session.execute(insert(BackgroundJob).values(
+                key=key, kind=kind, payload={'args': args}
+            ).on_conflict_do_nothing(index_elements=['key']))
+
+    async def claim_job(self):
+        instant = now()
+        expired = and_(BackgroundJob.status == 'running', BackgroundJob.lease_until <= instant)
+        eligible = and_(BackgroundJob.attempts < 3, or_(
+            and_(BackgroundJob.status == 'queued', BackgroundJob.next_attempt <= instant), expired))
+        async with self.transaction() as session:
+            await session.execute(update(BackgroundJob).where(expired, BackgroundJob.attempts >= 3).values(
+                status='failed', payload={}, lease_token='', lease_until=None))
+            key = await session.scalar(select(BackgroundJob.key).where(eligible).order_by(
+                BackgroundJob.next_attempt, BackgroundJob.key).limit(1).with_for_update(skip_locked=True))
+            if key is None:
+                return None
+            return await session.scalar(update(BackgroundJob).where(
+                BackgroundJob.key == key, eligible).values(status='running', lease_token=uuid4().hex,
+                    lease_until=instant + timedelta(minutes=10), attempts=BackgroundJob.attempts + 1
+                ).returning(BackgroundJob))
+
+    async def finish_job(self, key: str, token: str, success: bool, retry_delay: int | None = None):
+        async with self.transaction() as session:
+            job = await session.scalar(select(BackgroundJob).where(
+                BackgroundJob.key == key, BackgroundJob.status == 'running',
+                BackgroundJob.lease_token == token).with_for_update())
+            if job is None:
+                return False
+            terminal = success or job.attempts >= 3
+            result = await session.execute(update(BackgroundJob).where(
+                BackgroundJob.key == key, BackgroundJob.status == 'running', BackgroundJob.lease_token == token
+            ).values(status='done' if success else ('failed' if terminal else 'queued'),
+                payload={} if terminal else job.payload, lease_token='', lease_until=None,
+                next_attempt=now() + timedelta(seconds=60 * job.attempts if retry_delay is None else retry_delay)))
+            return result.rowcount == 1
