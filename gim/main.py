@@ -3,7 +3,7 @@ import asyncio
 import logging
 import signal
 
-from gim.config import Settings
+from gim.config import Settings, load_dotenv
 from gim.db import Database
 from gim.service import Service
 from gim.vk import VK
@@ -11,11 +11,24 @@ from gim.vk import VK
 
 async def run(mode):
     settings = Settings.load()
-    db = Database(settings.database_url)
+    if mode == 'check-vk':
+        vk = VK(settings)
+        try:
+            import json
+            print(json.dumps(await vk.diagnose(), ensure_ascii=False))
+        finally:
+            await vk.close()
+        return
+    db = Database(settings.database_url, group_id=settings.group_id)
     await db.open()
     vk = VK(settings)
     tasks = []
     try:
+        if mode == 'check-db':
+            async with db.pool.connection() as c:
+                await c.execute('SELECT 1')
+            print('PostgreSQL connection OK')
+            return
         if mode == 'migrate':
             await db.migrate()
             await db.bootstrap(settings.admin_ids)
@@ -24,7 +37,10 @@ async def run(mode):
             raise ValueError('Set VK_TOKEN and VK_GROUP_ID')
         service = Service(db, vk, settings)
         if mode == 'gateway':
-            tasks = [asyncio.create_task(vk.gateway(db))]
+            async def guarded_gateway():
+                async with db.gateway_guard(settings.group_id) as guard:
+                    await vk.gateway(db, guard)
+            tasks = [asyncio.create_task(guarded_gateway())]
         else:
             tasks = [asyncio.create_task(service.worker()) for _ in range(settings.concurrency)]
         stop = asyncio.Event()
@@ -46,11 +62,12 @@ async def run(mode):
 
 
 def main():
+    load_dotenv()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s %(message)s')
     logging.getLogger('httpx').setLevel(logging.WARNING)
     logging.getLogger('httpcore').setLevel(logging.WARNING)
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=['migrate', 'gateway', 'worker'])
+    parser.add_argument('mode', choices=['migrate', 'gateway', 'worker', 'check-vk', 'check-db'])
     asyncio.run(run(parser.parse_args().mode))
 
 

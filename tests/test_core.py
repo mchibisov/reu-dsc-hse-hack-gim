@@ -51,6 +51,12 @@ class DialogTests(unittest.TestCase):
 
 
 class ExcelTests(unittest.TestCase):
+    def test_long_summary_is_not_lost(self):
+        data = export_xlsx([{'application_id': 'a', 'summary': 'А' * 40000 + 'УНИКАЛЬНЫЙ_КОНЕЦ'}])
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            xml = z.read('xl/worksheets/sheet1.xml').decode()
+        self.assertTrue('УНИКАЛЬНЫЙ_КОНЕЦ' in xml)
+
     def test_untrusted_text_is_literal_and_xml_valid(self):
         data = export_xlsx([{'candidate': '=HYPERLINK("bad")', 'summary': 'Музей <ГИМ> & фонд', 'score': 0}])
         with zipfile.ZipFile(io.BytesIO(data)) as z:

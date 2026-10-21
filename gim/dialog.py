@@ -36,7 +36,7 @@ TASKS = {
 }
 
 
-def transition(state, text):
+def transition(state, text, require_consent=True):
     """Return new state, answered code, reply, and first-submission flag."""
     s = deepcopy(state)
     text = text.strip()
@@ -44,14 +44,19 @@ def transition(state, text):
     if step == 'submitted':
         return s, None, 'Анкета уже отправлена. Решение принимает куратор после собеседования.', False
     if not step:
-        return {'step': 'consent', 'directions': []}, None, 'Перед началом прочитайте условия обработки данных. Для продолжения напишите «Согласен».', False
+        fresh = {**s, 'step': 'consent' if require_consent else 'name', 'directions': []}
+        if not require_consent:
+            return fresh, None, s.get('questions', {}).get('name', QUESTIONS['name']), False
+        return fresh, None, 'Перед началом прочитайте условия обработки данных. Для продолжения напишите «Согласен».', False
+    if step == 'planning':
+        return s, None, 'Готовлю уточняющие вопросы по вашим ответам. Пришлю следующий вопрос отдельным сообщением.', False
     if step == 'consent':
         if text.casefold() not in ('согласен', 'согласна'):
             return s, None, 'Без согласия заполнение не начнётся. Для продолжения напишите «Согласен» или вернитесь позже.', False
         s['step'] = 'name'
-        return s, 'consent', QUESTIONS['name'], False
+        return s, 'consent', s.get('questions', {}).get('name', QUESTIONS['name']), False
     if not text or len(text) > 10000:
-        return s, None, 'Отправьте текстовый ответ длиной от 1 до 10000 символов.\n' + QUESTIONS[step], False
+        return s, None, 'Отправьте текстовый ответ длиной от 1 до 10000 символов.\n' + s.get('questions', {}).get(step, QUESTIONS.get(step, '')), False
     if step == 'directions':
         import re
         words = re.split(r'[\s,;]+', text.casefold())
@@ -60,13 +65,13 @@ def transition(state, text):
         if not selected:
             return s, None, QUESTIONS['directions'], False
         s['directions'] = selected
-    sequence = BASE + ['followup_' + d for d in s.get('directions', [])] + ['expectations']
+    sequence = s.get('base_codes', BASE) + s.get('followup_codes', ['followup_' + d for d in s.get('directions', [])]) + ['expectations']
     index = sequence.index(step)
     if index == len(sequence) - 1:
         s['step'] = 'submitted'
         return s, step, 'Спасибо! Анкета сохранена и передана куратору. Окончательное решение принимает человек.', True
     s['step'] = sequence[index + 1]
-    reply = QUESTIONS[s['step']]
+    reply = s.get('questions', {}).get(s['step'], QUESTIONS.get(s['step'], ''))
     if s['step'] == 'expectations':
-        reply = '\n'.join(TASKS[d] for d in s['directions']) + '\n\n' + reply
+        reply = '\n'.join(s.get('tasks', TASKS)[d] for d in s['directions']) + '\n\n' + reply
     return s, step, reply, False

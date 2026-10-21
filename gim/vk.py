@@ -8,11 +8,16 @@ log = logging.getLogger(__name__)
 
 
 def message_event(event):
-    if event.get('type') != 'message_new' or not event.get('event_id'):
+    if event.get('type') != 'message_new':
         return None
     msg = event.get('object', {}).get('message', {})
     if msg.get('out', 0) or msg.get('from_id', 0) <= 0 or msg.get('peer_id') != msg.get('from_id'):
         return None
+    if not event.get('event_id'):
+        message_id = msg.get('conversation_message_id') or msg.get('id')
+        if not message_id:
+            return None
+        event = {**event, 'event_id': f"message:{msg['peer_id']}:{message_id}"}
     return event
 
 
@@ -40,14 +45,25 @@ class VK:
             raise RuntimeError(f"VK API {method} error {data['error'].get('error_code')}")
         return data['response']
 
-    async def send(self, peer_id, text, random_id, attachment=None):
+    async def send(self, peer_id, text, random_id, attachment=None, role='candidate'):
         buttons = [[{'action': {'type': 'text', 'label': 'Старт'}, 'color': 'primary'},
                     {'action': {'type': 'text', 'label': '/status'}, 'color': 'secondary'}]]
+        if role in ('curator', 'admin'):
+            buttons.extend([[{'action': {'type': 'text', 'label': command}, 'color': 'secondary'}
+                             for command in row] for row in (('/top', '/export'), ('/stats', '/jobs'))])
         params = {'peer_id': peer_id, 'message': text, 'random_id': random_id,
                   'keyboard': json.dumps({'one_time': False, 'buttons': buttons}, ensure_ascii=False)}
         if attachment:
             params['attachment'] = attachment
         return await self.call('messages.send', **params)
+
+    async def diagnose(self):
+        permissions = await self.call('groups.getTokenPermissions')
+        settings = await self.call('groups.getLongPollSettings', group_id=self.settings.group_id)
+        return {'group_id': self.settings.group_id,
+                'permissions': [p['name'] for p in permissions.get('permissions', [])],
+                'longpoll_enabled': settings.get('is_enabled', False),
+                'message_new': bool(settings.get('events', {}).get('message_new'))}
 
     async def upload(self, peer_id, name, data):
         server = await self.call('docs.getMessagesUploadServer', peer_id=peer_id, type='doc')
@@ -57,21 +73,32 @@ class VK:
         doc = saved['doc']
         return f"doc{doc['owner_id']}_{doc['id']}" + ('_' + doc['access_key'] if doc.get('access_key') else '')
 
-    async def gateway(self, db):
+    async def gateway(self, db, guard=None):
         current = None
         delay = 1
+        resume_ts = await db.cursor(self.settings.group_id)
         while True:
+            if guard:
+                # Detect a lost singleton-lock connection before polling more events.
+                await guard.execute('SELECT 1')
             try:
                 if current is None:
                     current = await self.call('groups.getLongPollServer', group_id=self.settings.group_id)
+                    if resume_ts:
+                        current['ts'] = resume_ts
                 result = await self.http.get(current['server'], params={'act': 'a_check', 'key': current['key'], 'ts': current['ts'], 'wait': 25})
                 result.raise_for_status()
                 payload = result.json()
-                for event in payload.get('updates', []):
-                    accepted = message_event(event)
-                    if accepted and accepted['group_id'] == self.settings.group_id:
-                        await db.ingest(accepted)
-                current = poll_next(payload, current)
+                accepted = [normalized for event in payload.get('updates', [])
+                            if (normalized := message_event(event)) and normalized.get('group_id') == self.settings.group_id]
+                next_poll = poll_next(payload, current)
+                if next_poll:
+                    await db.ingest_batch(accepted, self.settings.group_id, next_poll['ts'])
+                    resume_ts = next_poll['ts']
+                elif payload.get('failed') == 3:
+                    resume_ts = None
+                    log.warning('longpoll history reset group_id=%s', self.settings.group_id)
+                current = next_poll
                 delay = 1
             except asyncio.CancelledError:
                 raise

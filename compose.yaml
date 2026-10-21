@@ -44,6 +44,21 @@ services:
   worker:
     <<: *app
     command: [python, -m, gim.main, worker]
+    environment:
+      DATABASE_URL: postgresql://gim:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/gim
+      STORAGE_DIR: /data/files
+      JOB_KINDS: dialog,send,send_file,score,prepare_followups
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  report-worker:
+    <<: *app
+    command: [python, -m, gim.main, worker]
+    environment:
+      DATABASE_URL: postgresql://gim:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/gim
+      STORAGE_DIR: /data/files
+      WORKER_CONCURRENCY: '2'
+      JOB_KINDS: export
     depends_on:
       migrate:
         condition: service_completed_successfully
