@@ -42,6 +42,12 @@ class Bot:
         event_id = str(event_id)
         async with self.limit, self.locks.setdefault(user_id, asyncio.Lock()):
             text = message.get('text', '')
+            parts = text.strip().split(maxsplit=1)
+            if parts and parts[0].lower() == '/excel':
+                reply = await self.store.request_code_export(user_id, event_id, parts[1] if len(parts) > 1 else '')
+                key = await self.store.queue_reply(user_id, reply.text, f'code-export:{event_id}')
+                await deliver_reply(self.store, self.vk, key)
+                return
             response = await self.admin.handle(user_id, user_id, text, event_id)
             if response is not None:
                 try:

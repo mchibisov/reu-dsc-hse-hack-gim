@@ -3,9 +3,10 @@ import asyncio
 import json
 from pathlib import Path
 
+from smoke_mistral import ANSWERS
+
 from gim_bot.analysis import Provider
 from gim_bot.config import get_settings
-from smoke_mistral import ANSWERS
 
 
 async def main():

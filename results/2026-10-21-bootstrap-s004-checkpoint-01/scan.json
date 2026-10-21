@@ -1,0 +1,8 @@
+{
+  "scanned_files": 257,
+  "secret_findings": [],
+  "env_tracked": false,
+  "env_ignored": true,
+  "runtime_model_enabled": false,
+  "hidden_code_configured": false
+}

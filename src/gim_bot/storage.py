@@ -3,6 +3,7 @@ import hashlib
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from datetime import timedelta
+from time import time
 from uuid import uuid4
 
 from sqlalchemy import and_, delete, or_, select, update
@@ -11,6 +12,13 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from .config import Settings
+from .export_access import (
+    CodeExportAttempt,
+    CodeExportLimit,
+    CodeExportPermit,
+    code_fingerprint,
+    code_matches,
+)
 from .models import (
     Application,
     BackgroundJob,
@@ -224,6 +232,55 @@ class Store:
                 session.add(request)
                 await session.flush()
             return request.id
+
+    async def request_code_export(self, user_id: int, event_id: str, provided: str) -> Reply:
+        """Атомарно учитывать попытку/дубликат и выдавать разрешение только на этот запрос."""
+        digest = event_digest(user_id, 'code-export:' + event_id)
+        instant = time()
+        insert = pg_insert if self.engine.dialect.name == 'postgresql' else sqlite_insert
+        async with self.transaction() as session:
+            # INSERT первым получает SQLite write lock; FOR UPDATE сериализует PostgreSQL.
+            await session.execute(insert(CodeExportLimit).values(
+                user_id=user_id, failures=[]
+            ).on_conflict_do_nothing(index_elements=['user_id']))
+            limit = await session.get(CodeExportLimit, user_id, with_for_update=True)
+            previous = await session.get(CodeExportAttempt, digest)
+            if previous:
+                return self._code_export_reply(previous.request_id)
+            failures = [timestamp for timestamp in limit.failures if timestamp > instant - 600]
+            limit.failures = failures
+            request_id = None
+            if len(failures) < 5 and code_matches(provided, self.settings.excel_access_code):
+                request = ExportRequest(admin_id=user_id, request_key='code:' + digest)
+                session.add(request)
+                await session.flush()
+                request_id = request.id
+                session.add(CodeExportPermit(request_id=request_id, user_id=user_id,
+                    fingerprint=code_fingerprint(self.settings.excel_access_code)))
+            elif len(failures) < 5:
+                limit.failures = [*failures, instant]
+            session.add(CodeExportAttempt(digest=digest, request_id=request_id))
+            return self._code_export_reply(request_id)
+
+    @staticmethod
+    def _code_export_reply(request_id):
+        if request_id is not None:
+            return Reply(f'Выгрузка №{request_id} поставлена в очередь. Файл придёт в этот диалог.')
+        return Reply('Запрос недоступен. Проверьте данные или повторите позже.')
+
+    async def authorize_export(self, request_id: int, user_id: int, settings: Settings) -> bool:
+        async with self.transaction() as session:
+            request = await session.get(ExportRequest, request_id)
+            if not request or request.admin_id != user_id or request.status != 'queued':
+                return False
+            if request.request_key.startswith('code:'):
+                permit = await session.get(CodeExportPermit, request_id)
+                allowed = bool(permit and permit.user_id == user_id and settings.excel_access_code
+                    and code_matches(permit.fingerprint, code_fingerprint(settings.excel_access_code)))
+                if not allowed:
+                    request.status = 'revoked'
+                return allowed
+            return user_id in settings.admins
 
     async def pending_exports(self):
         async with self.sessions() as session:

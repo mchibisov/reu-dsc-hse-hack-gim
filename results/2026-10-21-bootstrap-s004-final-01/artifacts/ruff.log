@@ -1,0 +1,25 @@
+I001 [*] Import block is un-sorted or un-formatted
+ --> scripts\probe_mistral.py:2:1
+  |
+1 |   """Диагностика HTTP отказа, без ключа и без реальных пользовательских данных."""
+2 | / import asyncio
+3 | | import json
+4 | | from pathlib import Path
+5 | |
+6 | | from gim_bot.analysis import Provider
+7 | | from gim_bot.config import get_settings
+8 | | from smoke_mistral import ANSWERS
+  | |_________________________________^
+help: Organize imports
+   |
+5  |
+6  + from smoke_mistral import ANSWERS
+7  +
+8  | from gim_bot.analysis import Provider
+9  | from gim_bot.config import get_settings
+   - from smoke_mistral import ANSWERS
+10 |
+   |
+
+Found 1 error.
+[*] 1 fixable with `--fix`.

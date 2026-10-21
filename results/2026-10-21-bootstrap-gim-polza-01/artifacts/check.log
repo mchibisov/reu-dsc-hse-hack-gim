@@ -1,0 +1,3 @@
+llm_failed task=analysis model=deepseek/deepseek-v4.1-flash-1017
+llm_followups_invalid_or_timeout
+{"provider": "Polza", "model": "deepseek/deepseek-v4.1-flash-1017", "scope": "synthetic only", "models_http_status": 200, "model_available": true, "generation_http_status": 200, "generation_duration_ms": 3438, "structured_json_valid": true, "total_tokens": 68, "provider_analysis_valid": false, "provider_analysis_duration_ms": 17219, "criteria_count": 0, "synthetic_score": null, "provider_followups_valid": false, "provider_followups_duration_ms": 3016, "followup_count": 0}

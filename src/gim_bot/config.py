@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     vk_group_id: int = 0
     vk_api_version: str = '5.199'
     admin_ids: str = ''
+    excel_access_code: str = Field(default='', repr=False)
     internal_api_key: str = Field(default='', repr=False)
     gateway_url: str = ''
     llm_api_key: str = Field(default='', repr=False)

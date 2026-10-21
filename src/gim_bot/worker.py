@@ -49,15 +49,17 @@ async def notify_admin(ctx, application_id: int, admin_id: int):
 
 
 async def export_applications(ctx, request_id: int, admin_id: int):
-    if admin_id not in ctx['settings'].admins:
-        return
-    pending = await ctx['store'].pending_exports()
-    if not any(r.id == request_id and r.admin_id == admin_id for r in pending):
+    store = ctx['store']
+    if not await store.authorize_export(request_id, admin_id, ctx['settings']):
         return
     apps = await ctx['store'].list_applications()
     all_apps = await ctx['store'].list_applications(completed_only=False)
     content = await asyncio.to_thread(build_excel, apps, len(all_apps))
+    if not await store.authorize_export(request_id, admin_id, ctx['settings']):
+        return
     attachment = await ctx['vk'].upload_document(admin_id, content, f'gim-{request_id}.xlsx')
+    if not await store.authorize_export(request_id, admin_id, ctx['settings']):
+        return
     await ctx['vk'].send(admin_id, 'Анкеты ГИМ и сводка. Решение о приёме принимает сотрудник.',
                          f'export:{request_id}', attachment=attachment)
     await ctx['store'].export_done(request_id)

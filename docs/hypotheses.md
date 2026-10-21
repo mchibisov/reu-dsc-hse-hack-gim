@@ -99,3 +99,14 @@
 | 2026-10-21 | gim-no-key-02: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-02/report.md) |
 | 2026-10-21 | gim-no-key-03: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-03/report.md) |
 | 2026-10-21 | gim-no-key-04: сквозной режим без LLM | [отчёт](../results/2026-10-21-bootstrap-gim-no-key-04/report.md) |
+| 2026-10-21 | S004 hidden-export-01: до реализации проверка скрытой команды, изоляции, replay и ротации | [отчёт](../results/2026-10-21-bootstrap-hidden-export-01/report.md) |
+| 2026-10-21 | S004 hidden-export-02: повтор RED после исправления аргумента тестовой fixture | [отчёт](../results/2026-10-21-bootstrap-hidden-export-02/report.md) |
+| 2026-10-21 | S004 hidden-export-03: после реализации durable разрешений и rate limiter; targeted/full regression | [отчёт](../results/2026-10-21-bootstrap-hidden-export-03/report.md) |
+| 2026-10-21 | S004 hidden-export-04: RED rolling-window границы, replay попыток, concurrency и admin regression | [отчёт](../results/2026-10-21-bootstrap-hidden-export-04/report.md) |
+| 2026-10-21 | S004 hidden-export-05: GREEN rolling-window, targeted/full suite, lint | [отчёт](../results/2026-10-21-bootstrap-hidden-export-05/report.md) |
+| 2026-10-21 | 2026-10-21-bootstrap-gim-groq-01 | [отчёт](../results/2026-10-21-bootstrap-gim-groq-01/report.md) |
+| 2026-10-21 | 2026-10-21-bootstrap-gim-groq-02 | [отчёт](../results/2026-10-21-bootstrap-gim-groq-02/report.md) |
+| 2026-10-21 | 2026-10-21-bootstrap-gim-polza-01 | [отчёт](../results/2026-10-21-bootstrap-gim-polza-01/report.md) |
+| 2026-10-21 | 2026-10-21-bootstrap-gim-polza-02 | [отчёт](../results/2026-10-21-bootstrap-gim-polza-02/report.md) |
+| 2026-10-21 | 2026-10-21-bootstrap-s004-review-01 | [отчёт](../results/2026-10-21-bootstrap-s004-review-01/report.md) |
+| 2026-10-21 | 2026-10-21-bootstrap-s004-final-01 | [отчёт](../results/2026-10-21-bootstrap-s004-final-01/report.md) |
