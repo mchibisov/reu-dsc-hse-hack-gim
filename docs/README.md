@@ -4,6 +4,7 @@
 
 - [Спецификация S003](specs/S003-shared-db-integration.md).
 - [План и статус S003](plans/S003-shared-db-integration.md).
+- [Промпт агенту для настройки Supabase и запуска](prompts/S003-cloud-setup-agent.md).
 - [Журнал проверок](hypotheses.md), [результаты](../results/).
 - [Контракт общей БД](../database/docs/contracts.md), [подключение](../database/docs/connection.md).
 
