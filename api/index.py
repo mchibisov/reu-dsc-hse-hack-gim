@@ -7,11 +7,14 @@ from gim.shared_config import SharedSettings
 from gim.serverless import receive,drain
 
 class handler(BaseHTTPRequestHandler):
+ server_version='GIM'
+ sys_version=''
  def log_message(self,*args):pass # HTTP paths/headers may contain authentication material
  def reply(self,status,text,content='text/plain; charset=utf-8'):
-  body=text.encode();self.send_response(status);self.send_header('Content-Type',content);self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+  body=text.encode();self.send_response(status);self.send_header('Content-Type',content);self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff');self.send_header('Referrer-Policy','no-referrer');self.send_header('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
  def do_GET(self):
   if self.path.split('?')[0]=='/health':return self.reply(200,'{"status":"ok","transport":"vk-callback"}','application/json')
+  if self.path.split('?')[0]!='/':return self.reply(404,'not found')
   self.reply(200,'<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Волонтёры ГИМ</title><body style="font:20px system-ui;background:#faf7f3;color:#222;max-width:650px;margin:15vh auto;padding:24px"><p style="color:#a71930">ГОСУДАРСТВЕННЫЙ ИСТОРИЧЕСКИЙ МУЗЕЙ · ДЕМО</p><h1>Начните с желания помогать</h1><p>Пять направлений волонтёрства. Короткая анкета и персональные уточнения в VK. Решение о приглашении принимает сотрудник музея.</p><a style="display:inline-block;background:#a71930;color:white;padding:16px 24px;border-radius:12px;text-decoration:none" href="https://vk.me/club242476311">Открыть бота в VK →</a><p style="font-size:15px">Бот работает в личных сообщениях сообщества. Нажмите «Начать».</p></body></html>','text/html; charset=utf-8')
  def do_POST(self):
   try:

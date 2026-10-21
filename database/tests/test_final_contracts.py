@@ -142,3 +142,45 @@ async def test_bounded_dispatcher_hands_off_slow_work_without_idle_spin(env):
     with psycopg.connect(DSN) as c:
         assert c.execute("SELECT count(*) FROM gim.audit_log WHERE action='test.cloud_wake' AND details->>'group'=%s",(str(r['group_id']),)).fetchone()[0]==1
         assert c.execute('SELECT expires_at<=now() FROM gim.runtime_leases WHERE group_id=%s',(r['group_id'],)).fetchone()[0]
+
+async def test_terminal_analysis_failure_notifies_once_without_fake_score(env):
+    from gim_db.outbox import SQLQueue
+    from gim_db.repository import emit
+    bot,worker,staff,r,t,admin,sid=env
+    a,_,_=await complete_draft(env)
+    async with worker.pool.connection() as c:
+        e=await emit(c,a['id'],'application.analyze','terminal-'+str(uuid.uuid4()),{'revision':1})
+        await c.execute("UPDATE gim.outbox_events SET max_attempts=1 WHERE application_id=%s AND topic='application.analyze'",(a['id'],))
+    queue=SQLQueue(worker.pool,r['group_id'])
+    event=await queue.claim(['application.analyze'])
+    assert await queue.finish(event['id'],event['lease_token'],False,'ModelUnavailable')
+    assert not await queue.finish(event['id'],event['lease_token'],False,'ModelUnavailable')
+    with psycopg.connect(DSN) as c:
+        n=c.execute("SELECT count(*) FROM gim.outbox_events WHERE application_id=%s AND topic='staff.notify' AND payload->>'kind'='analysis_unavailable'",(a['id'],)).fetchone()[0]
+        assert n==1
+        assert c.execute('SELECT count(*) FROM gim.evaluations WHERE application_id=%s',(a['id'],)).fetchone()[0]==0
+
+async def test_final_expired_analysis_lease_notifies_once(env):
+    from gim_db.outbox import SQLQueue
+    from gim_db.repository import emit
+    bot,worker,staff,r,t,admin,sid=env
+    a,_,_=await complete_draft(env)
+    async with worker.pool.connection() as c:
+        await emit(c,a['id'],'application.analyze','expired-'+str(uuid.uuid4()),{'revision':1})
+        await c.execute("UPDATE gim.outbox_events SET max_attempts=1,attempts=1,lease_token=gen_random_uuid(),lease_until=now()-interval '1 second' WHERE application_id=%s AND topic='application.analyze'",(a['id'],))
+    q=SQLQueue(worker.pool,r['group_id'])
+    assert await q.claim(['application.analyze']) is None
+    assert await q.claim(['application.analyze']) is None
+    with psycopg.connect(DSN) as c:
+        assert c.execute("SELECT count(*) FROM gim.outbox_events WHERE application_id=%s AND payload->>'kind'='analysis_unavailable'",(a['id'],)).fetchone()[0]==1
+
+async def test_staff_can_finish_explicit_archived_application_export(env):
+    from gim_db.storage import FileRepository
+    import hashlib
+    bot,worker,staff,r,t,admin,sid=env
+    own=await bot.start_application(r['id'],admin)
+    await staff.reset_own_application(admin,r['id'],request_key='export-old')
+    fid=await staff.request_export(admin,r['id'],application_id=own['id'],request_key='audit-export')
+    meta=await FileRepository(worker.pool).finish(fid,size_bytes=4,sha256=hashlib.sha256(b'xlsx').hexdigest())
+    assert meta['status']=='ready'
+    assert (await staff.staff_file(admin,fid))['application_id']==str(own['id'])
