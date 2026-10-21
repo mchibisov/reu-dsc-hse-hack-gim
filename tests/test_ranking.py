@@ -28,3 +28,16 @@ class RankingTests(unittest.TestCase):
   def row(name,raw,source='algorithm',score=2):return {'application_id':name,'score':score,'evaluation_source':source,'criteria_results':[{'calculation':{'kind':'binary_50_35_15','raw':raw}}]}
   b=ranked_bundle({'Анкеты':[row('low',1.6),row('high',2.4),row('manual',.2,'curator',3),{'application_id':'pending','score':None}]})
   self.assertEqual([r['application_id'] for r in b['Анкеты']],['manual','high','low','pending'])
+
+class RankingEvidenceTests(unittest.IsolatedAsyncioTestCase):
+ async def test_redaction_placeholder_is_not_a_quote_of_the_original(self):
+  from unittest.mock import AsyncMock
+  from types import SimpleNamespace
+  from gim.ranking import analyze,RUBRIC
+  from gim.shared_domain import DIRECTIONS
+  facts=[{'code':c,'status':'unknown'} for c in FEATURES]
+  facts[0]={'code':'m1','status':'yes','source_id':'a','quote':'[email]'}
+  r={'facts':facts,'summary':'Требует уточнения','strengths':[],'directions':[], 'direction_assessments':{d:'Уточнить задачи' for d in DIRECTIONS},'interview_questions':['Какие задачи вам интересны?']}
+  llm=SimpleNamespace(complete=AsyncMock(return_value=r))
+  with self.assertRaisesRegex(ValueError,'original answer'):
+   await analyze(llm,{'rubric':RUBRIC['rubric'],'answers':[{'id':'a','target_slot':'motivation','answer_text':'Напишу mail@example.test'}]})

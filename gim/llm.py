@@ -17,14 +17,14 @@ class LLMClient:
     def __init__(self, settings):
         self.settings = settings
 
-    async def complete(self, system, payload):
+    async def complete(self, system, payload, *, reasoning_enabled=None):
         key = getattr(self.settings, 'llm_api_key', '')
         model = getattr(self.settings, 'llm_model', '')
         base = getattr(self.settings, 'llm_base_url', '')
         if not key or not model or not base:
             raise ModelUnavailable('Configure LLM_API_KEY, LLM_MODEL and LLM_BASE_URL')
         effort=getattr(self.settings,'llm_reasoning_effort','')
-        enabled=getattr(self.settings,'llm_reasoning_enabled',None)
+        enabled=getattr(self.settings,'llm_reasoning_enabled',None) if reasoning_enabled is None else reasoning_enabled
         reasoning={'reasoning':{'enabled':enabled}} if enabled is not None else ({'reasoning':{'effort':effort}} if effort else {})
         started=time.monotonic()
         try:

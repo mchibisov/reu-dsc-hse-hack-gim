@@ -50,7 +50,7 @@ async def analyze(llm,snapshot):
  from gim.shared_analysis import safe_answers,DIRECTION_NAMES
  answers=safe_answers(snapshot['answers']);payload={'answers':answers,'features':{c:v[1] for c,v in FEATURES.items()},'direction_info':snapshot.get('direction_info',{})}
  for attempt in range(2):
-  result=await llm.complete(PROMPT,payload)
+  result=await llm.complete(PROMPT,payload,reasoning_enabled=False)
   try:
    facts=validate(result.get('facts'),answers);report=validate_report(result,answers)
    originals={str(a['id']):a['answer_text'] for a in snapshot['answers']}

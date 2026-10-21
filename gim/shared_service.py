@@ -432,7 +432,7 @@ class SharedService:
         if snapshot['rubric'].get('scoring_method')=='binary_50_35_15':
             from gim.ranking import analyze
             checked=await analyze(self.llm,snapshot)
-            return {**checked,'model':self.settings.llm_model,'prompt_version':'binary-50-35-15-v1'}
+            return {**checked,'model':self.settings.llm_model,'prompt_version':'binary-50-35-15-v1-noreasoning'}
         if snapshot['rubric'].get('scoring_method')=='fixed_facts_ridge':
             from gim.evidence import analyze
             checked=await analyze(self.llm,snapshot)
@@ -499,7 +499,7 @@ class SharedService:
              'library':[t['text'] for t in ctx['templates'] if t['kind']!='base'],
              'selected_directions':directions,'direction_info':ctx['direction_info'],
              'available_topics':sorted(topics-asked_topics),
-             'remaining_questions':remaining})
+             'remaining_questions':remaining},reasoning_enabled=False)
         if result.get('action')=='finish':
             return {'action':'finish'}
         sources={a['id']:a['text'] for a in safe}
