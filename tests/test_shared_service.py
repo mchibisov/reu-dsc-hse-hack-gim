@@ -185,10 +185,34 @@ class SharedServiceTests(unittest.IsolatedAsyncioTestCase):
         await self.s._staff_command(event,42,'/application '+str(aid),'/application')
         self.assertIn('Последний вопрос интервью?',next(iter(self.s.emitted.values()))['text'])
 
+    async def test_top_contains_short_ai_summary_and_readable_status(self):
+        self.s.staff_repo.export_bundle.return_value={'Анкеты':[{
+            'application_id':str(uuid4()),'full_name':'Тестовый кандидат',
+            'status':'submitted','score':2,'summary':'Опыт музейных экскурсий. Готов помогать посетителям.'}]}
+        event=self.event('/top')
+        await self.s._staff_command(event,42,'/top','/top')
+        text=next(iter(self.s.emitted.values()))['text']
+        self.assertIn('AI-сводка: Опыт музейных экскурсий.',text)
+        self.assertIn('подана',text)
+        self.assertNotIn('submitted',text)
+
     async def test_missing_key_keeps_analysis_retryable(self):
         from gim.llm import ModelUnavailable
         with self.assertRaises(ModelUnavailable):
             await self.s.analyze(dict(snapshot={},application_id=uuid4()))
+
+    async def test_hanging_followup_provider_is_bounded_and_submission_continues(self):
+        from unittest.mock import patch
+        self.s.settings.llm_api_key='synthetic'
+        async def hanging(*args,**kwargs):
+            await asyncio.Event().wait()
+        self.s.llm.complete=AsyncMock(side_effect=hanging)
+        for text in ['/start','да','Synthetic','synthetic@example.test','01.01.2000']:
+            await self.s.incoming(self.event(text))
+        real_timeout=asyncio.timeout
+        with patch('asyncio.timeout',side_effect=lambda seconds:real_timeout(0.001)):
+            await asyncio.wait_for(self.s.incoming(self.event('не определился')),0.2)
+        self.assertEqual(self.repo.app['status'],'submitted')
 
     async def test_followup_provider_outage_does_not_block_submission(self):
         self.s.settings.llm_api_key='synthetic'
@@ -226,6 +250,16 @@ class DomainTests(unittest.TestCase):
         self.assertEqual(select_followups(bank,[],['collections'],3,
                          {'experience':{'answer_text':'Работал с музейными коллекциями'}}),[interest,past,generic])
 
+    def test_xlsx_headers_are_readable_for_curator(self):
+        from openpyxl import load_workbook
+        bundle={'Анкеты':[{'application_id':'app','full_name':'Тест','summary':'Есть опыт','status':'submitted','score':2}],
+                'Ответы':[],'Собеседование':[],'Сводка':{'total':1}}
+        wb=load_workbook(io.BytesIO(snapshot_xlsx(bundle)))
+        headers=list(next(wb['Анкеты'].values))
+        self.assertIn('AI-сводка',headers)
+        self.assertIn('ФИО',headers)
+        self.assertEqual(wb['Анкеты'].cell(2,headers.index('Статус')+1).value,'Подана')
+
     def test_xlsx_preserves_full_text_and_no_formula(self):
         from openpyxl import load_workbook
         raw = '=SUM(A1:A2)' + 'x'*70000
@@ -234,7 +268,7 @@ class DomainTests(unittest.TestCase):
         wb = load_workbook(io.BytesIO(snapshot_xlsx(bundle)))
         self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка'])
         rows = list(wb['Ответы'].values)
-        ix = rows[0].index('answer_text')
+        ix = rows[0].index('Ответ кандидата')
         self.assertEqual(''.join(r[ix] for r in rows[1:]),raw)
         self.assertTrue(all(c.data_type!='f' for row in wb['Ответы'] for c in row))
 
@@ -261,6 +295,33 @@ class BoundaryTests(unittest.IsolatedAsyncioTestCase):
               SimpleNamespace(send=AsyncMock(),upload=AsyncMock(return_value='doc_synthetic')),
               SimpleNamespace(group_id=17,recruitment_id=uuid4()),
               SimpleNamespace(upload=AsyncMock(),read=AsyncMock()))
+
+    async def test_new_application_notifies_admin_plus_one_with_card_command(self):
+        from unittest.mock import patch
+        service=self.service(FakeSQL([]))
+        aid=uuid4()
+        async def deliver(repository,event,send):
+            await send(42,17,123)
+        with patch('gim_db.outbox.send_staff_notification',side_effect=deliver):
+            await service.notify({'application_id':aid})
+        args=service.vk.send.await_args.args
+        self.assertEqual(args[0],42)
+        self.assertIn('+1 анкета',args[1])
+        self.assertIn('/application '+str(aid),args[1])
+
+    async def test_analysis_ready_notification_contains_ai_summary(self):
+        from unittest.mock import patch
+        service=self.service(FakeSQL([]))
+        aid=uuid4()
+        async def deliver(repository,event,send):
+            await send(42,17,124)
+        with patch('gim_db.outbox.send_staff_notification',side_effect=deliver):
+            await service.notify({'application_id':aid,'payload':{
+                'kind':'analysis_ready','score':2,'summary':'Есть опыт экскурсий; уточнить график.'}})
+        text=service.vk.send.await_args.args[1]
+        self.assertIn('AI-анализ готов',text)
+        self.assertIn('Есть опыт экскурсий',text)
+        self.assertNotIn('+1 анкета',text)
 
     async def test_binding_uses_current_lease_and_keeps_original(self):
         original=dict(app_id='a',question_id='q1',revision=0)
@@ -554,13 +615,13 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         wb=load_workbook(io.BytesIO(self.objects[meta['storage_key']]))
         rows=list(wb['Ответы'].values)
         cols=rows[0]
-        slot=cols.index('target_slot'); answer=cols.index('answer_text')
+        slot=cols.index('Поле анкеты'); answer=cols.index('Ответ кандидата')
         # Each continuation carries its answer_id; field slot itself is first-row only.
-        aid=next(r[cols.index('answer_id')] for r in rows[1:] if r[slot]=='experience')
-        reconstructed=''.join(r[answer] or '' for r in rows[1:] if r[cols.index('answer_id')]==aid)
+        aid=next(r[cols.index('ID ответа')] for r in rows[1:] if r[slot]=='experience')
+        reconstructed=''.join(r[answer] or '' for r in rows[1:] if r[cols.index('ID ответа')]==aid)
         self.assertEqual(reconstructed,raw)
         exported=list(wb['Анкеты'].values)
-        self.assertEqual(exported[1][exported[0].index('score')],'2')
+        self.assertEqual(exported[1][exported[0].index('Балл 0–3')],'2')
         self.vk.upload.assert_awaited_once()
 
 
@@ -579,7 +640,7 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         wb=load_workbook(io.BytesIO(self.objects[meta['storage_key']]))
         self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка'])
         self.assertIn(str(app['id']),str(list(wb['Анкеты'].values)))
-        self.assertIn('summary',next(wb['Анкеты'].values))
+        self.assertIn('AI-сводка',next(wb['Анкеты'].values))
         await self.enqueue('/top')
         await self.drain()
         self.assertIsNone(await self.service._staff(self.candidate))
@@ -617,5 +678,5 @@ class WorkbookEncodingTests(unittest.TestCase):
         wb=load_workbook(io.BytesIO(snapshot_xlsx({'Ответы':[dict(answer_id='a',answer_text=raw)]})))
         rows=list(wb['Ответы'].values)
         row=dict(zip(rows[0],rows[1]))
-        self.assertEqual(json.loads(row['answer_text']),raw)
-        self.assertEqual(json.loads(row['field_encodings']),{'answer_text':'json_string'})
+        self.assertEqual(json.loads(row['Ответ кандидата']),raw)
+        self.assertEqual(json.loads(row['Кодировка полей']),{'answer_text':'json_string'})

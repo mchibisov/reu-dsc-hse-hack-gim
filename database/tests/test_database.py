@@ -175,3 +175,20 @@ async def test_bot_cannot_reopen_submitted_application(env):
     await bot.submit(a['id'])
     async with bot.pool.connection() as c:
         with pytest.raises(Exception): await c.execute("UPDATE gim.applications SET status='draft' WHERE id=%s",(a['id'],))
+
+
+async def test_analysis_ready_notification_is_transactional_and_idempotent(env):
+    bot,worker,staff,r,t,vk,sid=env
+    a,q,answer=await complete_draft(env)
+    await bot.submit(a['id'])
+    snapshot=await worker.evaluation_snapshot(a['id'])
+    criteria=[{'code':'motivation','points':2,'reason':'Есть опыт','evidence':[
+        {'source_type':'answer','source_id':str(answer['id']),'quote':'Снимал концерты'}]}]
+    kw=dict(snapshot=snapshot,score=2,criteria=criteria,summary='Есть опыт съёмки',request_key='ready-once')
+    await worker.save_evaluation(a['id'],**kw)
+    await worker.save_evaluation(a['id'],**kw)
+    with psycopg.connect(DSN,row_factory=dict_row) as c:
+        rows=c.execute("SELECT payload FROM gim.outbox_events WHERE application_id=%s AND topic='staff.notify' AND payload->>'kind'='analysis_ready'",(a['id'],)).fetchall()
+    assert len(rows)==1
+    assert rows[0]['payload']['summary']=='Есть опыт съёмки'
+    assert rows[0]['payload']['score']==2

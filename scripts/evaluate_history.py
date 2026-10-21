@@ -20,6 +20,19 @@ from gim_db.materials import prepare_history
 from gim_db.repository import create_pool, one
 
 
+def evaluation_metrics(predictions):
+    scored=[r for r in predictions if r['score'] is not None]
+    correct=sum(r['score']==r['expert_score'] for r in scored)
+    n=len(predictions)
+    return {'holdout':n,'predicted':len(scored),'coverage':len(scored)/n if n else 0,
+            'exact_match':correct/len(scored) if scored else None,
+            'exact_match_all':correct/n if n else None,
+            'mae':sum(abs(r['score']-r['expert_score']) for r in scored)/len(scored) if scored else None,
+            'abstentions':dict(Counter(r.get('error') for r in predictions if r['score'] is None)),
+            'baseline_score_2':{'exact_match':sum(r['expert_score']==2 for r in predictions)/n if n else None,
+                                'mae':sum(abs(2-r['expert_score']) for r in predictions)/n if n else None}}
+
+
 async def evaluate(paths, output):
     records,_=prepare_history(paths)
     _,holdout=split_history(records)
@@ -55,12 +68,7 @@ async def evaluate(paths, output):
         return row
 
     predictions=await asyncio.gather(*(predict(r) for r in holdout if r['expert_score'] is not None))
-    scored=[r for r in predictions if r['score'] is not None]
-    metrics={'available_labels':len(records),'holdout':len(predictions),'predicted':len(scored),
-             'coverage':len(scored)/len(predictions) if predictions else 0,
-             'exact_match':sum(r['score']==r['expert_score'] for r in scored)/len(scored) if scored else None,
-             'mae':sum(abs(r['score']-r['expert_score']) for r in scored)/len(scored) if scored else None,
-             'abstentions':dict(Counter(r.get('error') for r in predictions if r['score'] is None)),
+    metrics={**evaluation_metrics(predictions),'available_labels':len(records),
              'model':settings.llm_model,'rubric_version':rubric['rubric_version']}
     output=Path(output)
     output.parent.mkdir(parents=True,exist_ok=True)

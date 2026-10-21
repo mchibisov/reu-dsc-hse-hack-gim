@@ -1,6 +1,6 @@
 import unittest
 
-from gim.shared_domain import select_followups
+from gim.shared_domain import select_followups, covered_followup_topics
 
 
 class LibraryFollowups(unittest.TestCase):
@@ -30,3 +30,15 @@ class LibraryFollowups(unittest.TestCase):
         answers={'expectations':{'answer_text':'Интересуют посты и фото'},
                  'available_time':{'answer_text':'По субботам, других волонтёрских программ нет'}}
         self.assertEqual(select_followups(ts,[],['media'],3,answers),[])
+
+    def test_vague_expectations_still_allow_goal_clarification(self):
+        self.assertNotIn('expectation_goals',covered_followup_topics(
+            {'expectations':{'answer_text':'Хочу помогать'}},[]))
+
+    def test_specific_learning_goal_is_already_covered(self):
+        self.assertIn('expectation_goals',covered_followup_topics(
+            {'expectations':{'answer_text':'Хочу научиться описывать музейные коллекции и работать с каталогом'}},[]))
+
+    def test_negated_learning_goal_does_not_claim_expectations_are_clear(self):
+        self.assertNotIn('expectation_goals',covered_followup_topics(
+            {'expectations':{'answer_text':'Не хочу развивать навыки, просто хочу помогать в зале'}},[]))

@@ -18,3 +18,5 @@ runtime/
 _env
 _env.*
 .DS_Store
+
+.superpowers/

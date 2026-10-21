@@ -78,19 +78,29 @@ def covered_followup_topics(answers,directions):
         covered.add('other_commitments')
     if re.search(r'(готов|хочу|предпочитаю).*работать в команде|предпочитаю.*индивидуаль',all_text):
         covered.add('teamwork')
-    if texts.get('expectations','').strip() not in {'','нет','не относится','не знаю'}:
+    if not re.search(r'\bне\s+(?:хочу|планирую|готов|собираюсь|интересует)',texts.get('expectations','')) and len(texts.get('expectations','').split())>=7 and re.search(r'научи|навык|опыт|узнать|осво|разв|познаком|изуч|знакомств',texts.get('expectations','')):
         covered.add('expectation_goals')
     return covered
+
+
+def question_topics(text):
+    """Catch personal-contribution rephrasings even with a different model slot."""
+    text=' '.join(text.casefold().replace('ё','е').split())
+    return {'experience_detail'} if re.search(
+        r'\bроль\b|личн\w* вклад|что .*делали лично|задач\w* .*самостоятель|выполня\w* .*самостоятель',text) else set()
 
 
 def select_followups(templates, questions, directions, maximum, answers=None):
     """Музейная библиотека: выбранное направление, незаданные темы, без экзаменов."""
     asked={str(q.get('template_id')) for q in questions}
     asked_slots={q['target_slot'] for q in questions if q['source']!='base'}|covered_followup_topics(answers,directions)
+    for q in questions:
+        if q['source']!='base':
+            asked_slots|=question_topics(q.get('text',''))
     asked_texts={' '.join(q.get('text','').split()).casefold() for q in questions}
     result=[]
     for t in sorted(templates,key=lambda t:(not bool(t.get('directions')),t['position'])):
-        if t['kind']=='base' or str(t['id']) in asked or t['target_slot'] in asked_slots:
+        if t['kind']=='base' or str(t['id']) in asked or t['target_slot'] in asked_slots or question_topics(t['text']) & asked_slots:
             continue
         text=t['text'].casefold()
         if ' '.join(text.split()) in asked_texts:

@@ -167,6 +167,20 @@ class AnalysisIntegration(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):
             await service.personal_question(ctx,['media'],2)
 
+    async def test_personal_contribution_cannot_repeat_under_different_topic(self):
+        service=self.service()
+        qid=self.snapshot['answers'][0]['question_id']
+        ctx={'questions':[{'id':qid,'source':'base','target_slot':'experience','text':'Опыт?'},
+                          {'id':str(uuid4()),'source':'generated','target_slot':'teamwork',
+                           'text':'В редакционной команде какую роль вы брали и что делали лично?'}],
+             'answers':self.snapshot['answers'],'templates':[], 'direction_info':{}}
+        service.llm.complete.return_value={'action':'ask','target_slot':'skills_detail',
+            'question':'Какие задачи вы выполняли самостоятельно?',
+            'source_id':self.aid,'quote':'Снимал концерты'}
+        with self.assertRaises(ValueError):
+            await service.personal_question(ctx,['media'],2)
+        self.assertNotIn('experience_detail',service.llm.complete.call_args.args[1]['available_topics'])
+
     async def test_personal_question_requires_exact_anchor_and_does_not_repeat(self):
         service=self.service()
         qid=self.snapshot['answers'][0]['question_id']
