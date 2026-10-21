@@ -8,8 +8,9 @@ import httpx
 from psycopg.types.json import Jsonb
 
 from gim.dialog import BASE, QUESTIONS, TASKS, transition
-from gim.followups import plan_followups, validate_plan
-from gim.scoring import validate_evaluation
+from gim.followups import validate_decision
+from gim.llm import LLMClient
+from gim.rubric import load_rubric, validate_rubric_evaluation
 from gim.xlsx import export_xlsx
 
 log = logging.getLogger(__name__)
@@ -69,9 +70,11 @@ class Service(StaffCommands):
         if not app:
             app = await (await c.execute('''INSERT INTO applications(user_id,group_id,campaign,questionnaire)
                 VALUES(%s,%s,%s,%s) RETURNING *''', (user['id'], group, self.settings.campaign,
-                    Jsonb({**QUESTIONS, '_base_codes': BASE, '_tasks': TASKS})))).fetchone()
+                    Jsonb({**QUESTIONS, '_base_codes': BASE, '_tasks': TASKS,
+                           '_max_followups': getattr(self.settings, 'max_followups', 3)})))).fetchone()
         old = {**app['state'], 'questions': {**app['questionnaire'], **app['state'].get('questions', {})},
                'base_codes': app['questionnaire'].get('_base_codes', BASE), 'tasks': app['questionnaire'].get('_tasks', TASKS)}
+        old['max_followups'] = app['questionnaire'].get('_max_followups', getattr(self.settings, 'max_followups', 3))
         if not self.settings.consent_text or app['consent_at'] is not None:
             for attachment in job['payload']['object']['message'].get('attachments', []):
                 doc = attachment.get('doc') if attachment.get('type') == 'doc' else None
@@ -84,10 +87,14 @@ class Service(StaffCommands):
                     (file_id, app['id'], user['id'], 'vk:' + reference, doc.get('size'), Jsonb({'title': str(doc.get('title', 'Документ'))[:300]})))
         # "Старт" during an unfinished application resumes instead of becoming an answer.
         if old.get('step') not in (None, 'submitted') and text.casefold() in ('старт', 'начать'):
-            reply = self.settings.consent_text + '\nНапишите «Согласен».' if old['step'] == 'consent' else app['questionnaire'].get(old['step'], QUESTIONS.get(old['step'], ''))
+            reply = (self.settings.consent_text + '\nНапишите «Согласен».' if old['step'] == 'consent'
+                     else 'Готовлю следующий вопрос по вашим ответам.' if old['step'] == 'planning'
+                     else app['questionnaire'].get(old['step'], QUESTIONS.get(old['step'], '')))
             await self.reply(c, job, reply)
             return
         state, code, reply, submitted = transition(old, text, require_consent=bool(self.settings.consent_text))
+        if old.get('step') == 'planning' and text and len(text) <= 10000:
+            code = 'supplement_ai_' + str(app['revision'] + 1)
         if state['step'] == 'consent':
             reply = self.settings.consent_text + '\n\n' + reply
         revision = app['revision']
@@ -98,24 +105,23 @@ class Service(StaffCommands):
             else:
                 revision += 1
                 await c.execute('''INSERT INTO answers(application_id,question_code,question_kind,question_text,answer_text,revision,group_id,event_id)
-                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s)''', (app['id'], code, 'followup' if code.startswith('followup') else 'base',
-                    app['questionnaire'].get(code, QUESTIONS.get(code, code)), text, revision, group, job['payload']['event_id']))
+                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s)''', (app['id'], code,
+                    'followup' if code.startswith('followup') else 'supplement' if code.startswith('supplement') else 'base',
+                    app['questionnaire'].get(code, QUESTIONS.get(code, 'Дополнение кандидата')), text, revision, group, job['payload']['event_id']))
                 await c.execute('UPDATE applications SET profile=profile || %s WHERE id=%s', (Jsonb({code: text}), app['id']))
                 if code == 'name':
                     await c.execute('UPDATE users SET name=%s WHERE id=%s', (text[:300], user['id']))
             await c.execute('UPDATE inbox_events SET application_id=%s WHERE group_id=%s AND event_id=%s', (app['id'], group, job['payload']['event_id']))
-        if code == 'source':
-            if getattr(self.settings, 'followup_url', ''):
-                state['step'] = 'planning'
-                await self.db.enqueue(c, 'prepare_followups', {'application_id': str(app['id']),
-                    'peer_id': user['vk_id'], 'serial_key': job['payload']['serial_key']},
-                    f"followups:{app['id']}:{revision}", application_id=app['id'])
-                reply = 'Основная часть заполнена. Готовлю уточняющие вопросы по вашим ответам.'
+        if code and (code == 'source' or code.startswith(('followup_', 'supplement_'))):
+            if state.get('followup_count', 0) >= state['max_followups']:
+                state['step'] = 'expectations'
+                reply = self.expectations_reply(state)
             else:
-                plan = plan_followups(state['directions'], app['profile'])
-                state, question_map = self.apply_plan(state, plan)
-                await c.execute('UPDATE applications SET questionnaire=questionnaire || %s WHERE id=%s', (Jsonb(question_map), app['id']))
-                reply = state['questions'].get(state['step'], QUESTIONS.get(state['step'], ''))
+                state['step'] = 'planning'
+                await self.db.enqueue(c, 'prepare_followups', {'application_id': str(app['id']), 'revision': revision,
+                    'peer_id': user['vk_id'], 'serial_key': f"ai:{group}:{app['id']}"},
+                    f"followups:{app['id']}:{revision}", application_id=app['id'])
+                reply = 'Ответ сохранён. Анализирую анкету и выбираю следующий уточняющий вопрос.'
         await c.execute('''UPDATE applications SET state=%s,revision=%s,selected_directions=%s,
             status=CASE WHEN %s THEN 'submitted' ELSE status END,
             submitted_at=CASE WHEN %s THEN now() ELSE submitted_at END WHERE id=%s''',
@@ -129,57 +135,94 @@ class Service(StaffCommands):
                 await self.reply(c, job, '+1 заполненная заявка\nID: ' + str(app['id']), 'notify:' + str(recipient['id']), recipient['vk_id'], recipient['id'])
 
     @staticmethod
-    def apply_plan(state, plan):
-        state = dict(state)
-        questions = {'followup_' + q['direction']: q['text'] for q in plan}
-        state['questions'] = {**state.get('questions', {}), **questions}
-        state['followup_codes'] = list(questions)
-        state['step'] = state['followup_codes'][0] if questions else 'expectations'
-        return state, questions
+    def expectations_reply(state):
+        return '\n'.join(state.get('tasks', TASKS)[d] for d in state.get('directions', [])) + '\n\n' + state.get('questions', {}).get('expectations', QUESTIONS['expectations'])
 
     async def prepare_followups(self, job):
         app_id = job['payload']['application_id']
         async with self.db.pool.connection() as c:
-            app = await (await c.execute('SELECT * FROM applications WHERE id=%s', (app_id,))).fetchone()
-            answers = await (await c.execute("SELECT question_code,question_text,answer_text FROM answers WHERE application_id=%s AND question_code NOT IN ('name','source') ORDER BY revision", (app_id,))).fetchall()
-        if not app or app['state'].get('step') != 'planning':
-            return
-        plan = plan_followups(app['selected_directions'], app['profile'])
-        try:
-            async with httpx.AsyncClient(timeout=20) as client:
-                response = await client.post(self.settings.followup_url, json={
-                    'selected_directions': app['selected_directions'], 'answers': answers,
-                    'question_bank': plan, 'max_questions': len(plan)},
-                    headers={'Authorization': 'Bearer ' + self.settings.service_token} if self.settings.service_token else {})
-                response.raise_for_status()
-                plan = validate_plan(response.json()['questions'], app['selected_directions'])
-        except Exception as exc:
-            log.warning('followup fallback error_type=%s', type(exc).__name__)
-        async with self.db.pool.connection() as c:
             if not await self.owns_lease(c, job):
                 return
-            current = await (await c.execute('SELECT state FROM applications WHERE id=%s FOR UPDATE', (app_id,))).fetchone()
-            if current['state'].get('step') != 'planning':
+            app = await (await c.execute('SELECT * FROM applications WHERE id=%s', (app_id,))).fetchone()
+            if app and 'revision' not in job['payload']:
+                # Jobs queued by the previous bot version did not contain a revision.
+                job['payload']['revision'] = app['revision']
+                await c.execute('UPDATE jobs SET payload=payload || %s WHERE id=%s',
+                    (Jsonb({'revision': app['revision']}), job['id']))
+            answers = await (await c.execute("SELECT id::text,revision,question_code,question_kind,question_text,answer_text FROM answers WHERE application_id=%s AND question_code NOT IN ('name','source') ORDER BY revision", (app_id,))).fetchall()
+        if not app or app['state'].get('step') != 'planning' or app['revision'] != job['payload']['revision']:
+            return
+        maximum = app['state'].get('max_followups', app['questionnaire'].get('_max_followups', getattr(self.settings, 'max_followups', 3)))
+        remaining = maximum - app['state'].get('followup_count', 0)
+        if remaining <= 0:
+            decision = {'action': 'finish'}
+        elif getattr(self.settings, 'followup_url', ''):
+            async with httpx.AsyncClient(timeout=20) as client:
+                response = await client.post(self.settings.followup_url, json={
+                    'application_id': str(app['id']), 'answer_revision': app['revision'],
+                    'selected_directions': app['selected_directions'], 'answers': answers,
+                    'direction_tasks': app['state'].get('tasks', TASKS), 'remaining_questions': remaining},
+                    headers={'Authorization': 'Bearer ' + self.settings.service_token} if self.settings.service_token else {})
+                response.raise_for_status()
+                decision = response.json()
+        else:
+            decision = await LLMClient(self.settings).next_question(answers, app['selected_directions'], remaining)
+        decision = validate_decision(decision, app['selected_directions'], [a['question_text'] for a in answers])
+        async with self.db.pool.connection() as c:
+            # Serialize publication with incoming event ingestion and dialog processing.
+            serial_key = f"{app['group_id']}:{job['payload']['peer_id']}"
+            await c.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))', (serial_key,))
+            if not await self.owns_lease(c, job):
                 return
-            state, questions = self.apply_plan(current['state'], plan)
+            current = await (await c.execute('SELECT state,revision FROM applications WHERE id=%s FOR UPDATE', (app_id,))).fetchone()
+            if current['state'].get('step') != 'planning' or current['revision'] != job['payload']['revision']:
+                return
+            pending = await (await c.execute("""SELECT id FROM jobs WHERE kind='dialog'
+                AND payload->>'serial_key'=%s AND status IN ('pending','running') LIMIT 1""", (serial_key,))).fetchone()
+            if pending:
+                # Let queued additions become answers before asking the model again.
+                raise RuntimeError('Incoming answers are awaiting persistence')
+            state = dict(current['state'])
+            state['max_followups'] = maximum
+            questions = {}
+            if decision['action'] == 'finish':
+                state['step'] = 'expectations'
+                text = self.expectations_reply(state)
+            else:
+                count = state.get('followup_count', 0) + 1
+                code = 'followup_ai_' + str(count)
+                state.update(step=code, followup_count=count)
+                questions[code] = decision['question']
+                state['questions'] = {**state.get('questions', {}), **questions}
+                text = decision['question']
             await c.execute('UPDATE applications SET state=%s,questionnaire=questionnaire || %s WHERE id=%s', (Jsonb(state), Jsonb(questions), app_id))
-            await self.reply(c, job, state['questions'].get(state['step'], QUESTIONS.get(state['step'], '')), peer_id=job['payload']['peer_id'])
+            await c.execute("INSERT INTO audit_log(application_id,action,details) VALUES(%s,'ai_next_question',%s)",
+                (app_id, Jsonb({'action': decision['action'], 'answer_revision': current['revision'], 'direction': decision.get('direction')})))
+            await self.reply(c, job, text, peer_id=job['payload']['peer_id'])
 
     async def score(self, job):
-        if not self.settings.scoring_url:
-            raise RuntimeError('SCORING_URL_not_configured')
         app_id = job['payload']['application_id']
         async with self.db.pool.connection() as c:
             app = await (await c.execute('SELECT * FROM applications WHERE id=%s', (app_id,))).fetchone()
             answers = await (await c.execute('SELECT id::text,question_code,question_text,answer_text FROM answers WHERE application_id=%s ORDER BY revision', (app_id,))).fetchall()
-        headers = {'Authorization': 'Bearer ' + self.settings.scoring_token} if self.settings.scoring_token else {}
-        async with httpx.AsyncClient(timeout=60) as client:
-            response = await client.post(self.settings.scoring_url, json={
-                'application_id': str(app['id']), 'answer_revision': app['revision'],
-                'selected_directions': app['selected_directions'],
-                'answers': [a for a in answers if a['question_code'] not in ('name', 'source')]}, headers=headers)
-            response.raise_for_status()
-            result = validate_evaluation(response.json(), answers)
+        visible_answers = [a for a in answers if a['question_code'] not in ('name', 'source')]
+        rubric = job['payload'].get('rubric') or load_rubric(getattr(self.settings, 'rubric_path', ''))
+        # The team endpoint and direct provider use the same frozen, human-authored rubric.
+        async with self.db.pool.connection() as c:
+            if not await self.owns_lease(c, job):
+                return
+            await c.execute("UPDATE jobs SET payload=payload || %s WHERE id=%s", (Jsonb({'rubric': rubric}), job['id']))
+        if self.settings.scoring_url:
+            headers = {'Authorization': 'Bearer ' + self.settings.scoring_token} if self.settings.scoring_token else {}
+            async with httpx.AsyncClient(timeout=60) as client:
+                response = await client.post(self.settings.scoring_url, json={
+                    'application_id': str(app['id']), 'answer_revision': app['revision'],
+                    'selected_directions': app['selected_directions'], 'answers': visible_answers, 'rubric': rubric}, headers=headers)
+                response.raise_for_status()
+                result = validate_rubric_evaluation(response.json(), rubric, visible_answers)
+        else:
+            raw = await LLMClient(self.settings).evaluate(visible_answers, app['selected_directions'], rubric)
+            result = validate_rubric_evaluation(raw, rubric, visible_answers)
         async with self.db.pool.connection() as c:
             if not await self.owns_lease(c, job):
                 return

@@ -1,23 +1,24 @@
 import unittest
 
-from gim.followups import plan_followups, validate_plan
+from gim.followups import validate_decision
 
 
 class FollowupTests(unittest.TestCase):
-    def test_skill_already_described_gets_deeper_question(self):
-        plan = plan_followups(['media'], {'experience': 'Я фотограф, снимаю мероприятия и делаю репортажи'})
-        self.assertEqual(len(plan), 1)
-        self.assertEqual(plan[0]['direction'], 'media')
-        self.assertNotIn('Что вы умеете', plan[0]['text'])
-        self.assertIn('фото', plan[0]['text'].lower())
+    def test_model_can_finish_without_unnecessary_question(self):
+        result = validate_decision({'action': 'finish'}, ['funds'], [])
+        self.assertEqual(result['action'], 'finish')
 
-    def test_unselected_directions_never_get_questions(self):
-        plan = plan_followups(['funds'], {'experience': 'Архив и каталоги'})
-        self.assertEqual([q['direction'] for q in plan], ['funds'])
-        self.assertNotIn('дет', plan[0]['text'])
+    def test_model_question_is_preserved_without_keyword_routing(self):
+        question = 'Как вы сверяли инвентарные номера предметов?'
+        result = validate_decision({'action': 'ask', 'direction': 'funds', 'question': question}, ['funds'], [])
+        self.assertEqual(result['question'], question)
 
     def test_provider_cannot_repeat_or_change_direction(self):
-        for plan in ([{'direction': 'media', 'text': 'Где работали?'}],
-                     [{'direction': 'funds', 'text': 'Один вопрос?'}, {'direction': 'funds', 'text': 'Один вопрос?'}]):
+        for decision in ({'action': 'ask', 'direction': 'media', 'question': 'Где работали?'},
+                         {'action': 'ask', 'direction': 'funds', 'question': '  Один вопрос?  '}):
             with self.assertRaises(ValueError):
-                validate_plan(plan, ['funds'])
+                validate_decision(decision, ['funds'], ['Один вопрос?'])
+
+    def test_unknown_action_is_rejected(self):
+        with self.assertRaises(ValueError):
+            validate_decision({'action': 'accept_candidate'}, ['funds'], [])
