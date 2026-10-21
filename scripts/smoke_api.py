@@ -1,6 +1,6 @@
 """Opt-in synthetic ingress → real Supabase/LLM → real curator VK/XLSX check.
 
-Run ONLY with the normal worker stopped. Candidate messages are captured locally;
+Run only in an isolated test group/DB, or with its matching normal worker stopped. Never stop production for development. Candidate messages are captured locally;
 staff messages/files go only to --staff-vk-id, which must already be authorized.
 Creates two clearly labelled synthetic applications; never edits existing forms.
 Invoke as python -m scripts.smoke_api --staff-vk-id YOUR_ID.
@@ -161,7 +161,7 @@ async def smoke(staff_vk_id,output):
             dialog=await service.bot_repo.dialog_context(app['id'])
             assert dialog['application']['status']=='submitted'
             assert len(dialog['answers'])>=19
-            followups=[q for q in dialog['questions'] if q['source']!='base']
+            followups=[q for q in dialog['questions'] if q['source']!='base' and q.get('purpose')!='expectations']
             assert len(followups)<=3 and len({q['target_slot'] for q in followups})==len(followups)
             async with pools[1].connection() as c:
                 evaluation=await one(c,'SELECT score,criteria_results,summary FROM gim.evaluations WHERE application_id=%s ORDER BY created_at DESC LIMIT 1',(app['id'],))
@@ -169,7 +169,7 @@ async def smoke(staff_vk_id,output):
                 raise RuntimeError('Live model did not produce a verified evaluation')
             report['applications'].append({'id':str(app['id']),'answers':len(dialog['answers']),
                 'followups':[q['text'] for q in followups],'score':evaluation['score'],
-                'criteria':len(evaluation['criteria_results'])})
+                'criteria':len(evaluation['criteria_results']), 'expectations_checks':sum(q.get('purpose')=='expectations' for q in dialog['questions'])})
             print(json.dumps({'phase':'application_verified','application':str(app['id']),
                               'score':evaluation['score'],'answers':len(dialog['answers'])}),flush=True)
             await incoming(actor,'/status')
@@ -190,7 +190,7 @@ async def smoke(staff_vk_id,output):
                 response.raise_for_status()
                 assert hashlib.sha256(response.content).hexdigest()==meta['sha256']
                 wb=load_workbook(io.BytesIO(response.content),read_only=True)
-                assert wb.sheetnames==['Анкеты','Ответы','Собеседование','Сводка']
+                assert wb.sheetnames==['Анкеты','Ответы','Собеседование','Сводка','Оценка']
                 assert wb['Анкеты'].max_row==len(bundle['Анкеты'])+1
                 wb.close()
         report['xlsx_downloaded_and_verified']=len(files)

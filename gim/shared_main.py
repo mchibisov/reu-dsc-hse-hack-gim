@@ -43,17 +43,18 @@ async def check_database(settings, pools):
         # Fail before Long Poll if the new SQL runtime migration has not been applied.
         await c.execute('SELECT group_id,ts,lease_token,lease_until FROM gim.gateway_checkpoints LIMIT 0')
         await c.execute('SELECT lease_until,lease_token,attempts,failed_at FROM gim.outbox_events LIMIT 0')
+        await c.execute('SELECT archived,attempt,analysis_rubric,analysis_rubric_version FROM gim.applications LIMIT 0')
     return {'schema': 'gim', 'recruitment_id': str(settings.recruitment_id), 'base_questions': len(templates),
             'analysis': 'configured' if settings.llm_api_key else 'disabled',
             'redis': False, 'storage': 'local-private'}
 
 
-async def worker_loop(service, pool, group_id):
+async def worker_loop(service, pool, group_id, *, delivery_only=False):
     queue = SQLQueue(pool, group_id=group_id)
     ctx = {'repository': service.worker_repo, 'handlers': service.handlers}
     while True:
         try:
-            if not await run_once(ctx, queue, limit=1):
+            if not await run_once(ctx, queue, limit=1,topics=('vk.send','question.send','staff.notify','file.export') if delivery_only else None):
                 await asyncio.sleep(0.5)
         except asyncio.CancelledError:
             raise
@@ -102,8 +103,8 @@ async def run(mode, settings):
             if mode in {'run', 'gateway'}:
                 tasks.create_task(gateway_loop(vk, pools[0], settings.group_id))
             if mode in {'run', 'worker'}:
-                for _ in range(settings.concurrency):
-                    tasks.create_task(worker_loop(service, pools[1], settings.group_id))
+                for i in range(settings.concurrency):
+                    tasks.create_task(worker_loop(service, pools[1], settings.group_id,delivery_only=(i==0 and settings.concurrency>1)))
 
 
 async def run_with_shutdown(mode,settings):

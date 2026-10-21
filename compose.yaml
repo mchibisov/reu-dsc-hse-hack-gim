@@ -1,5 +1,6 @@
 services:
   gateway:
+    image: ${GIM_IMAGE:-gim-mvp-final:local}
     build:
       context: .
       dockerfile: Dockerfile.shared
@@ -12,6 +13,7 @@ services:
       driver: json-file
       options: {max-size: '10m', max-file: '3'}
   worker:
+    image: ${GIM_IMAGE:-gim-mvp-final:local}
     build:
       context: .
       dockerfile: Dockerfile.shared

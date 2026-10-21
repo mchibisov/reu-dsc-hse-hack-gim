@@ -97,6 +97,8 @@ def select_followups(templates, questions, directions, maximum, answers=None):
     for q in questions:
         if q['source']!='base':
             asked_slots|=question_topics(q.get('text',''))
+    if any(q.get('purpose')=='expectations' for q in questions):
+        asked_slots|={'alternatives','expectation_goals'}
     asked_texts={' '.join(q.get('text','').split()).casefold() for q in questions}
     result=[]
     for t in sorted(templates,key=lambda t:(not bool(t.get('directions')),t['position'])):

@@ -6,6 +6,8 @@
 """
 import asyncio
 import hashlib
+import json
+from pathlib import Path
 import logging
 from datetime import date
 from uuid import UUID
@@ -21,12 +23,20 @@ from gim.shared_export_access import request_code_export,code_recipient
 from gim.shared_analysis import safe_answers, approved_rubric, validate_result, ANALYSIS_PROMPT, DIRECTION_NAMES
 
 HELP = 'Это бот волонтёрской программы ГИМ. В VK бот штатно отвечает в личных сообщениях сообщества — отдельный аккаунт бота не нужен. Команды: /start — начать или продолжить, /status — статус, /help — помощь. Ответьте текстом на текущий вопрос. Для неприменимого поля напишите «не относится». Резюме и PDF в этом режиме не принимаются.'
-STAFF_HELP = 'Команды сотрудника: /admin, /help, /top, /stats, /application UUID (или /candidate UUID), /export [UUID]. Автоматическая оценка требует ключ модели и утверждённую рубрику. Решение о приёме принимает сотрудник.'
-WELCOME = 'Здравствуйте! Я бот волонтёрской программы Государственного исторического музея. Помогу заполнить заявку и уточню важные детали вашего опыта. Обычно анкета занимает 7–8 минут: 19 основных вопросов и до трёх коротких уточнений от AI. Достаточно 1–3 предложений на содержательный вопрос; если поле не подходит, напишите «не относится». Ответы увидит куратор; решение о приглашении принимает сотрудник музея.\n\nКнопки «Начать», «Статус» и «Помощь» доступны всем. Начнём с согласия на обработку данных.'
+STAFF_HELP = 'Команды сотрудника: /admin, /help, /top, /stats, /application UUID (или /candidate UUID), /export [UUID], /new [СТРАНИЦА], /top [СТРАНИЦА], /score UUID БАЛЛ ПРИЧИНА, /jobs. Администратору: /reset. Автоматическая оценка требует ключ модели и утверждённую рубрику. Решение о приёме принимает сотрудник.'
+WELCOME = 'Здравствуйте! Я бот волонтёрской программы Государственного исторического музея. Помогу заполнить заявку и уточню важные детали вашего опыта. Ориентир прохождения — 5–7 минут (время зависит от подробности ответов): 19 основных вопросов и до трёх коротких уточнений от AI. Достаточно 1–3 предложений на содержательный вопрос; если поле не подходит, напишите «не относится». Ответы увидит куратор; решение о приглашении принимает сотрудник музея.\n\nКнопки «Начать», «Статус» и «Помощь» доступны всем. Начнём с согласия на обработку данных.'
 
 
 def question_text(question,actor):
     text=question['text']
+    if question.get('source')=='base' and question.get('position'):
+        text=f'Основная анкета · {question["position"]} из 19\n\n'+text
+    elif question.get('purpose')=='expectations':
+        text='Совпали ли ожидания?\n\n'+text
+    elif question.get('source') in {'generated','template'}:
+        text='Короткое уточнение\n\n'+text
+    if question['target_slot']=='consent':
+        text+='\n\nСодержательные ответы анализируются AI для подготовки к собеседованию. Имя, контакты и дата рождения исключаются из запроса модели. Не включайте ненужные личные сведения в свободный текст. Окончательное решение принимает сотрудник.'
     if question['target_slot']=='vk_url':
         text+=f'\n\nВаша страница: https://vk.com/id{actor}\nНажмите «Использовать мою страницу», либо откройте ссылку, скопируйте её и отправьте ответом.'
     return text
@@ -83,7 +93,7 @@ class SharedService:
         command=text.strip().split(maxsplit=1)[0].casefold() if text.strip() else ''
         alias=text.strip().casefold().rstrip('.!')
         command={'старт':'/start','начать':'/start','начать анкету':'/start','привет':'/start',
-                 'статус':'/status','помощь':'/help','экспорт':'/export'}.get(alias,command)
+                 'статус':'/status','помощь':'/help','экспорт':'/export','меню':'/help','новые анкеты':'/new'}.get(alias,command)
         staff=await self._staff(actor)
         access=incoming.get('_export_access')
         if command=='/export' and access:
@@ -94,7 +104,7 @@ class SharedService:
                 await self._emit(event,actor,'Готовлю файл Excel (.xlsx). Он придёт отдельным вложением в этот диалог.' if allowed
                     else 'Доступ не подтверждён. Проверьте код или повторите через 10 минут.')
             return
-        staff_commands={'/admin','/top','/stats','/application','/candidate','/export','/score','/jobs'}
+        staff_commands={'/admin','/top','/stats','/application','/candidate','/export','/score','/jobs','/new','/reset'}
         if command in staff_commands or (staff and command=='/help'):
             if not staff:
                 await self._emit(event,actor,'Команда доступна только активным сотрудникам сообщества.')
@@ -118,6 +128,9 @@ class SharedService:
         except Conflict:
             await self._emit(event,actor,'Активный набор недоступен. Обратитесь к оператору сообщества.')
             return
+        if app.get('answers_revision')==0 and getattr(self.settings,'analysis_rubric_path',''):
+            configured=json.loads(Path(self.settings.analysis_rubric_path).read_text())
+            await self.bot_repo.pin_rubric(app['id'],configured['rubric'],configured['version'])
         ctx=await self.bot_repo.dialog_context(app['id'])
         if not ctx['questions'] and command!='/status':
             await self._emit(event,actor,WELCOME,app_id=app['id'],suffix='welcome')
@@ -192,7 +205,22 @@ class SharedService:
                     expected_revision=app['answers_revision'],template_id=t['id'])
                 return
         direction=parse_answer('directions',slots['directions']['answer_text'])[0] if 'directions' in slots else {'selected_directions':[],'undecided':False}
-        count=sum(q['source']!='base' for q in ctx['questions'])
+        if ctx['followup_policy'].get('expectations_check',getattr(self.settings,'expectations_check',False)):
+            check=next((q for q in ctx['questions'] if q['target_slot']=='expectations_match'),None)
+            if check is None:
+                parts=[]
+                for d in direction['selected_directions']:
+                    info=ctx['direction_info'].get(d,'').replace('\\n','\n').strip()
+                    if info:parts.append(DIRECTION_NAMES[d]+': '+info)
+                if not parts:
+                    parts=[DIRECTION_NAMES[d]+': '+ctx['direction_info'].get(d,'').replace('\\n','\n').strip() for d in DIRECTION_NAMES]
+                if 'collections' in direction['selected_directions']:
+                    parts.append('Мест в фондовом направлении немного: участие только в нём не гарантируется.')
+                text='\n\n'.join(parts)+'\n\nНасколько эти задачи совпадают с вашими ожиданиями? Что интересно, что не подходит? Готовы ли рассмотреть другие направления и какие? Отказ от альтернатив сам по себе не означает отказ в участии.'
+                await self.bot_repo.prepare_question(app_id,request_key=f'expectations:{app["answers_revision"]}',
+                    expected_revision=app['answers_revision'],text=text,target_slot='expectations_match',purpose='expectations')
+                return
+        count=sum(q['source']!='base' and q.get('purpose')!='expectations' for q in ctx['questions'])
         limit=min(3,getattr(self.settings,'max_followups',3),ctx['followup_policy'].get('max_followups',3))
         model_finished=False
         if count<limit and getattr(self.settings,'llm_api_key',''):
@@ -233,10 +261,45 @@ class SharedService:
         await self._emit(event,actor,'Анкета получена. Спасибо!',app_id=app_id)
 
     async def _staff_command(self,event,actor,text,command):
-        if command in {'/admin','/help','/jobs','/score'}:
+        if command in {'/admin','/help'}:
             await self._emit(event,actor,STAFF_HELP,staff=True)
             return
         parts=text.strip().split()
+        if command=='/reset':
+            staff=await self._staff(actor)
+            if not staff or staff['role']!='admin':
+                await self._emit(event,actor,'Сброс доступен только администратору для собственной тестовой анкеты.',staff=True)
+                return
+            if parts[1:]!=['confirm']:
+                await self._emit(event,actor,'Создать новую собственную тестовую анкету? Предыдущая попытка останется в архиве. Для подтверждения отправьте /reset confirm',staff=True)
+                return
+            new_id=await self.staff_repo.reset_own_application(actor,self.settings.recruitment_id,request_key=str(event['id']))
+            await self._emit(event,actor,f'Новая тестовая анкета создана: {new_id}. Нажмите «Начать». Предыдущие ответы сохранены в архиве.',staff=True)
+            return
+        if command=='/score':
+            try:
+                fields=text.strip().split(maxsplit=3)
+                target=UUID(fields[1]);score=int(fields[2]);reason=fields[3].strip()
+                if not 0<=score<=3 or not 5<=len(reason)<=1500:raise ValueError()
+            except (ValueError,IndexError):
+                await self._emit(event,actor,'Формат: /score UUID БАЛЛ ОБОСНОВАНИЕ. Балл — целое 0–3, причина — 5–1500 символов.',staff=True)
+                return
+            bundle=await self.staff_repo.export_bundle(actor,self.settings.recruitment_id,application_id=target)
+            rows=bundle['Анкеты']
+            if not rows:
+                await self._emit(event,actor,'Анкета не найдена в текущем наборе.',staff=True);return
+            row=rows[0]
+            await self.staff_repo.curator_evaluation(actor,target,revision=row['answers_revision'],score=score,
+                criteria=row.get('criteria_results') or [],summary='Оценка сотрудника: '+reason,
+                request_key=str(event['id']),directions=row.get('recommended_directions') or [],
+                interview_questions=(bundle.get('Собеседование') or [{}])[0].get('interview_questions',[]))
+            await self._emit(event,actor,f'Сохранена оценка сотрудника {score}/3. Исходная AI-оценка сохранена. /application {target}',staff=True)
+            return
+        if command=='/jobs':
+            async with self.worker_repo.pool.connection() as c:
+                row=await one(c,"SELECT count(*) FILTER(WHERE completed_at IS NULL AND failed_at IS NULL) pending,count(*) FILTER(WHERE failed_at IS NOT NULL) failed FROM gim.outbox_events WHERE payload->>'group_id'=%s OR application_id IN (SELECT a.id FROM gim.applications a JOIN gim.recruitments r ON r.id=a.recruitment_id WHERE r.group_id=%s)",(str(self.settings.group_id),self.settings.group_id))
+            await self._emit(event,actor,f'В очереди: {row["pending"]}. Завершились ошибкой: {row["failed"]}. Оператор может проверить безопасные коды ошибок.',staff=True)
+            return
         app_id=None
         if command in {'/application','/candidate'} or (command=='/export' and len(parts)>1):
             try:
@@ -249,7 +312,7 @@ class SharedService:
                                                kind='xlsx',request_key=str(event['id']))
             await self._emit(event,actor,'Готовлю файл Excel (.xlsx). Он придёт отдельным вложением в этот диалог.',staff=True)
             return
-        bundle=await self.staff_repo.export_bundle(actor,self.settings.recruitment_id,application_id=app_id)
+        bundle=await self.staff_repo.export_bundle(actor,self.settings.recruitment_id,application_id=app_id,**({'filters':{'status':'submitted'}} if command=='/new' else {}))
         if command=='/stats':
             stats=bundle['Сводка']
             text=f'Всего: {stats["total"]}. С оценкой: {stats["scored"]}. Без оценки: {stats["unscored"]}. Средний балл: {stats.get("average_score") if stats.get("average_score") is not None else "нет"}.'
@@ -257,7 +320,10 @@ class SharedService:
             rows=bundle['Анкеты']
             # The database provides the authoritative score ordering, NULLS LAST.
             cards=[]
-            for r in rows[:15]:
+            if command=='/new':rows=sorted(rows,key=lambda r:r.get('submitted_at') or '',reverse=True)
+            page=int(parts[1]) if command in {'/top','/new'} and len(parts)>1 and parts[1].isdigit() else 1
+            page=max(1,min(page,max(1,(len(rows)+4)//5)))
+            for r in rows[(page-1)*5:page*5] if not app_id else rows[:1]:
                 status={'draft':'черновик','submitted':'подана','withdrawn':'отозвана'}.get(r['status'],r['status'])
                 card=f'{r["application_id"]} | {r.get("full_name") or "имя не указано"} | {status} | балл: {r.get("score") if r.get("score") is not None else "не оценена"}'
                 if not app_id:
@@ -266,13 +332,29 @@ class SharedService:
                     card+=f'\n/application {r["application_id"]}'
                 cards.append(card)
             text='\n\n'.join(cards) or 'Анкеты не найдены.'
+            if not app_id and rows:
+                text+=f'\n\nСтраница {page} из {max(1,(len(rows)+4)//5)}.'
+                if page*5<len(rows):text+=f' Следующая: {command} {page+1}'
             if app_id and rows:
                 r=rows[0]
                 text+=f'\nEmail: {r.get("email") or "не указан"}\nНаправления: {", ".join(DIRECTION_NAMES.get(d,d) for d in r.get("selected_directions",[])) or "не определился"}. Полные ответы доступны в /export {app_id}.'
                 text+=f'\nAI-сводка: {r.get("summary") or "Ожидается анализ / проверка сотрудником"}'
+                if r.get('ai_score') is not None:
+                    text+=f'\nИсходная AI-оценка: {r["ai_score"]}/3. '+(r.get('ai_summary') or '' if r.get('evaluation_source')=='curator' else '')
                 for item in r.get('criteria_results') or []:
                     quotes='; '.join(ev.get('quote','') for ev in item.get('evidence',[]))
-                    text+=f'\n{item.get("code")}: {item.get("points")} — {item.get("reason","")} «{quotes}»'
+                    text+=f'\n{item.get("name",item.get("code"))}: '+str(item.get('points'))+f' — {item.get("reason","")} «{quotes}»'
+                    for fact in item.get('facts',[]):
+                        text+=f'\n  {fact.get("label",fact["code"])}: '+{'yes':'да','no':'нет','unknown':'недостаточно данных'}[fact['status']]+(f' — «{fact["quote"]}»' if fact.get('quote') else '')
+                    if item.get('calculation'):
+                        calc=item['calculation']
+                        if calc.get('kind')=='weighted_sum':
+                            text+=f'\nРасчёт: 3 × {calc["points"]:.3f} / {calc["observed"]:.3f} = {calc["raw"]:.3f}; округление 0.5 вверх → {calc["score"]}/3. Неизвестные группы исключены. Это не вероятность.'
+                            continue
+                        if calc.get('kind')=='logistic':
+                            text+='\nРасчёт фиксированной модели: x=1 (да), −1 (нет), 0 (неизвестно); для каждого балла b + Σ(w×x). Отклики: '+', '.join(f'{k}: {v:.3f}' for k,v in calc['class_values'].items())+f'. Максимальный отклик → {calc["score"]}/3. Это не вероятность. Подтверждено фактов: {calc["observed_facts"]}/{calc["total_facts"]}.'
+                            continue
+                        text+=f'\nРасчёт: базовый уровень {calc["intercept"]:.3f} + вклады фактов = {calc["raw"]:.3f}; ограничение 0–3, округление 0.5 вверх → {calc["score"]}/3. Подтверждено фактов: {calc["observed_facts"]}/{calc["total_facts"]} (это полнота данных, не вероятность успеха).'
                 interviews=bundle.get('Собеседование',[])
                 if interviews:
                     text+='\nСобеседование: '+str(interviews[0].get('interview_questions',interviews[0]))
@@ -317,6 +399,10 @@ class SharedService:
         if not getattr(self.settings,'llm_api_key',''):
             raise ModelUnavailable('Set LLM_API_KEY to enable analysis')
         snapshot=event['snapshot']
+        if snapshot['rubric'].get('scoring_method')=='fixed_facts_ridge':
+            from gim.evidence import analyze
+            checked=await analyze(self.llm,snapshot)
+            return {**checked,'model':self.settings.llm_model,'prompt_version':'fixed-facts-v1'}
         rubric,_=approved_rubric(snapshot)
         safe=safe_answers(snapshot['answers'])
         payload={'rubric':{k:v for k,v in rubric.items() if k!='history_examples'},
@@ -334,6 +420,9 @@ class SharedService:
                 'Если сведений нет, явно исключи группу: points=0, needs_review=true.',
                 {**payload,'previous_result':result,'validation_error':str(exc)})
             checked=validate_result(result,snapshot,safe)
+        if getattr(self.settings,'enhanced_reports',False):
+            from gim.evidence import analyze
+            checked=await analyze(self.llm,snapshot,scored=checked)
         return {**checked,
                 'model':self.settings.llm_model,'prompt_version':'shared-analysis-v1'}
 
@@ -346,6 +435,7 @@ class SharedService:
         safe=safe_answers(answers)
         topics={t['target_slot'] for t in ctx['templates'] if t['kind']!='base'}|{'experience_detail','skills_detail'}
         asked_topics={q['target_slot'] for q in ctx['questions'] if q.get('source','base')!='base'}
+        if any(q.get('purpose')=='expectations' for q in ctx['questions']):asked_topics|={'alternatives','expectation_goals'}
         for q in ctx['questions']:
             if q.get('source','base')!='base':
                 asked_topics|=question_topics(q['text'])

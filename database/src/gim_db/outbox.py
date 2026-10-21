@@ -168,11 +168,11 @@ async def _execute(ctx, queue, event):
         log.warning('outbox_execution_failed event_id=%s code=%s', event['id'], code)
 
 
-async def run_once(ctx, queue, limit=10):
+async def run_once(ctx, queue, limit=10, *, topics=None):
     """Process at most limit events, one claim at a time; return claimed count."""
     count = 0
     for _ in range(limit):
-        event = await queue.claim()
+        event = await queue.claim(topics) if topics is not None else await queue.claim()
         if event is None:
             break
         count += 1

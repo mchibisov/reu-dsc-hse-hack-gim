@@ -5,7 +5,9 @@ import re
 import zipfile
 from datetime import datetime
 from openpyxl import Workbook
-from openpyxl.styles import Font
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
+from gim.shared_analysis import DIRECTION_NAMES
 
 SHEETS=('Анкеты','Ответы','Собеседование','Сводка')
 HEADERS={
@@ -23,6 +25,14 @@ HEADERS={
     'created_at':'Дата ответа','is_latest':'Последняя версия ответа','interview_questions':'Вопросы для собеседования',
     'expectations':'Ответы об ожиданиях','metric':'Показатель','value':'Значение',
     'continuation_part':'Часть текста','continuation_total':'Всего частей','field_encodings':'Кодировка полей',
+}
+HEADERS.update({'ai_score':'Исходный балл AI','ai_summary':'Исходное резюме AI','criterion':'Критерий','criterion_status':'Статус критерия','reason':'Обоснование','quote':'Подтверждающая цитата','points':'Вклад в оценку','source_id':'ID исходного ответа','full_ai_report':'Полный AI-отчёт'})
+ORDER={
+ 'Анкеты':['full_name','score','ai_score','status','decision','selected_directions','recommended_directions','summary','ai_summary','email','submitted_at','evaluated_at','criteria_results'],
+ 'Ответы':['application_id','position','question_text','answer_text','question_source','purpose','target_slot','is_latest'],
+ 'Собеседование':['application_id','summary','expectations','interview_questions'],
+ 'Оценка':['full_name','criterion','criterion_status','points','reason','quote','application_id','source_id'],
+ 'Сводка':['metric','value'],
 }
 LABELS={
     'status':{'draft':'Черновик','submitted':'Подана','withdrawn':'Отозвана'},
@@ -46,7 +56,20 @@ def snapshot_xlsx(snapshot):
     wb=Workbook()
     wb.remove(wb.active)
     wb.properties.created=wb.properties.modified=datetime(2000,1,1)
-    for name in SHEETS:
+    proof=[]
+    for app in snapshot.get('Анкеты',[]):
+        for criterion in app.get('criteria_results') or []:
+            items=criterion.get('facts') or [criterion]
+            for item in items:
+                ev=item.get('evidence',criterion.get('evidence',[]))
+                proof.append({'full_name':app.get('full_name'),'application_id':app['application_id'],
+                    'criterion':item.get('label',criterion.get('name',item.get('code'))),
+                    'criterion_status':{'yes':'Да','no':'Нет','unknown':'Недостаточно данных'}.get(item.get('status'),'Нужно уточнить' if criterion.get('needs_review') else 'Оценён'),
+                    'points':item.get('contribution',criterion.get('points')),'reason':criterion.get('reason',''),
+                    'quote':item.get('quote') or '\n'.join(e.get('quote','') for e in ev),
+                    'source_id':item.get('source_id') or ', '.join(str(e.get('source_id','')) for e in ev)})
+    snapshot={**snapshot,'Оценка':proof}
+    for name in (*SHEETS,'Оценка'):
         sheet=wb.create_sheet(name)
         data=snapshot.get(name,[] if name!='Сводка' else {})
         if isinstance(data,dict):
@@ -54,9 +77,16 @@ def snapshot_xlsx(snapshot):
         prepared=[]
         for record in data:
             record=dict(record)
+            if name=='Анкеты' and isinstance(record.get('summary'),str):
+                record['full_ai_report']=record['summary']
+                record['summary']=record['summary'].split('\n\n')[0]
             for key,labels in LABELS.items():
                 if isinstance(record.get(key),str):
                     record[key]=labels.get(record[key],record[key])
+            for field in ('selected_directions','recommended_directions'):
+                if isinstance(record.get(field),list):record[field]=', '.join(DIRECTION_NAMES.get(d,d) for d in record[field])
+            if name=='Сводка' and isinstance(record.get('value'),dict):
+                record['value']='\n'.join(f'{DIRECTION_NAMES.get(k,k)}: {v}' for k,v in record['value'].items())
             encoded={}
             for key,value in list(record.items()):
                 text=_text(value)
@@ -67,11 +97,15 @@ def snapshot_xlsx(snapshot):
                 record['field_encodings']=encoded
             prepared.append(record)
         data=prepared
-        columns=list(dict.fromkeys(k for row in data for k in row)) or ['Нет данных']
+        available=list(dict.fromkeys(k for row in data for k in row))
+        columns=[k for k in ORDER.get(name,[]) if k in available]+[k for k in available if k not in ORDER.get(name,[])] or ['Нет данных']
         columns += ['continuation_part','continuation_total']
         sheet.append([HEADERS.get(k,k) for k in columns])
         for cell in sheet[1]:
-            cell.font=Font(bold=True)
+            cell.font=Font(bold=True,color='FFFFFF')
+            cell.fill=PatternFill('solid',fgColor='A71930')
+            cell.alignment=Alignment(wrap_text=True,vertical='center')
+        sheet.row_dimensions[1].height=34
         for row in data:
             # 15000 code points also fit Excel's UTF-16 limit for astral emoji.
             chunks={k:[_text(row.get(k))[i:i+15000] for i in range(0,len(_text(row.get(k))),15000)] or [''] for k in columns[:-2]}
@@ -83,9 +117,21 @@ def snapshot_xlsx(snapshot):
                     v=chunks[k]
                     values.append(v[n] if n<len(v) else (v[0] if k.endswith('_id') else ''))
                 sheet.append(values+[str(n+1),str(total)])
-                for cell in sheet[sheet.max_row]:
-                    cell.data_type='s'
-        sheet.freeze_panes='A2'
+                for cell,k in zip(sheet[sheet.max_row],columns):
+                    raw=row.get(k)
+                    if n==0 and k in {'score','ai_score','position','points','answers_revision'} and type(raw) in (int,float):
+                        cell.value=raw
+                    else:cell.data_type='s'
+                    cell.alignment=Alignment(wrap_text=True,vertical='top')
+                    if sheet.max_row%2==0:cell.fill=PatternFill('solid',fgColor='FFF3F4')
+                sheet.row_dimensions[sheet.max_row].height=75 if name!='Сводка' else 40
+        for i,k in enumerate(columns,1):
+            sheet.column_dimensions[get_column_letter(i)].width=(65 if k in {'summary','ai_summary','answer_text','question_text','reason','quote','criteria_results','interview_questions'} else 30 if k not in {'score','ai_score','points','position','continuation_part','continuation_total'} else 14)
+        for i,k in enumerate(columns,1):
+            if k in {'criteria_results','full_ai_report','field_encodings'} or (k in {'continuation_part','continuation_total'} and all(len(_text(r.get('answer_text','')))<15000 for r in data)):
+                sheet.column_dimensions[get_column_letter(i)].hidden=True
+        sheet.sheet_view.zoomScale=85
+        sheet.freeze_panes='B2' if name=='Анкеты' else 'A2'
         sheet.auto_filter.ref=sheet.dimensions
     data=io.BytesIO()
     wb.save(data)

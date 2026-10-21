@@ -266,7 +266,7 @@ class DomainTests(unittest.TestCase):
         bundle = {'Анкеты':[], 'Ответы':[dict(application_id='app',question_id='q',answer_id='a',answer_text=raw)],
                   'Собеседование':[], 'Сводка':dict(total=1,scored=0,average_score=None)}
         wb = load_workbook(io.BytesIO(snapshot_xlsx(bundle)))
-        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка'])
+        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка','Оценка'])
         rows = list(wb['Ответы'].values)
         ix = rows[0].index('Ответ кандидата')
         self.assertEqual(''.join(r[ix] for r in rows[1:]),raw)
@@ -621,7 +621,7 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         reconstructed=''.join(r[answer] or '' for r in rows[1:] if r[cols.index('ID ответа')]==aid)
         self.assertEqual(reconstructed,raw)
         exported=list(wb['Анкеты'].values)
-        self.assertEqual(exported[1][exported[0].index('Балл 0–3')],'2')
+        self.assertEqual(exported[1][exported[0].index('Балл 0–3')],2)
         self.vk.upload.assert_awaited_once()
 
 
@@ -638,7 +638,7 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(meta['requested_by_staff_id'])
         from openpyxl import load_workbook
         wb=load_workbook(io.BytesIO(self.objects[meta['storage_key']]))
-        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка'])
+        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка','Оценка'])
         self.assertIn(str(app['id']),str(list(wb['Анкеты'].values)))
         self.assertIn('AI-сводка',next(wb['Анкеты'].values))
         await self.enqueue('/top')
