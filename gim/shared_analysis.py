@@ -74,7 +74,7 @@ def validate_result(result,snapshot,safe):
     seen=set(); total=Decimal(0); observed=Decimal(0); missing=[]
     for item in criteria:
         code=item.get('code')
-        if code not in maxima or code in seen:
+        if not isinstance(code,str) or code not in maxima or code in seen:
             raise ValueError('Unknown or duplicate criterion')
         seen.add(code)
         points=decimal(item.get('points'))
@@ -97,7 +97,7 @@ def validate_result(result,snapshot,safe):
         for ev in evidence:
             sid=ev.get('source_id'); quote=ev.get('quote')
             if (ev.get('source_type')!='answer' or not isinstance(quote,str) or not quote.strip()
-                or sid not in sources or quote not in sources[sid] or quote not in originals[sid]):
+                or not isinstance(sid,str) or sid not in sources or quote not in sources[sid] or quote not in originals[sid]):
                 raise ValueError('Unverifiable evidence')
         total+=points
     if partial:

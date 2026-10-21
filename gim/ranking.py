@@ -30,8 +30,8 @@ def validate(facts,answers):
  if not isinstance(facts,list) or len(facts)!=len(FEATURES):raise ValueError('All ranking facts required')
  sources={a['id']:a['text'] for a in answers};by={}
  for f in facts:
-  if not isinstance(f,dict) or f.get('code') not in FEATURES or f['code'] in by or f.get('status') not in {'yes','no','unknown'}:raise ValueError('Invalid ranking fact')
-  if f['status']!='unknown' and (not isinstance(f.get('quote'),str) or not f['quote'].strip() or f.get('source_id') not in sources or f['quote'] not in sources[f['source_id']]):raise ValueError('Unverifiable ranking evidence')
+  if not isinstance(f,dict) or not isinstance(f.get('code'),str) or f.get('code') not in FEATURES or f['code'] in by or not isinstance(f.get('status'),str) or f.get('status') not in {'yes','no','unknown'}:raise ValueError('Invalid ranking fact')
+  if f['status']!='unknown' and (not isinstance(f.get('quote'),str) or not f['quote'].strip() or not isinstance(f.get('source_id'),str) or f.get('source_id') not in sources or f['quote'] not in sources[f['source_id']]):raise ValueError('Unverifiable ranking evidence')
   if f['status']=='unknown':f={**f,'quote':'','source_id':None}
   by[f['code']]=f
  return [by[c] for c in FEATURES]

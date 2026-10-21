@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-from .repository import Repository, create_pool, one
+from .repository import Repository, create_pool, one, emit, all_rows
 
 log = logging.getLogger('gim.tasks')
 TOPICS = ('question.send', 'application.analyze', 'staff.notify', 'file.export', 'vk.incoming', 'vk.send')
@@ -36,12 +36,13 @@ class SQLQueue:
         group = None if self.group_id is None else str(self.group_id)
         async with self.pool.connection() as c, c.transaction():
             # A process dying on its final attempt must become terminal too.
-            await c.execute(f'''UPDATE gim.outbox_events SET failed_at=now(),lease_token=NULL,lease_until=NULL,
+            expired=await all_rows(c,f'''UPDATE gim.outbox_events SET failed_at=now(),lease_token=NULL,lease_until=NULL,
                 last_error_code=COALESCE(last_error_code,'lease_expired') WHERE id IN (
                 SELECT e.id FROM gim.outbox_events e {joins}
                 WHERE e.completed_at IS NULL AND e.failed_at IS NULL AND e.attempts>=e.max_attempts
                 AND (e.lease_until IS NULL OR e.lease_until<=now()) AND {scope}
-                FOR UPDATE OF e SKIP LOCKED)''', (group, group))
+                FOR UPDATE OF e SKIP LOCKED) RETURNING *''', (group, group))
+            for event in expired:await _notify_failed_analysis(c,event)
             return await one(c, f'''WITH candidate AS (
                 SELECT e.id FROM gim.outbox_events e {joins}
                 WHERE e.completed_at IS NULL AND e.failed_at IS NULL AND e.attempts<e.max_attempts
@@ -92,7 +93,17 @@ class SQLQueue:
             if event and success and error_code is None and event['topic'] == 'question.send':
                 await c.execute('UPDATE gim.dialog_questions SET asked_at=COALESCE(asked_at,now()) WHERE id=%s AND application_id=%s',
                                 (event['payload']['question_id'], event['application_id']))
+            if event and event['failed_at'] is not None:await _notify_failed_analysis(c,event)
             return event is not None
+
+
+async def _notify_failed_analysis(c,event):
+    if event['topic']!='application.analyze' or not event.get('application_id'):return
+    recipients=await all_rows(c,'''SELECT s.id FROM gim.staff_members s JOIN gim.recruitments r ON r.group_id=s.group_id
+      JOIN gim.applications a ON a.recruitment_id=r.id WHERE a.id=%s AND NOT a.archived AND s.active AND s.notify_new_applications''',(event['application_id'],))
+    for recipient in recipients:
+        await emit(c,event['application_id'],'staff.notify',f'analysis-unavailable:{event["id"]}:{recipient["id"]}',
+                   {'kind':'analysis_unavailable'},staff_id=recipient['id'])
 
 
 async def _handle(ctx, event):

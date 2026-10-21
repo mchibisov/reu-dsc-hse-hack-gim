@@ -154,6 +154,16 @@ class SharedServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.repo.app['current_question_id'],current)
         self.assertEqual(self.repo.questions[-1]['target_slot'],'email')
 
+    async def test_delayed_receipt_after_submission_does_not_rewrite_form(self):
+        for text in ['/start','да','Synthetic','synthetic@example.test','01.01.2000','не определился']:
+            await self.s.incoming(self.event(text))
+        before=len(self.repo.answers)
+        e=self.event('Позднее дополнение')
+        e['payload']['receipt']={'app_id':str(self.repo.app['id']),'question_id':str(self.repo.questions[-1]['id'])}
+        await self.s.incoming(e)
+        self.assertEqual(len(self.repo.answers),before)
+        self.assertEqual(self.repo.app['status'],'submitted')
+
     async def test_raw_is_never_truncated_and_contacts_require_consent(self):
         await self.s.incoming(self.event('/start'))
         await self.s.incoming(self.event('Согласен'))

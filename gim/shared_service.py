@@ -142,6 +142,9 @@ class SharedService:
         if command=='/start':
             await self._advance(event,actor,ctx,resume=True)
             return
+        if ctx['application']['status']!='draft':
+            await self._advance(event,actor,ctx)
+            return
         # Prefer durable binding even if an earlier execution advanced the application.
         binding=payload.get('binding')
         receipt=payload.get('receipt')
@@ -358,6 +361,8 @@ class SharedService:
             if app_id and rows:
                 r=rows[0]
                 text+=f'\nEmail: {r.get("email") or "не указан"}\nНаправления: {", ".join(DIRECTION_NAMES.get(d,d) for d in r.get("selected_directions",[])) or "не определился"}. Полные ответы доступны в /export {app_id}.'
+                from gim.dashboard import dashboard
+                text+='\n\n'+dashboard(r)+'\n'
                 text+=f'\nAI-сводка: {r.get("summary") or "Ожидается анализ / проверка сотрудником"}'
                 if r.get('ai_score') is not None:
                     text+=f'\nИсходная AI-оценка: {r["ai_score"]}/3. '+(r.get('ai_summary') or '' if r.get('evaluation_source')=='curator' else '')
@@ -413,7 +418,9 @@ class SharedService:
         async def send(vk_id,group_id,random_id):
             if group_id==self.settings.group_id:
                 payload=event.get('payload',{})
-                if payload.get('kind')=='analysis_ready':
+                if payload.get('kind')=='analysis_unavailable':
+                    text=f'Анкета сохранена, но AI-анализ не завершился после повторных попыток. Балл не выставлен. Проверьте ответы и при необходимости оцените вручную.\n/application {event["application_id"]}\n/export {event["application_id"]}'
+                elif payload.get('kind')=='analysis_ready':
                     preview=' '.join(payload.get('summary','').split())
                     text=f'AI-анализ готов. Предварительный балл: {payload["score"]}/3.\nAI-сводка: {preview[:500]}'
                     if len(preview)>500:

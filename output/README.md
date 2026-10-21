@@ -8,3 +8,5 @@
 - [Честные результаты оценки](../docs/evaluation-report.md)
 - [Security review](../docs/security-review.md)
 - [Фактический статус выпуска](FINAL_STATUS.md)
+
+- [Критерии IT-жюри и акценты для защиты](JURY_CRITERIA.md)

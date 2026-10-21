@@ -34,11 +34,11 @@ def validate_facts(facts,answers):
         raise ValueError('All fixed facts required')
     sources={str(a['id']):a['text'] for a in answers}; seen=set()
     for f in facts:
-        if not isinstance(f,dict) or f.get('code') not in FACTS or f['code'] in seen or f.get('status') not in {'yes','no','unknown'}:
+        if not isinstance(f,dict) or not isinstance(f.get('code'),str) or f.get('code') not in FACTS or f['code'] in seen or not isinstance(f.get('status'),str) or f.get('status') not in {'yes','no','unknown'}:
             raise ValueError('Invalid fixed fact')
         seen.add(f['code'])
         if f['status']!='unknown' and (not isinstance(f.get('quote'),str) or not f['quote'].strip()
-                or f.get('source_id') not in sources or f['quote'] not in sources[f['source_id']]):
+                or not isinstance(f.get('source_id'),str) or f.get('source_id') not in sources or f['quote'] not in sources[f['source_id']]):
             raise ValueError('Unverifiable fact quote')
         if f['status']=='unknown':
             f.update(quote='',source_id=None)
@@ -89,13 +89,13 @@ def validate_report(report,answers):
     for item in strengths:
         if (not isinstance(item,dict) or not isinstance(item.get('text'),str) or not 1<=len(item['text'])<=300
             or not isinstance(item.get('quote'),str) or not item['quote'].strip()
-            or item.get('source_id') not in sources or item['quote'] not in sources[item['source_id']]):
+            or not isinstance(item.get('source_id'),str) or item.get('source_id') not in sources or item['quote'] not in sources[item['source_id']]):
             raise ValueError('Unverifiable report evidence')
     assessments=report.get('direction_assessments')
     if not isinstance(assessments,dict) or set(assessments)!=set(DIRECTIONS) or any(not isinstance(v,str) or not 1<=len(v)<=350 for v in assessments.values()):
         raise ValueError('All direction assessments required')
     dirs=report.get('directions');qs=report.get('interview_questions')
-    if not isinstance(dirs,list) or not set(dirs)<=set(DIRECTIONS) or len(dirs)>5:raise ValueError('Invalid directions')
+    if not isinstance(dirs,list) or any(not isinstance(d,str) for d in dirs) or not set(dirs)<=set(DIRECTIONS) or len(dirs)>5:raise ValueError('Invalid directions')
     if not isinstance(qs,list) or not 1<=len(qs)<=3 or any(not isinstance(q,str) or not 5<=len(q)<=350 for q in qs):raise ValueError('Invalid interview questions')
     return report
 
