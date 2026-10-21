@@ -183,4 +183,4 @@ async def test_staff_can_finish_explicit_archived_application_export(env):
     fid=await staff.request_export(admin,r['id'],application_id=own['id'],request_key='audit-export')
     meta=await FileRepository(worker.pool).finish(fid,size_bytes=4,sha256=hashlib.sha256(b'xlsx').hexdigest())
     assert meta['status']=='ready'
-    assert (await staff.staff_file(admin,fid))['application_id']==own['id']
+    assert (await staff.staff_file(admin,fid))['application_id']==str(own['id'])
