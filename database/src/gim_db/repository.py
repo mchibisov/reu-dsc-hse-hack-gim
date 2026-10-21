@@ -180,13 +180,23 @@ class Repository:
             if not 0<=revision<=a['answers_revision']: raise ValueError('Invalid snapshot revision')
             r=await one(c,'SELECT rubric,rubric_version FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
             snapshot=await one(c,'SELECT gim.snapshot(%s,%s) AS data',(app_id,revision))
-            answers=await all_rows(c,'SELECT id,question_id,revision,answer_text,value FROM gim.answers WHERE id=ANY(%s::uuid[])',(snapshot['data']['answer_ids'],))
+            answers=await all_rows(c,'''SELECT a.id,a.question_id,a.revision,a.answer_text,a.value,
+                CASE WHEN q.source='base' THEN q.target_slot ELSE 'clarification_'||q.position::text END AS target_slot
+                FROM gim.answers a JOIN gim.dialog_questions q ON q.id=a.question_id
+                WHERE a.id=ANY(%s::uuid[]) ORDER BY a.revision''',(snapshot['data']['answer_ids'],))
             files=await all_rows(c,'SELECT id,sha256,extracted_text,extraction_version FROM gim.files WHERE id=ANY(%s::uuid[])',([f['id'] for f in snapshot['data']['files']],))
             return {'input_snapshot':snapshot['data'],**r,'answers':answers,'files':files}
 
     async def save_evaluation(self, app_id, *, snapshot, score: int, criteria: list, summary: str,
-             request_key: str, directions=None, interview_questions=None, model=None,prompt_version=None,source_event_id=None):
+             request_key: str, directions=None, interview_questions=None, model=None,prompt_version=None,source_event_id=None,
+             source_lease_token=None):
         async with self.pool.connection() as c, c.transaction():
+            if source_lease_token is not None:
+                event=await one(c,'''SELECT id FROM gim.outbox_events WHERE id=%s AND lease_token=%s
+                    AND lease_until>now() AND completed_at IS NULL AND failed_at IS NULL
+                    FOR UPDATE''',(source_event_id,source_lease_token))
+                if event is None:
+                    raise Conflict('Outbox lease no longer owned')
             await app_lock(c,app_id)
             # Do not even attempt a conflicting insert: triggers validate before ON CONFLICT.
             old=await one(c,"SELECT id FROM gim.evaluations WHERE application_id=%s AND source='algorithm' AND request_key=%s",(app_id,request_key))
@@ -197,7 +207,7 @@ class Repository:
                 (app_id,snapshot['input_snapshot']['revision'],score,snapshot['rubric_version'],Jsonb(snapshot['rubric']),Jsonb(criteria),
                  Jsonb(snapshot['input_snapshot']),summary,directions or [],Jsonb(interview_questions or []),model,prompt_version,request_key,source_event_id))
             if source_event_id:
-                await c.execute('UPDATE gim.outbox_events SET completed_at=now(),last_error_code=NULL WHERE id=%s',(source_event_id,))
+                await c.execute('UPDATE gim.outbox_events SET completed_at=now(),last_error_code=NULL,lease_token=NULL,lease_until=NULL WHERE id=%s',(source_event_id,))
             await audit(c,app_id,'evaluation.algorithm',{'evaluation_id':str(row['id']),'revision':snapshot['input_snapshot']['revision']})
             return row['id']
 

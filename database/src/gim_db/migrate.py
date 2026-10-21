@@ -18,7 +18,7 @@ def migrate(dsn: str, directory: Path | None = None) -> None:
             c.execute('REVOKE ALL ON SCHEMA gim_meta FROM PUBLIC')
             c.execute('CREATE TABLE IF NOT EXISTS gim_meta.migrations(name text PRIMARY KEY, sha256 text NOT NULL)')
             for path in paths:
-                sql = path.read_text()
+                sql = path.read_text(encoding='utf-8')
                 digest = hashlib.sha256(sql.encode()).hexdigest()
                 row = c.execute('SELECT sha256 FROM gim_meta.migrations WHERE name=%s', (path.name,)).fetchone()
                 if row:

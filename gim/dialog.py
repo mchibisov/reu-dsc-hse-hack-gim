@@ -18,11 +18,6 @@ QUESTIONS = {
     'hobbies': 'Какие у вас увлечения?',
     'strengths': 'В чём ваша суперсила? Какие навыки вы хотели бы применить?',
     'source': 'Откуда вы узнали о наборе?',
-    'followup_events': 'Расскажите о конкретном опыте общения с посетителями или детьми. Как вы действуете в сложной ситуации?',
-    'followup_projects': 'Какой квест, игру или мастер-класс вы могли бы помочь разработать? Какой вклад внесёте?',
-    'followup_funds': 'В фондах помогают оцифровывать предметы, составлять каталоги и маркировать материалы. Есть ли опыт аккуратной работы с документами или каталогами?',
-    'followup_inclusion': 'В инклюзивном направлении есть отдельный отбор и обучение взаимодействию с посетителями с инвалидностью. Готовы ли вы пройти обучение? Есть ли такой опыт?',
-    'followup_media': 'Что вы умеете делать: тексты, фото, видео, дизайн? Опишите конкретную работу или пришлите ссылку на портфолио.',
     'expectations': 'Совпали ли эти задачи с вашими ожиданиями? Какие альтернативные направления вы готовы рассмотреть? Можно ответить «никакие».',
 }
 BASE = ['name', 'interests', 'experience', 'languages', 'directions', 'motivation',
@@ -65,11 +60,14 @@ def transition(state, text, require_consent=True):
         if not selected:
             return s, None, QUESTIONS['directions'], False
         s['directions'] = selected
-    sequence = s.get('base_codes', BASE) + s.get('followup_codes', ['followup_' + d for d in s.get('directions', [])]) + ['expectations']
-    index = sequence.index(step)
-    if index == len(sequence) - 1:
+    if step == 'expectations':
         s['step'] = 'submitted'
         return s, step, 'Спасибо! Анкета сохранена и передана куратору. Окончательное решение принимает человек.', True
+    if step.startswith('followup_') or step == s.get('base_codes', BASE)[-1]:
+        s['step'] = 'planning'
+        return s, step, 'Ответ сохранён. Готовлю следующий вопрос по всей анкете.', False
+    sequence = s.get('base_codes', BASE)
+    index = sequence.index(step)
     s['step'] = sequence[index + 1]
     reply = s.get('questions', {}).get(s['step'], QUESTIONS.get(s['step'], ''))
     if s['step'] == 'expectations':
