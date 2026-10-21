@@ -16,6 +16,7 @@ from gim.shared_domain import parse_answer, latest_slots, select_followups
 from gim.shared_xlsx import snapshot_xlsx, SHEETS
 from gim.vk import message_event
 from gim.llm import LLMClient, ModelUnavailable
+from gim.shared_export_access import request_code_export,code_recipient
 from gim.shared_analysis import safe_answers, approved_rubric, validate_result, ANALYSIS_PROMPT
 
 HELP = 'Команды: /start — начать или продолжить, /status — статус, /help — помощь. Ответьте текстом на текущий вопрос. Для неприменимого поля напишите «не относится». Резюме и PDF в этом режиме не принимаются.'
@@ -71,6 +72,15 @@ class SharedService:
         if command=='старт':
             command='/start'
         staff=await self._staff(actor)
+        access=incoming.get('_export_access')
+        if command=='/export' and access:
+            if staff and access.get('application_id'):
+                await self._staff_command(event,actor,'/export '+access['application_id'],command)
+            else:
+                allowed=await request_code_export(self,event,actor)
+                await self._emit(event,actor,'Excel с кандидатами и сводкой поставлен в очередь.' if allowed
+                    else 'Доступ не подтверждён. Проверьте код или повторите через 10 минут.')
+            return
         staff_commands={'/admin','/top','/stats','/application','/candidate','/export','/score','/jobs'}
         if command in staff_commands or (staff and command=='/help'):
             if not staff:
@@ -328,6 +338,14 @@ class SharedService:
                 raise ValueError('Immutable export integrity failed')
         else:
             raise ValueError('Export is not pending or ready')
+        if 'code_access' in meta.get('filters',{}):
+            recipient=await code_recipient(self,meta)
+            if recipient is None:return
+            attachment=await self.vk.upload(recipient,f'gim-{meta["id"]}.xlsx',data)
+            if await code_recipient(self,meta)!=recipient:return
+            await self.vk.send(recipient,'Excel: кандидаты, ответы, summary и общая сводка.',
+                               event['vk_random_id'],attachment=attachment)
+            return
         if not requester or requester['group_id']!=self.settings.group_id:
             return
         await self.staff_repo.staff_file(requester['vk_id'],meta['id'])

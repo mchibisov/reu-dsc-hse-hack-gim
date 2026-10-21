@@ -62,7 +62,7 @@ async def worker_loop(service, pool, group_id):
 
 
 async def gateway_loop(vk, pool, group_id):
-    ledger = GatewayLedger(pool, group_id)
+    ledger = GatewayLedger(pool, group_id, getattr(vk.settings,"excel_access_code", ""))
     await ledger.acquire()
     try:
         await vk.gateway(ledger, guard=ledger)

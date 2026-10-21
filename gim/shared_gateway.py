@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from gim_db.repository import emit, one
 from gim.vk import message_event
+from gim.shared_export_access import seal_export
 
 
 class LeaseBusy(RuntimeError):
@@ -14,9 +15,10 @@ class LeaseLost(RuntimeError):
 
 
 class GatewayLedger:
-    def __init__(self, pool, group_id):
+    def __init__(self, pool, group_id, excel_access_code=""):
         self.pool = pool
         self.group_id = group_id
+        self.excel_access_code = excel_access_code
         self.token = uuid4()
 
     async def acquire(self):
@@ -61,6 +63,7 @@ class GatewayLedger:
                 normalized = message_event(event)
                 if normalized is None:
                     continue
+                normalized = seal_export(normalized,self.excel_access_code)
                 actor = normalized['object']['message']['from_id']
                 await emit(c, None, 'vk.incoming', f'vk-in:{group_id}:{normalized["event_id"]}',
                            {'event': normalized, 'group_id': group_id, 'serial_key': f'vk:{group_id}:{actor}'})
