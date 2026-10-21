@@ -1,7 +1,7 @@
 name: Tests
 on:
   push:
-    branches: [Vova]
+    branches: [main]
   pull_request:
 jobs:
   test:
@@ -27,9 +27,14 @@ jobs:
         with:
           python-version: '3.13'
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.shared.txt
       - run: python -m gim.main migrate
-      - run: python -m unittest discover -s tests -v
+      # Private-schema integration tests run in database.yml against their own schema.
+      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+        env:
+          TEST_DATABASE_URL: ''
+      - run: python -m unittest discover -s tests -p 'test_service.py' -v
+      - run: python -m unittest discover -s tests -p 'test_db.py' -v
       - run: python -m compileall -q gim
       - run: |
           cp .env.example .env

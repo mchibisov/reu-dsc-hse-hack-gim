@@ -1,0 +1,70 @@
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile.legacy
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql://gim:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/gim
+    STORAGE_DIR: /data/files
+  restart: unless-stopped
+  volumes:
+    - reports:/data/files
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: '3'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: gim
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: gim
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U gim -d gim']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    <<: *app
+    command: [python, -m, gim.main, migrate]
+    restart: 'no'
+    depends_on:
+      postgres:
+        condition: service_healthy
+  gateway:
+    <<: *app
+    command: [python, -m, gim.main, gateway]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  worker:
+    <<: *app
+    command: [python, -m, gim.main, worker]
+    environment:
+      DATABASE_URL: postgresql://gim:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/gim
+      STORAGE_DIR: /data/files
+      JOB_KINDS: dialog,send,send_file,score,prepare_followups
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  report-worker:
+    <<: *app
+    command: [python, -m, gim.main, worker]
+    environment:
+      DATABASE_URL: postgresql://gim:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/gim
+      STORAGE_DIR: /data/files
+      WORKER_CONCURRENCY: '2'
+      JOB_KINDS: export
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  postgres:
+  reports:

@@ -1,4 +1,7 @@
 .env
+.env.*
+!.env.example
+!.env.shared.example
 .venv/
 __pycache__/
 *.pyc
@@ -8,3 +11,7 @@ data/
 *.pdf
 outputs/
 work/
+runtime/
+.ruff_cache/
+*.egg-info/
+!.env.legacy.example
