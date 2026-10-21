@@ -145,3 +145,4 @@
 | 2026-10-21 | gim-reanalysis-01: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-reanalysis-01/report.md) |
 | 2026-10-21 | gim-reanalysis-02: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-reanalysis-02/report.md) |
 | 2026-10-21 | gim-summary-live-01: фактические результаты и ограничения | [отчёт](../results/2026-10-21-bootstrap-gim-summary-live-01/report.md) |
+| 2026-10-21 | Актуальный HANDOFF,0секретов, бот остановлен, push576acd9 подтверждён | [отчёт](../results/2026-10-21-bootstrap-handoff-02/report.md) |
