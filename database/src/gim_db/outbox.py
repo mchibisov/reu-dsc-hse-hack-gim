@@ -29,6 +29,7 @@ class SQLQueue:
         # Scope by persisted application/file first, payload only for gateway events.
         scope = '''(%s::text IS NULL OR COALESCE(r.group_id::text,fr.group_id::text,e.payload->>'group_id')=%s)'''
         joins = '''LEFT JOIN gim.applications a ON a.id=e.application_id
+                   LEFT JOIN gim.users recipient ON recipient.id=a.user_id
                    LEFT JOIN gim.recruitments r ON r.id=a.recruitment_id
                    LEFT JOIN gim.files f ON f.id=e.file_id
                    LEFT JOIN gim.recruitments fr ON fr.id=f.recruitment_id'''
@@ -50,6 +51,18 @@ class SQLQueue:
                     SELECT 1 FROM gim.outbox_events older WHERE older.topic='vk.incoming'
                     AND older.payload->>'serial_key'=e.payload->>'serial_key'
                     AND older.payload->>'group_id'=e.payload->>'group_id'
+                    AND older.vk_random_id<e.vk_random_id
+                    AND older.completed_at IS NULL AND older.failed_at IS NULL))
+                AND (e.topic NOT IN ('vk.send','question.send') OR NOT EXISTS (
+                    SELECT 1 FROM gim.outbox_events older
+                    LEFT JOIN gim.applications oa ON oa.id=older.application_id
+                    LEFT JOIN gim.users ou ON ou.id=oa.user_id
+                    LEFT JOIN gim.recruitments obr ON obr.id=oa.recruitment_id
+                    WHERE older.topic IN ('vk.send','question.send')
+                    AND COALESCE(older.payload->>'peer_id',ou.vk_id::text)
+                        =COALESCE(e.payload->>'peer_id',recipient.vk_id::text)
+                    AND COALESCE(obr.group_id::text,older.payload->>'group_id')
+                        =COALESCE(r.group_id::text,e.payload->>'group_id')
                     AND older.vk_random_id<e.vk_random_id
                     AND older.completed_at IS NULL AND older.failed_at IS NULL))
                 ORDER BY e.vk_random_id LIMIT 1 FOR UPDATE OF e SKIP LOCKED)
@@ -76,7 +89,7 @@ class SQLQueue:
                 WHERE id=%s AND lease_token=%s AND lease_until>now()
                 AND completed_at IS NULL AND failed_at IS NULL RETURNING *''',
                 (success, success, success, error_code, event_id, token))
-            if event and success and event['topic'] == 'question.send':
+            if event and success and error_code is None and event['topic'] == 'question.send':
                 await c.execute('UPDATE gim.dialog_questions SET asked_at=COALESCE(asked_at,now()) WHERE id=%s AND application_id=%s',
                                 (event['payload']['question_id'], event['application_id']))
             return event is not None
@@ -89,12 +102,16 @@ async def _handle(ctx, event):
         return 'recipient_revoked_or_unsubscribed'
     if topic == 'question.send':
         async with repo.pool.connection() as c:
-            question = await one(c, '''SELECT q.*,u.vk_id,r.group_id FROM gim.dialog_questions q
+            question = await one(c, '''SELECT q.*,u.vk_id,r.group_id,a.status AS application_status,
+                a.current_question_id FROM gim.dialog_questions q
                 JOIN gim.applications a ON a.id=q.application_id JOIN gim.users u ON u.id=a.user_id
                 JOIN gim.recruitments r ON r.id=a.recruitment_id WHERE q.id=%s AND q.application_id=%s''',
                 (event['payload']['question_id'], event['application_id']))
         if question is None:
             raise LookupError('Missing persisted question')
+        if (question['status']!='active' or question['application_status']!='draft'
+                or question['current_question_id']!=question['id']):
+            return 'question_no_longer_active'
         event['question'] = question
     if topic == 'application.analyze':
         event['snapshot'] = await repo.evaluation_snapshot(event['application_id'], revision=event['payload']['revision'])

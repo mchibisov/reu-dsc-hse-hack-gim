@@ -164,8 +164,17 @@ class SharedServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.repo.profile['birth_date_answer_id'],self.repo.answers[-2]['id'])
         self.assertTrue(all(x['answer_ids'] for x in self.repo.profile['facts'].values()))
 
-    async def test_analysis_disabled(self):
-        self.assertIsNone(await self.s.analyze(dict(snapshot={},application_id=uuid4())))
+    async def test_missing_key_keeps_analysis_retryable(self):
+        from gim.llm import ModelUnavailable
+        with self.assertRaises(ModelUnavailable):
+            await self.s.analyze(dict(snapshot={},application_id=uuid4()))
+
+    async def test_followup_provider_outage_does_not_block_submission(self):
+        self.s.settings.llm_api_key='synthetic'
+        self.s.llm.complete=AsyncMock(side_effect=TimeoutError)
+        for text in ['/start','да','Synthetic','synthetic@example.test','01.01.2000','не определился']:
+            await self.s.incoming(self.event(text))
+        self.assertEqual(self.repo.app['status'],'submitted')
 
 
 class DomainTests(unittest.TestCase):
@@ -386,7 +395,9 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         async with self.owner.transaction():
             row=await (await self.owner.execute('''INSERT INTO gim.recruitments(group_id,title,questionnaire_version,
                 rubric_version,rubric,followup_policy) VALUES(%s,'Synthetic shared integration','test','test',%s,%s) RETURNING id''',
-                (self.group,Jsonb({'criteria':[{'code':'synthetic','max_points':3}],'approval':'synthetic-test-only'}),Jsonb({'max_followups':3})))).fetchone()
+                (self.group,Jsonb({'criteria':[{'code':'synthetic','description':'Synthetic only','max_points':3}],
+                    'approved_by':'synthetic-test-only','scoring_method':'sum_round_half_up',
+                    'scoring_rule':'Сумма, округление до целого (0.5 вверх)'}),Jsonb({'max_followups':3})))).fetchone()
             self.rid=row['id']
             for i,code in enumerate(self.codes,1):
                 await self.owner.execute('''INSERT INTO gim.question_templates(recruitment_id,code,kind,text,position,required,target_slot)
@@ -441,7 +452,10 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
            LEFT JOIN gim.files f ON f.id=e.file_id LEFT JOIN gim.recruitments fr ON fr.id=f.recruitment_id
            WHERE COALESCE(r.group_id::text,fr.group_id::text,e.payload->>'group_id')=%s
            AND e.completed_at IS NULL''',(str(self.group),))).fetchall()
-        self.assertEqual(pending,[])
+        if not getattr(self.service.settings,'llm_api_key',''):
+            self.assertTrue(all(e['topic']=='application.analyze' and e['last_error_code']=='ModelUnavailable' for e in pending))
+        else:
+            self.assertEqual(pending,[])
 
     async def test_real_private_roles_replay_followups_submit_export(self):
         from gim_db.outbox import run_once
@@ -479,7 +493,19 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         count=await (await self.owner.execute('SELECT count(*) AS n FROM gim.evaluations WHERE application_id=%s',(app['id'],))).fetchone()
         self.assertEqual(count['n'],0)
         disabled=await (await self.owner.execute("SELECT last_error_code FROM gim.outbox_events WHERE application_id=%s AND topic='application.analyze'",(app['id'],))).fetchone()
-        self.assertEqual(disabled['last_error_code'],'analysis_disabled')
+        self.assertEqual(disabled['last_error_code'],'ModelUnavailable')
+        self.service.settings.llm_api_key='synthetic-never-sent'
+        self.service.settings.llm_model='synthetic-model'
+        answer=next(a for a in ctx['answers'] if a['answer_text']==raw)
+        self.service.llm.complete=AsyncMock(return_value={
+            'score':2,'criteria':[{'code':'synthetic','points':2,'reason':'Synthetic only',
+            'evidence':[{'source_type':'answer','source_id':str(answer['id']),'quote':'=synthetic'}]}],
+            'summary':'Synthetic summary','directions':['media'],'interview_questions':['Какова ваша роль?']})
+        await self.owner.execute("UPDATE gim.outbox_events SET available_at=now() WHERE application_id=%s AND topic='application.analyze'",(app['id'],))
+        await self.drain()
+        evaluation=await (await self.owner.execute('SELECT * FROM gim.evaluations WHERE application_id=%s',(app['id'],))).fetchone()
+        self.assertEqual(evaluation['score'],2)
+        self.assertEqual(evaluation['criteria_results'][0]['evidence'][0]['quote'],'=synthetic')
         await self.enqueue('/export',self.admin)
         await self.drain()
         meta=await (await self.owner.execute("SELECT * FROM gim.files WHERE recruitment_id=%s AND kind='xlsx'",(self.rid,))).fetchone()
@@ -493,6 +519,8 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         aid=next(r[cols.index('answer_id')] for r in rows[1:] if r[slot]=='experience')
         reconstructed=''.join(r[answer] or '' for r in rows[1:] if r[cols.index('answer_id')]==aid)
         self.assertEqual(reconstructed,raw)
+        exported=list(wb['Анкеты'].values)
+        self.assertEqual(exported[1][exported[0].index('score')],'2')
         self.vk.upload.assert_awaited_once()
 
 class WorkbookEncodingTests(unittest.TestCase):

@@ -1,9 +1,0 @@
-{
-  "prompt_exists": true,
-  "missing_local_references": [],
-  "missing_required_context": [],
-  "api_key_format_found": false,
-  "runtime_changes": false,
-  "cloud_access_attempted": false,
-  "github_write_rechecked": false
-}

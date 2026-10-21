@@ -1,6 +1,8 @@
 # Standalone alternative for an existing direct PostgreSQL/Supabase DATABASE_URL.
 x-app: &app
-  build: .
+  build:
+    context: .
+    dockerfile: Dockerfile.legacy
   env_file: .env
   restart: unless-stopped
   environment:

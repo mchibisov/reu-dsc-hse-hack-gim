@@ -30,14 +30,21 @@ class DialogTests(unittest.TestCase):
         codes = []
         for text in ['Иван', 'История', 'Работал в архиве', 'Английский B1',
                      'фонды', 'Хочу помогать музею', '5 часов в неделю',
-                     'Читаю', 'Аккуратность', 'VK', 'Готов к каталогизации', 'Медиа']:
+                     'Читаю', 'Аккуратность', 'VK']:
             state, code, reply, done = transition(state, text)
             if code:
                 codes.append(code)
-        self.assertTrue(done)
+        self.assertFalse(done)
+        self.assertEqual(state['step'], 'planning')
         self.assertEqual(state['directions'], ['funds'])
-        self.assertIn('followup_funds', codes)
-        self.assertNotIn('followup_media', codes)
+        state['step'] = 'followup_ai_1'
+        state['questions'] = {'followup_ai_1': 'Как сверяли номера предметов?'}
+        state, code, _, done = transition(state, 'Сравнивал с каталогом')
+        self.assertEqual(code, 'followup_ai_1')
+        self.assertEqual(state['step'], 'planning')
+        state['step'] = 'expectations'  # Model decides the collected information is enough.
+        state, _, _, done = transition(state, 'Медиа')
+        self.assertTrue(done)
         again, code, _, done = transition(state, 'Старт')
         self.assertEqual(again, state)
         self.assertIsNone(code)

@@ -1,7 +1,0 @@
-test_group_mismatch_cannot_advance_cursor (test_shared_gateway.GatewayIntegration.test_group_mismatch_cannot_advance_cursor) ... ok
-test_singleton_checkpoint_and_event_replay (test_shared_gateway.GatewayIntegration.test_singleton_checkpoint_and_event_replay) ... ok
-
-----------------------------------------------------------------------
-Ran 2 tests in 0.232s
-
-OK
