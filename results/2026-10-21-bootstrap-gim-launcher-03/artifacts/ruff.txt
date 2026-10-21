@@ -1,0 +1,16 @@
+I001 [*] Import block is un-sorted or un-formatted
+ --> C:\Users\User\PycharmProjects\meaningful_code\main.py:2:1
+  |
+1 |   """Корневой запуск: используйте run_bot.cmd или Python 3.12+ с зависимостями."""
+2 | / import runpy
+3 | | from pathlib import Path
+  | |________________________^
+help: Organize imports
+  |
+4 |
+  -
+5 | if __name__ == '__main__':
+  |
+
+Found 1 error.
+[*] 1 fixable with `--fix`.

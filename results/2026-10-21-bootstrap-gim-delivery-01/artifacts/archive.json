@@ -1,0 +1,16 @@
+{
+  "archive": "gim_bot_mvp.zip",
+  "files": 139,
+  "bytes": 184982,
+  "sha256": "9179ea982d2b9361c1b204af2afc590aaa6211ab92a34196ffa71c0fa21daccb",
+  "zip_integrity": "passed",
+  "excluded": [
+    ".env",
+    ".venv",
+    ".git",
+    "raw candidate csv/xlsx",
+    "databases"
+  ],
+  "llm": "disabled",
+  "checks": "43 passed, 1 skipped; ruff/compileall/pip/settings exit 0"
+}

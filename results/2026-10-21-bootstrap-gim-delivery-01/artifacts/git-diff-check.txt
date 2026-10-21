@@ -1,0 +1,49 @@
+warning: unable to access 'C:\Users\User/.config/git/ignore': Permission denied
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:20: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:24: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:34: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:40: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:42: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:47: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:60: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:63: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:65: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:132: trailing whitespace.
++.venv\Lib\site-packages\sqlalchemy\engine\base.py:1953: 
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:171: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:178: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:180: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:195: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:209: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:213: trailing whitespace.
++tests\test_concurrency.py:29: 
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:301: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:308: trailing whitespace.
++    
+results/2026-10-21-H002-gim-concurrency-01/artifacts/pytest.txt:310: trailing whitespace.
++    
+results/2026-10-21-bootstrap-gim-hardening-01/artifacts/pytest.txt:25: trailing whitespace.
++tests\test_gateway.py:22: 
+results/2026-10-21-bootstrap-gim-review-fix-01/artifacts/pytest.txt:32: trailing whitespace.
++    
+results/2026-10-21-bootstrap-gim-review-fix-01/artifacts/pytest.txt:37: trailing whitespace.
++    
+results/2026-10-21-bootstrap-gim-review-fix-01/artifacts/pytest.txt:45: trailing whitespace.
++tests\test_reliability.py:47: 
+results/2026-10-21-bootstrap-gim-review-fix-02/artifacts/pytest.txt:16: trailing whitespace.
++E         

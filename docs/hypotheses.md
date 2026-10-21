@@ -72,8 +72,13 @@
 | 2026-10-21 | gim-review-fix-04 | [отчёт](../results/2026-10-21-bootstrap-gim-review-fix-04/report.md) |
 | 2026-10-21 | gim-suite-02 | [отчёт](../results/2026-10-21-bootstrap-gim-suite-02/report.md) |
 | 2026-10-21 | gim-suite-03 | [отчёт](../results/2026-10-21-bootstrap-gim-suite-03/report.md) |
-
 | 2026-10-21 | gim-mistral-01 | [отчёт](../results/2026-10-21-bootstrap-gim-mistral-01/report.md) |
 | 2026-10-21 | gim-mistral-02 | [отчёт](../results/2026-10-21-bootstrap-gim-mistral-02/report.md) |
 | 2026-10-21 | gim-mistral-03 | [отчёт](../results/2026-10-21-bootstrap-gim-mistral-03/report.md) |
 | 2026-10-21 | gim-mistral-04 | [отчёт](../results/2026-10-21-bootstrap-gim-mistral-04/report.md) |
+| 2026-10-21 | gim-delivery-01: целостность и состав архива | [отчёт](../results/2026-10-21-bootstrap-gim-delivery-01/report.md) |
+| 2026-10-21 | gim-presence-01: наличие файлов и запуск | [отчёт](../results/2026-10-21-bootstrap-gim-presence-01/report.md) |
+| 2026-10-21 | gim-launcher-01: наличие файлов и запуск | [отчёт](../results/2026-10-21-bootstrap-gim-launcher-01/report.md) |
+| 2026-10-21 | gim-launcher-02: наличие файлов и запуск | [отчёт](../results/2026-10-21-bootstrap-gim-launcher-02/report.md) |
+| 2026-10-21 | gim-launcher-03: наличие файлов и запуск | [отчёт](../results/2026-10-21-bootstrap-gim-launcher-03/report.md) |
+| 2026-10-21 | gim-launcher-04: наличие файлов и запуск | [отчёт](../results/2026-10-21-bootstrap-gim-launcher-04/report.md) |
