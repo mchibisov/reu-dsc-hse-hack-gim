@@ -110,3 +110,4 @@
 | 2026-10-21 | 2026-10-21-bootstrap-gim-polza-02 | [отчёт](../results/2026-10-21-bootstrap-gim-polza-02/report.md) |
 | 2026-10-21 | 2026-10-21-bootstrap-s004-review-01 | [отчёт](../results/2026-10-21-bootstrap-s004-review-01/report.md) |
 | 2026-10-21 | 2026-10-21-bootstrap-s004-final-01 | [отчёт](../results/2026-10-21-bootstrap-s004-final-01/report.md) |
+| 2026-10-21 | Переносимый HANDOFF | [отчёт](../results/2026-10-21-bootstrap-handoff-01/report.md) |
