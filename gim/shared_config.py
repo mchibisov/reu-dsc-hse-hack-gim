@@ -24,6 +24,7 @@ class SharedSettings:
     llm_base_url: str = 'https://polza.ai/api/v1'
     llm_api_key: str = field(default='',repr=False)
     llm_model: str = 'deepseek/deepseek-v4.1-flash-1017'
+    excel_access_code: str = field(default='',repr=False)
 
     @classmethod
     def load(cls):
@@ -60,4 +61,5 @@ class SharedSettings:
                    os.environ.get('VK_API_VERSION', '5.199'),
                    os.environ.get('LLM_BASE_URL','https://polza.ai/api/v1'),
                    os.environ.get('LLM_API_KEY',''),
-                   os.environ.get('LLM_MODEL','deepseek/deepseek-v4.1-flash-1017'))
+                   os.environ.get('LLM_MODEL','deepseek/deepseek-v4.1-flash-1017'),
+                   os.environ.get('EXCEL_ACCESS_CODE',''))
