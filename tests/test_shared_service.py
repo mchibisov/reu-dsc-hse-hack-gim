@@ -58,8 +58,10 @@ class FakeRepository:
                  revision=self.app['answers_revision'])
         self.answers.append(a)
         self.events[kw['event_id']] = a
-        self.app['current_question_id'] = None
-        next(q for q in self.questions if q['id'] == question_id)['status'] = 'answered'
+        q=next(q for q in self.questions if q['id']==question_id)
+        if q['status']=='active':
+            self.app['current_question_id']=None
+            q['status']='answered'
         return a
 
     async def set_consent(self, app_id, version):
@@ -135,6 +137,22 @@ class SharedServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.repo.answers),1)
         self.assertEqual(self.repo.app['current_question_id'],current)
         self.assertEqual(self.repo.questions[-1]['target_slot'],'full_name')
+
+    async def test_fast_fragments_do_not_answer_the_next_question(self):
+        # Both messages arrived while the same question was visible.
+        await self.s.incoming(self.event('/start'))
+        await self.s.incoming(self.event('Согласен'))
+        q=self.repo.questions[-1]
+        receipt={'app_id':str(self.repo.app['id']),'question_id':str(q['id'])}
+        first=self.event('Максим');first['payload']['receipt']=receipt
+        second=self.event('Чибисов');second['payload']['receipt']=receipt
+        await self.s.incoming(first)
+        current=self.repo.app['current_question_id']
+        await self.s.incoming(second)
+        self.assertEqual(self.repo.answers[-1]['question_id'],q['id'])
+        self.assertEqual(self.repo.answers[-1]['answer_text'],'Максим\nЧибисов')
+        self.assertEqual(self.repo.app['current_question_id'],current)
+        self.assertEqual(self.repo.questions[-1]['target_slot'],'email')
 
     async def test_raw_is_never_truncated_and_contacts_require_consent(self):
         await self.s.incoming(self.event('/start'))
@@ -266,7 +284,7 @@ class DomainTests(unittest.TestCase):
         bundle = {'Анкеты':[], 'Ответы':[dict(application_id='app',question_id='q',answer_id='a',answer_text=raw)],
                   'Собеседование':[], 'Сводка':dict(total=1,scored=0,average_score=None)}
         wb = load_workbook(io.BytesIO(snapshot_xlsx(bundle)))
-        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка'])
+        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка','Оценка'])
         rows = list(wb['Ответы'].values)
         ix = rows[0].index('Ответ кандидата')
         self.assertEqual(''.join(r[ix] for r in rows[1:]),raw)
@@ -621,7 +639,7 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         reconstructed=''.join(r[answer] or '' for r in rows[1:] if r[cols.index('ID ответа')]==aid)
         self.assertEqual(reconstructed,raw)
         exported=list(wb['Анкеты'].values)
-        self.assertEqual(exported[1][exported[0].index('Балл 0–3')],'2')
+        self.assertEqual(exported[1][exported[0].index('Балл 0–3')],2)
         self.vk.upload.assert_awaited_once()
 
 
@@ -638,7 +656,7 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(meta['requested_by_staff_id'])
         from openpyxl import load_workbook
         wb=load_workbook(io.BytesIO(self.objects[meta['storage_key']]))
-        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка'])
+        self.assertEqual(wb.sheetnames,['Анкеты','Ответы','Собеседование','Сводка','Оценка'])
         self.assertIn(str(app['id']),str(list(wb['Анкеты'].values)))
         self.assertIn('AI-сводка',next(wb['Анкеты'].values))
         await self.enqueue('/top')

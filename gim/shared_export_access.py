@@ -45,15 +45,17 @@ EXPORT_QUERY = """
  WITH selected AS (
   SELECT a.*,u.vk_id,u.full_name,u.email,e.id evaluation_id,e.score,e.source evaluation_source,e.reviewer_staff_id,e.summary,
    e.recommended_directions,e.interview_questions,e.criteria_results,e.answers_revision evaluation_revision,e.created_at evaluated_at,
-   reviewer.full_name reviewer_name
+   reviewer.full_name reviewer_name,
+   (SELECT ae.score FROM gim.evaluations ae WHERE ae.application_id=a.id AND ae.source='algorithm' ORDER BY ae.answers_revision DESC,ae.created_at DESC LIMIT 1) ai_score,
+   (SELECT ae.summary FROM gim.evaluations ae WHERE ae.application_id=a.id AND ae.source='algorithm' ORDER BY ae.answers_revision DESC,ae.created_at DESC LIMIT 1) ai_summary
   FROM gim.applications a JOIN gim.users u ON u.id=a.user_id
   LEFT JOIN gim.effective_evaluations e ON e.application_id=a.id
   LEFT JOIN gim.staff_members sm ON sm.id=e.reviewer_staff_id LEFT JOIN gim.users reviewer ON reviewer.id=sm.user_id
-  WHERE a.recruitment_id=%s
+  WHERE a.recruitment_id=%s AND NOT COALESCE((to_jsonb(a)->>'archived')::boolean,false)
  ), questionnaire AS (
   SELECT id application_id,vk_id,full_name,email,birth_date,birth_date_raw,status,decision,selected_directions,undecided,
     answers_revision,submitted_at,evaluation_id,score,evaluation_source,reviewer_staff_id,reviewer_name,summary,
-    recommended_directions,criteria_results,evaluation_revision,evaluated_at,
+    recommended_directions,criteria_results,evaluation_revision,evaluated_at,ai_score,ai_summary,
     COALESCE(evaluation_revision<answers_revision,false) evaluation_stale
   FROM selected ORDER BY score DESC NULLS LAST,submitted_at NULLS LAST,id
  ), answers AS (

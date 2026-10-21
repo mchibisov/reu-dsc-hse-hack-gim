@@ -34,6 +34,8 @@ async def app_lock(c, app_id):
     a = await one(c,'SELECT * FROM gim.applications WHERE id=%s FOR UPDATE',(app_id,))
     if not a:
         raise LookupError('Application not found')
+    if a.get('archived'):
+        raise Conflict('Test attempt archived')
     return a
 
 
@@ -64,8 +66,17 @@ class Repository:
             # Avoid granting UPDATE(vk_id) to runtime merely for an upsert.
             await c.execute('INSERT INTO gim.users(vk_id) VALUES(%s) ON CONFLICT(vk_id) DO NOTHING',(verified_vk_id,))
             u=await one(c,'SELECT id FROM gim.users WHERE vk_id=%s',(verified_vk_id,))
-            await c.execute('INSERT INTO gim.applications(user_id,recruitment_id) VALUES(%s,%s) ON CONFLICT(user_id,recruitment_id) DO NOTHING',(u['id'],recruitment_id))
-            return await one(c,'SELECT * FROM gim.applications WHERE user_id=%s AND recruitment_id=%s',(u['id'],recruitment_id))
+            await c.execute('INSERT INTO gim.applications(user_id,recruitment_id) VALUES(%s,%s) ON CONFLICT DO NOTHING',(u['id'],recruitment_id))
+            return await one(c,'SELECT * FROM gim.applications a WHERE user_id=%s AND recruitment_id=%s AND NOT COALESCE((to_jsonb(a)->>\'archived\')::boolean,false)',(u['id'],recruitment_id))
+
+    async def pin_rubric(self,app_id,rubric,version):
+        async with self.pool.connection() as c:
+            await c.execute("UPDATE gim.applications SET analysis_rubric=%s,analysis_rubric_version=%s WHERE id=%s AND analysis_rubric IS NULL AND answers_revision=0 AND status='draft' AND NOT archived",(Jsonb(rubric),version,app_id))
+
+    async def reset_own_application(self,verified_vk_id,recruitment_id,*,request_key):
+        async with self.pool.connection() as c:
+            row=await one(c,'SELECT gim.reset_own_application(%s,%s,%s) AS id',(verified_vk_id,recruitment_id,request_key))
+            return row['id']
 
     async def set_consent(self, app_id, version: str):
         if not version.strip(): raise ValueError('Consent version required')
@@ -123,8 +134,8 @@ class Repository:
                 target_slot=t['target_slot']
             if not text or not text.strip() or not target_slot: raise ValueError('Question wording and slot required')
             r=await one(c,'SELECT followup_policy FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
-            if source!='base':
-                count=await one(c,"SELECT count(*) AS n FROM gim.dialog_questions WHERE application_id=%s AND source<>'base'",(app_id,))
+            if source!='base' and purpose!='expectations':
+                count=await one(c,"SELECT count(*) AS n FROM gim.dialog_questions WHERE application_id=%s AND source<>'base' AND purpose<>'expectations'",(app_id,))
                 if count['n']>=r['followup_policy'].get('max_followups',5): raise Conflict('Followup limit reached')
                 if parent_question_id is None and await one(c,'SELECT 1 FROM gim.dialog_questions WHERE application_id=%s AND target_slot=%s',(app_id,target_slot)):
                     raise Conflict('Slot already asked; explicit clarification parent required')
@@ -179,6 +190,8 @@ class Repository:
             revision=a['answers_revision'] if revision is None else revision
             if not 0<=revision<=a['answers_revision']: raise ValueError('Invalid snapshot revision')
             r=await one(c,'SELECT rubric,rubric_version,direction_info FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
+            if a.get('analysis_rubric') is not None:
+                r.update(rubric=a['analysis_rubric'],rubric_version=a['analysis_rubric_version'])
             snapshot=await one(c,'SELECT gim.snapshot(%s,%s) AS data',(app_id,revision))
             answers=await all_rows(c,'''SELECT a.id,a.question_id,a.revision,a.answer_text,a.value,
                 CASE WHEN q.source='base' THEN q.target_slot ELSE 'clarification_'||q.position::text END AS target_slot

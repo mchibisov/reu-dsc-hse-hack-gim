@@ -20,6 +20,8 @@ def message_event(event):
     msg = event.get('object', {}).get('message', {})
     if msg.get('out', 0) or msg.get('from_id', 0) <= 0 or msg.get('peer_id') != msg.get('from_id'):
         return None
+    if msg.get('conversation_message_id'):
+        event={**event,'event_id':f"message:{msg['peer_id']}:{msg['conversation_message_id']}"}
     if not event.get('event_id'):
         message_id = msg.get('conversation_message_id') or msg.get('id')
         if not message_id:
@@ -52,13 +54,15 @@ class VK:
             raise VKAPIError(method,data['error'].get('error_code',0))
         return data['response']
 
-    async def send(self, peer_id, text, random_id, attachment=None, role='candidate',question_slot=None):
+    async def send(self, peer_id, text, random_id, attachment=None, role='candidate',question_slot=None,want_cmid=False):
         buttons = [[{'action': {'type': 'text', 'label': 'Начать'}, 'color': 'primary'},
                     {'action': {'type': 'text', 'label': 'Статус'}, 'color': 'secondary'},
                     {'action': {'type': 'text', 'label': 'Помощь'}, 'color': 'secondary'}]]
         options={'consent':(('Согласен','Не согласен'),),
                  'current_status':(('Студент','Работаю','Безработный'),),
                  'directions':(('Организационное','Проектное'),('Фондовое','Инклюзивное'),('Медиа','Не определился')),
+                 'discovery':(('Социальные сети','От друзей'),('Сайт музея','Другое')),
+                 'expectations_match':(('Задачи подходят, открыт альтернативам',),('Хочу обсудить с куратором',)),
                  'vk_url':(('Использовать мою страницу',),)}
         for row in reversed(options.get(question_slot,())):
             buttons.insert(0,[{'action':{'type':'text','label':label},'color':'positive'} for label in row])
@@ -67,13 +71,21 @@ class VK:
                                        'link':f'https://vk.com/id{peer_id}'}}])
         if role in ('curator', 'admin'):
             buttons.extend([[{'action': {'type': 'text', 'label': command}, 'color': 'secondary'}
-                             for command in row] for row in (('/top', '/export'), ('/stats', '/admin'))])
+                             for command in row] for row in (('/top', '/export'), ('/stats', '/admin'),('/new', '/jobs'))])
+        if role=='admin':
+            buttons.append([{'action':{'type':'text','label':'/reset'},'color':'negative'}])
         params = {'peer_id': peer_id, 'message': text, 'random_id': random_id,
                   'keyboard': json.dumps({'one_time': False, 'buttons': buttons}, ensure_ascii=False)}
+        if want_cmid:
+            params['peer_ids']=str(params.pop('peer_id'))
         if attachment:
             params['attachment'] = attachment
         try:
-            return await self.call('messages.send', **params)
+            sent=await self.call('messages.send', **params)
+            if isinstance(sent,list):
+                if len(sent)!=1 or sent[0].get('error'):raise VKAPIError('messages.send',sent[0].get('error',{}).get('code',1))
+                return sent[0]
+            return sent
         except VKAPIError as exc:
             if exc.error_code!=912:
                 raise
@@ -81,7 +93,11 @@ class VK:
             # random_id/attachment so a configuration mistake does not lose data.
             log.warning('vk_keyboard_disabled group_id=%s',self.settings.group_id)
             params.pop('keyboard')
-            return await self.call('messages.send', **params)
+            sent=await self.call('messages.send', **params)
+            if isinstance(sent,list):
+                if len(sent)!=1 or sent[0].get('error'):raise VKAPIError('messages.send',sent[0].get('error',{}).get('code',1))
+                return sent[0]
+            return sent
 
     async def diagnose(self):
         permissions = await self.call('groups.getTokenPermissions')

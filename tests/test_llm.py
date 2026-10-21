@@ -32,3 +32,15 @@ class LLMTests(unittest.IsolatedAsyncioTestCase):
     async def test_no_key_never_substitutes_pattern_question(self):
         with self.assertRaises(ModelUnavailable):
             await LLMClient(SimpleNamespace()).next_question([], ['funds'], 3)
+
+    async def test_structured_extraction_can_disable_reasoning_per_call(self):
+        captured=[]
+        def endpoint(request):
+            captured.append(json.loads(request.content))
+            return httpx.Response(200,json={'choices':[{'message':{'content':'{"facts":[]}'}}]})
+        settings=SimpleNamespace(llm_api_key='test',llm_model='pinned-model',llm_base_url='https://test.invalid',llm_reasoning_effort='low')
+        factory=httpx.AsyncClient
+        with patch('gim.llm.httpx.AsyncClient',lambda **kw:factory(transport=httpx.MockTransport(endpoint),**kw)):
+            await LLMClient(settings).complete('Extract facts',{},reasoning_enabled=False)
+        self.assertEqual(captured[0]['model'],'pinned-model')
+        self.assertEqual(captured[0]['reasoning'],{'enabled':False})
