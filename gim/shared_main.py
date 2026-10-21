@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import os
+import signal
 from contextlib import AsyncExitStack, suppress
 
 from gim.config import load_dotenv
@@ -105,6 +106,19 @@ async def run(mode, settings):
                     tasks.create_task(worker_loop(service, pools[1], settings.group_id))
 
 
+async def run_with_shutdown(mode,settings):
+    loop=asyncio.get_running_loop()
+    if os.name!='nt':
+        # Docker sends SIGTERM. Cancel cooperatively so in-flight tasks release
+        # leases and gateway releases its checkpoint before pools are closed.
+        loop.add_signal_handler(signal.SIGTERM,asyncio.current_task().cancel)
+    try:
+        await run(mode,settings)
+    finally:
+        if os.name!='nt':
+            loop.remove_signal_handler(signal.SIGTERM)
+
+
 def main():
     parser = argparse.ArgumentParser(description='VK-бот: private PostgreSQL, SQL очередь, без Redis')
     parser.add_argument('mode', choices=('check-db', 'check-vk', 'run', 'gateway', 'worker'))
@@ -116,8 +130,8 @@ def main():
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     try:
         settings = SharedSettings.load()
-        asyncio.run(run(args.mode, settings))
-    except KeyboardInterrupt:
+        asyncio.run(run_with_shutdown(args.mode, settings))
+    except (KeyboardInterrupt,asyncio.CancelledError):
         log.info('shared_runtime_stopped')
     except (ValueError, StartupError) as exc:
         parser.exit(2, str(exc) + '\n')

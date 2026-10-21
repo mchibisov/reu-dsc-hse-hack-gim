@@ -178,7 +178,7 @@ class Repository:
             if not a: raise LookupError('Application not found')
             revision=a['answers_revision'] if revision is None else revision
             if not 0<=revision<=a['answers_revision']: raise ValueError('Invalid snapshot revision')
-            r=await one(c,'SELECT rubric,rubric_version FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
+            r=await one(c,'SELECT rubric,rubric_version,direction_info FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
             snapshot=await one(c,'SELECT gim.snapshot(%s,%s) AS data',(app_id,revision))
             answers=await all_rows(c,'''SELECT a.id,a.question_id,a.revision,a.answer_text,a.value,
                 CASE WHEN q.source='base' THEN q.target_slot ELSE 'clarification_'||q.position::text END AS target_slot

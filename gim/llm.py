@@ -1,8 +1,12 @@
 """OpenAI-compatible chat-completions client (Mistral/OpenRouter/custom provider)."""
 import json
+import logging
+import time
 import httpx
 
 from gim.dialog import TASKS
+
+log=logging.getLogger(__name__)
 
 
 class ModelUnavailable(RuntimeError):
@@ -19,17 +23,24 @@ class LLMClient:
         base = getattr(self.settings, 'llm_base_url', '')
         if not key or not model or not base:
             raise ModelUnavailable('Configure LLM_API_KEY, LLM_MODEL and LLM_BASE_URL')
+        effort=getattr(self.settings,'llm_reasoning_effort','')
+        reasoning={'reasoning':{'effort':effort}} if effort else {}
+        started=time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
+            async with httpx.AsyncClient(timeout=90) as client:
                 response = await client.post(base.rstrip('/') + '/chat/completions',
                     headers={'Authorization': 'Bearer ' + key}, json={
-                        'model': model, 'temperature': 0.2, 'max_tokens': 4000,
+                        'model': model, 'temperature': 0.2, 'max_tokens': 6000,**reasoning,
                         'response_format': {'type': 'json_object'},
                         'messages': [{'role': 'system', 'content': system},
                                      {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)}]})
                 if response.status_code != 200:
                     raise ModelUnavailable('Model HTTP status ' + str(response.status_code))
                 result = response.json()
+                usage=result.get('usage') or {}
+                log.info('llm_response model=%s seconds=%.1f finish=%s input_tokens=%s output_tokens=%s cost_rub=%s',
+                         model,time.monotonic()-started,result['choices'][0].get('finish_reason'),
+                         usage.get('prompt_tokens'),usage.get('completion_tokens'),usage.get('cost_rub'))
                 if result['choices'][0].get('finish_reason') in ('length', 'content_filter'):
                     raise ValueError('Incomplete model response')
                 value = json.loads(result['choices'][0]['message']['content'])

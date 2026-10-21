@@ -163,7 +163,7 @@ async def _execute(ctx, queue, event):
             await asyncio.shield(queue.finish(event['id'], event['lease_token'], False, 'cancelled'))
         raise
     except Exception as exc:
-        code = type(exc).__name__
+        code = getattr(exc,'code',type(exc).__name__)
         await queue.finish(event['id'], event['lease_token'], False, code)
         log.warning('outbox_execution_failed event_id=%s code=%s', event['id'], code)
 

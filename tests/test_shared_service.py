@@ -87,7 +87,7 @@ class MemoryService(SharedService):
     async def _bind(self, event, binding):
         return self.bindings.setdefault(str(event['id']), binding)
 
-    async def _emit(self, event, peer, text, *, app_id=None, staff=False, suffix='reply'):
+    async def _emit(self, event, peer, text, *, app_id=None, staff=False, suffix='reply',question_slot=None):
         self.emitted.setdefault((str(event['id']),suffix), dict(text=text,peer=peer,staff=staff))
 
     async def _staff(self, vk_id):
@@ -114,6 +114,17 @@ class SharedServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.repo.questions[0]['target_slot'],'consent')
         self.s.vk.send.assert_not_awaited()
         self.assertEqual(self.repo.answers,[])
+
+    async def test_new_person_gets_bot_welcome_on_start_button(self):
+        await self.s.incoming(self.event('Начать'))
+        self.assertTrue(any('бот' in e['text'].casefold() for e in self.s.emitted.values()))
+        self.assertEqual(self.repo.questions[0]['target_slot'],'consent')
+
+    async def test_own_vk_profile_button_saves_real_link(self):
+        self.repo.templates.insert(3,template('vk_url',3))
+        for text in ('Начать','Согласен','Synthetic','synthetic@example.test','Использовать мою страницу'):
+            await self.s.incoming(self.event(text))
+        self.assertEqual(self.repo.answers[-1]['answer_text'],'https://vk.com/id42')
 
     async def test_replay_after_advance_never_answers_next_question(self):
         await self.s.incoming(self.event('/start'))
@@ -164,6 +175,16 @@ class SharedServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.repo.profile['birth_date_answer_id'],self.repo.answers[-2]['id'])
         self.assertTrue(all(x['answer_ids'] for x in self.repo.profile['facts'].values()))
 
+    async def test_curator_card_keeps_interview_after_long_summary(self):
+        aid=uuid4()
+        self.s.staff_repo.export_bundle.return_value={'Анкеты':[{
+            'application_id':str(aid),'status':'submitted','score':2,'summary':'Описание '*600,
+            'criteria_results':[], 'selected_directions':['media']}],
+            'Собеседование':[{'interview_questions':['Последний вопрос интервью?']}]}
+        event=self.event('/application '+str(aid))
+        await self.s._staff_command(event,42,'/application '+str(aid),'/application')
+        self.assertIn('Последний вопрос интервью?',next(iter(self.s.emitted.values()))['text'])
+
     async def test_missing_key_keeps_analysis_retryable(self):
         from gim.llm import ModelUnavailable
         with self.assertRaises(ModelUnavailable):
@@ -201,9 +222,9 @@ class DomainTests(unittest.TestCase):
         generic['text']='В каких проектах вы участвовали раньше?'
         bank=[interest,past,wrong,generic]
         self.assertEqual(select_followups(bank,[],['collections'],3,
-                         {'experience':{'answer_text':'нет'}}),[])
+                         {'experience':{'answer_text':'нет'}}),[interest])
         self.assertEqual(select_followups(bank,[],['collections'],3,
-                         {'experience':{'answer_text':'Работал с музейными коллекциями'}}),[past,generic])
+                         {'experience':{'answer_text':'Работал с музейными коллекциями'}}),[interest,past,generic])
 
     def test_xlsx_preserves_full_text_and_no_formula(self):
         from openpyxl import load_workbook
@@ -268,6 +289,23 @@ class BoundaryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('ON CONFLICT(dedupe_key) DO NOTHING',query)
         self.assertEqual(args[1],'vk.send')
         service.vk.send.assert_not_awaited()
+
+    async def test_vk_question_includes_clickable_personal_profile(self):
+        service=self.service(FakeSQL([]))
+        await service.send_question({'question':{'group_id':17,'vk_id':42,'target_slot':'vk_url',
+            'text':'Ссылка на вашу страницу ВК'},'vk_random_id':99})
+        self.assertIn('https://vk.com/id42',service.vk.send.call_args.args[1])
+        self.assertEqual(service.vk.send.call_args.kwargs['question_slot'],'vk_url')
+
+    async def test_long_reply_split_losslessly_with_distinct_dedupe_keys(self):
+        sql=FakeSQL([None,None,None])
+        service=self.service(sql)
+        raw='Содержательный ответ '*400
+        await service._emit(dict(id=uuid4()),42,raw,staff=True)
+        payloads=[args[3].obj for _,args in sql.calls]
+        self.assertTrue(all(len(p['text'])<=3500 for p in payloads))
+        self.assertEqual(''.join(p['text'] for p in payloads),raw)
+        self.assertEqual(len({args[2] for _,args in sql.calls}),len(sql.calls))
 
     async def test_staff_send_rechecks_membership(self):
         service=self.service(FakeSQL([None]))

@@ -60,27 +60,53 @@ def latest_slots(context):
     return slots
 
 
-def select_followups(templates, questions, directions, maximum, answers=None):
-    """Отклоняем гипотетические задания; при отсутствии подходящих вопросов пропускаем.
+def covered_followup_topics(answers,directions):
+    """Skip only topics explicitly disclosed; these rules never score skills."""
+    texts={slot:a.get('answer_text','').casefold().replace('ё','е') for slot,a in (answers or {}).items()}
+    preferences=' '.join(texts.get(s,'') for s in ('expectations','motivation'))
+    all_text=' '.join(texts.values())
+    covered=set()
+    if re.search(r'интерес|хочу|готов|планир|нрав',preferences) and re.search(r'пост|фото|видео|контент|редакт|дизайн|рубрик',preferences):
+        covered.add('media_activity')
+    if re.search(r'археолог|книжн|рукопис|нумизмат|монет',preferences):
+        covered.add('collections_interest')
+    if len(directions)>1 or re.search(r'рассматриваю.*друг|готов.*друг.*направлен',all_text):
+        covered.add('alternatives')
+    if re.search(r'гибк|регуляр|по суббот|по воскрес|по будн|выходн|график',texts.get('available_time','')):
+        covered.add('schedule')
+    if re.search(r'других.*программ.*нет|не состою|состою.*программ',all_text):
+        covered.add('other_commitments')
+    if re.search(r'(готов|хочу|предпочитаю).*работать в команде|предпочитаю.*индивидуаль',all_text):
+        covered.add('teamwork')
+    if texts.get('expectations','').strip() not in {'','нет','не относится','не знаю'}:
+        covered.add('expectation_goals')
+    return covered
 
-    Никакие ситуации/компетенции не генерируются. Уточняется только описанный
-    прошлый опыт; ограничение направления шаблона требует явного выбора кандидата.
-    """
+
+def select_followups(templates, questions, directions, maximum, answers=None):
+    """Музейная библиотека: выбранное направление, незаданные темы, без экзаменов."""
     asked={str(q.get('template_id')) for q in questions}
-    asked_slots={q['target_slot'] for q in questions if q['source']!='base'}
+    asked_slots={q['target_slot'] for q in questions if q['source']!='base'}|covered_followup_topics(answers,directions)
+    asked_texts={' '.join(q.get('text','').split()).casefold() for q in questions}
     result=[]
-    for t in sorted(templates,key=lambda t:t['position']):
+    for t in sorted(templates,key=lambda t:(not bool(t.get('directions')),t['position'])):
         if t['kind']=='base' or str(t['id']) in asked or t['target_slot'] in asked_slots:
             continue
         text=t['text'].casefold()
+        if ' '.join(text.split()) in asked_texts:
+            continue
         if re.search(r'\b(представьте|ситуаци\w*|бы|сделаете|поступите|разработайте|придумайте)\b',text):
             continue
         directed=bool(set(t.get('directions',[])) & set(directions))
-        past=bool(re.search(r'опыт|раньше|ранее|делали|участвовали|работали|занимались',text))
+        if t.get('directions') and not directed:
+            continue
+        # General library questions are useful even for a first-time volunteer.
+        # Questions explicitly about prior work require actual prior experience.
+        past=bool(re.search(r'раньше|ранее|делали|участвовали|работали|занимались',text))
         experience=(answers or {}).get('experience',{}).get('answer_text','').strip().casefold()
         has_experience=bool(experience and experience.rstrip('.!') not in
                             {'нет','не было','не относится','не применимо','опыта нет','нет опыта','не имею опыта'})
-        if not (past and has_experience and (not t.get('directions') or directed)):
+        if past and not has_experience:
             continue
         result.append(t)
         if len(result)>=max(0,min(3,maximum)):

@@ -25,6 +25,7 @@ class SharedSettings:
     llm_api_key: str = field(default='',repr=False)
     llm_model: str = 'deepseek/deepseek-v4.1-flash-1017'
     excel_access_code: str = field(default='',repr=False)
+    llm_reasoning_effort: str = 'low'
 
     @classmethod
     def load(cls):
@@ -62,4 +63,5 @@ class SharedSettings:
                    os.environ.get('LLM_BASE_URL','https://polza.ai/api/v1'),
                    os.environ.get('LLM_API_KEY',''),
                    os.environ.get('LLM_MODEL','deepseek/deepseek-v4.1-flash-1017'),
-                   os.environ.get('EXCEL_ACCESS_CODE',''))
+                   os.environ.get('EXCEL_ACCESS_CODE',''),
+                   os.environ.get('LLM_REASONING_EFFORT','low'))
