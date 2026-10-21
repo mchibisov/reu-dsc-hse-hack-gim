@@ -185,8 +185,15 @@ class Repository:
             return {'input_snapshot':snapshot['data'],**r,'answers':answers,'files':files}
 
     async def save_evaluation(self, app_id, *, snapshot, score: int, criteria: list, summary: str,
-             request_key: str, directions=None, interview_questions=None, model=None,prompt_version=None,source_event_id=None):
+             request_key: str, directions=None, interview_questions=None, model=None,prompt_version=None,source_event_id=None,
+             source_lease_token=None):
         async with self.pool.connection() as c, c.transaction():
+            if source_lease_token is not None:
+                event=await one(c,'''SELECT id FROM gim.outbox_events WHERE id=%s AND lease_token=%s
+                    AND lease_until>now() AND completed_at IS NULL AND failed_at IS NULL
+                    FOR UPDATE''',(source_event_id,source_lease_token))
+                if event is None:
+                    raise Conflict('Outbox lease no longer owned')
             await app_lock(c,app_id)
             # Do not even attempt a conflicting insert: triggers validate before ON CONFLICT.
             old=await one(c,"SELECT id FROM gim.evaluations WHERE application_id=%s AND source='algorithm' AND request_key=%s",(app_id,request_key))
@@ -197,7 +204,7 @@ class Repository:
                 (app_id,snapshot['input_snapshot']['revision'],score,snapshot['rubric_version'],Jsonb(snapshot['rubric']),Jsonb(criteria),
                  Jsonb(snapshot['input_snapshot']),summary,directions or [],Jsonb(interview_questions or []),model,prompt_version,request_key,source_event_id))
             if source_event_id:
-                await c.execute('UPDATE gim.outbox_events SET completed_at=now(),last_error_code=NULL WHERE id=%s',(source_event_id,))
+                await c.execute('UPDATE gim.outbox_events SET completed_at=now(),last_error_code=NULL,lease_token=NULL,lease_until=NULL WHERE id=%s',(source_event_id,))
             await audit(c,app_id,'evaluation.algorithm',{'evaluation_id':str(row['id']),'revision':snapshot['input_snapshot']['revision']})
             return row['id']
 

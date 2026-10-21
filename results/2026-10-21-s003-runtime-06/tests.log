@@ -1,0 +1,43 @@
+test_check_db_with_three_real_runtime_logins (test_shared_bootstrap.BootstrapIntegration.test_check_db_with_three_real_runtime_logins) ... ok
+test_group_mismatch_cannot_advance_cursor (test_shared_gateway.GatewayIntegration.test_group_mismatch_cannot_advance_cursor) ... ok
+test_singleton_checkpoint_and_event_replay (test_shared_gateway.GatewayIntegration.test_singleton_checkpoint_and_event_replay) ... ok
+test_missing_connections_names_are_clear_and_secret_free (test_shared_runtime.SettingsTests.test_missing_connections_names_are_clear_and_secret_free) ... ok
+test_runtime_rejects_operator_login (test_shared_runtime.SettingsTests.test_runtime_rejects_operator_login) ... ok
+test_three_service_logins_and_bounded_concurrency (test_shared_runtime.SettingsTests.test_three_service_logins_and_bounded_concurrency) ... ok
+test_objects_immutable_and_retry_safe (test_shared_runtime.StorageTests.test_objects_immutable_and_retry_safe) ... ok
+test_read_detects_corrupted_export (test_shared_runtime.StorageTests.test_read_detects_corrupted_export) ... ok
+test_rejects_paths_outside_private_root (test_shared_runtime.StorageTests.test_rejects_paths_outside_private_root) ... ok
+test_binding_uses_current_lease_and_keeps_original (test_shared_service.BoundaryTests.test_binding_uses_current_lease_and_keeps_original) ... ok
+test_expired_lease_cannot_record_binding (test_shared_service.BoundaryTests.test_expired_lease_cannot_record_binding) ... ok
+test_export_ready_reuses_immutable_file_and_checks_acl_twice (test_shared_service.BoundaryTests.test_export_ready_reuses_immutable_file_and_checks_acl_twice) ... ok
+test_export_rejects_incomplete_snapshot_before_writing_file (test_shared_service.BoundaryTests.test_export_rejects_incomplete_snapshot_before_writing_file) ... ok
+test_export_uses_snapshot_then_finishes_before_vk (test_shared_service.BoundaryTests.test_export_uses_snapshot_then_finishes_before_vk) ... ok
+test_reply_is_an_outbox_intention (test_shared_service.BoundaryTests.test_reply_is_an_outbox_intention) ... ok
+test_staff_send_rechecks_membership (test_shared_service.BoundaryTests.test_staff_send_rechecks_membership) ... ok
+test_age_and_directions (test_shared_service.DomainTests.test_age_and_directions) ... ok
+test_followups_are_from_library_and_at_most_three (test_shared_service.DomainTests.test_followups_are_from_library_and_at_most_three) ... ok
+test_xlsx_preserves_full_text_and_no_formula (test_shared_service.DomainTests.test_xlsx_preserves_full_text_and_no_formula) ... ok
+test_analysis_disabled (test_shared_service.MoreDialogTests.test_analysis_disabled) ... ok
+test_completed_dialog_sets_provenance_before_submit (test_shared_service.MoreDialogTests.test_completed_dialog_sets_provenance_before_submit) ... ok
+test_consent_denial_does_not_collect_contacts (test_shared_service.MoreDialogTests.test_consent_denial_does_not_collect_contacts) ... ok
+test_crash_after_answer_before_next_question_recovers_same_binding (test_shared_service.MoreDialogTests.test_crash_after_answer_before_next_question_recovers_same_binding) ... ok
+test_group_and_payload_actor_are_not_authorization (test_shared_service.MoreDialogTests.test_group_and_payload_actor_are_not_authorization) ... ok
+test_invalid_date_is_preserved_and_corrected_without_losing_history (test_shared_service.MoreDialogTests.test_invalid_date_is_preserved_and_corrected_without_losing_history) ... ok
+test_persisted_question_precedes_external_send (test_shared_service.MoreDialogTests.test_persisted_question_precedes_external_send) ... ok
+test_raw_is_never_truncated_and_contacts_require_consent (test_shared_service.MoreDialogTests.test_raw_is_never_truncated_and_contacts_require_consent) ... ok
+test_replay_after_advance_never_answers_next_question (test_shared_service.MoreDialogTests.test_replay_after_advance_never_answers_next_question) ... ok
+test_real_private_roles_replay_followups_submit_export (test_shared_service.SharedDatabaseIntegration.test_real_private_roles_replay_followups_submit_export) ... ok
+test_analysis_disabled (test_shared_service.SharedServiceTests.test_analysis_disabled) ... ok
+test_completed_dialog_sets_provenance_before_submit (test_shared_service.SharedServiceTests.test_completed_dialog_sets_provenance_before_submit) ... ok
+test_consent_denial_does_not_collect_contacts (test_shared_service.SharedServiceTests.test_consent_denial_does_not_collect_contacts) ... ok
+test_group_and_payload_actor_are_not_authorization (test_shared_service.SharedServiceTests.test_group_and_payload_actor_are_not_authorization) ... ok
+test_persisted_question_precedes_external_send (test_shared_service.SharedServiceTests.test_persisted_question_precedes_external_send) ... ok
+test_raw_is_never_truncated_and_contacts_require_consent (test_shared_service.SharedServiceTests.test_raw_is_never_truncated_and_contacts_require_consent) ... ok
+test_replay_after_advance_never_answers_next_question (test_shared_service.SharedServiceTests.test_replay_after_advance_never_answers_next_question) ... ok
+test_export_bytes_are_identical_after_time_changes (test_shared_service.SnapshotRepeatTests.test_export_bytes_are_identical_after_time_changes) ... ok
+test_xml_control_character_is_recoverable (test_shared_service.WorkbookEncodingTests.test_xml_control_character_is_recoverable) ... ok
+
+----------------------------------------------------------------------
+Ran 38 tests in 3.597s
+
+OK

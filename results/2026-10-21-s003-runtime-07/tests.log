@@ -1,0 +1,38 @@
+test_gateway_does_not_need_a_writable_file_directory (test_shared_runtime.MainTests.test_gateway_does_not_need_a_writable_file_directory) ... Executing <Task finished name='Task-2' coro=<MainTests.test_gateway_does_not_need_a_writable_file_directory() done, defined at C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_shared_runtime.py:76> exception=PermissionError() created at C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\asyncio\runners.py:100> took 0.141 seconds
+ERROR
+test_missing_connections_names_are_clear_and_secret_free (test_shared_runtime.SettingsTests.test_missing_connections_names_are_clear_and_secret_free) ... ok
+test_runtime_rejects_operator_login (test_shared_runtime.SettingsTests.test_runtime_rejects_operator_login) ... ok
+test_three_service_logins_and_bounded_concurrency (test_shared_runtime.SettingsTests.test_three_service_logins_and_bounded_concurrency) ... ok
+test_objects_immutable_and_retry_safe (test_shared_runtime.StorageTests.test_objects_immutable_and_retry_safe) ... ok
+test_read_detects_corrupted_export (test_shared_runtime.StorageTests.test_read_detects_corrupted_export) ... ok
+test_rejects_paths_outside_private_root (test_shared_runtime.StorageTests.test_rejects_paths_outside_private_root) ... ok
+
+======================================================================
+ERROR: test_gateway_does_not_need_a_writable_file_directory (test_shared_runtime.MainTests.test_gateway_does_not_need_a_writable_file_directory)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_shared_runtime.py", line 91, in test_gateway_does_not_need_a_writable_file_directory
+    await run('gateway', settings)
+  File "C:\Users\User\PycharmProjects\meaningful_code\gim_shared\gim\shared_main.py", line 92, in run
+    storage = LocalPrivateStorage(settings.storage_dir)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\unittest\mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\unittest\mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\unittest\mock.py", line 1198, in _execute_mock_call
+    raise effect
+PermissionError
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.183s
+
+FAILED (errors=1)

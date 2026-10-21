@@ -69,9 +69,9 @@ LLM не создаёт критерии. Вызов `save_evaluation(app_id, sn
 
 `curator_evaluation(verified_vk_id, app_id, revision=N, score=..., criteria=..., summary=..., request_key=...)` создаёт отдельную запись от активного сотрудника сообщества; исходная оценка алгоритма остаётся. Ручная правка требует текущую revision. `decide(verified_vk_id, app_id, 'invited'|'accepted'|'rejected')` — отдельное решение человека, не следствие балла.
 
-## Фоновые задачи и ARQ
+## Фоновые задачи PostgreSQL
 
-`python -m gim_db.outbox` — издатель. `arq gim_db.outbox.WorkerSettings` — исполнитель. Единственный брокер — Redis. Стабильный ARQ job ID: `gim:<outbox_uuid>`; Redis хранит только непрозрачный UUID, не анкету. В outbox есть available_at, last_published_at, publish_attempts, completed_at, last_error_code.
+`python -m gim_db.outbox` — SQL-исполнитель. SQLQueue(pool, group_id=None) предоставляет async claim(topics=None), finish(event_id, token, success, error_code=None), renew(event_id, token); `run_once(ctx, queue, limit=10)` возвращает число захваченных событий. Токен и срок аренды проверяются при продлении/подтверждении. Внешние вызовы выполняются вне транзакций.
 
 Команда предоставляет модуль `GIM_HANDLERS_MODULE`:
 
@@ -81,16 +81,18 @@ HANDLERS = {
     'application.analyze': analyze_saved_snapshot,
     'staff.notify': notify_staff,
     'file.export': export_saved_bundle,
+    'vk.incoming': process_incoming,
+    'vk.send': send_vk_message,
 }
 ```
 
-Каждый handler — `async def handler(event: dict)`. `question.send` получает event.question с точным text, vk_id, group_id; отправляет его через VK с event.vk_random_id. `application.analyze` получает event.snapshot и возвращает kwargs для save_evaluation: score, criteria, summary, directions, interview_questions, model, prompt_version. Не возвращать snapshot/request_key/source_event_id: worker подставляет их сам.
+Каждый handler — `async def handler(event: dict)`. `question.send` получает event.question с точным text, vk_id, group_id; отправляет его через VK с event.vk_random_id. `application.analyze` получает event.snapshot и возвращает kwargs для save_evaluation: score, criteria, summary, directions, interview_questions, model, prompt_version. Возврат None завершает событие с analysis_disabled без создания оценки. Не возвращать snapshot/request_key/source_event_id/source_lease_token: worker подставляет их сам; source_lease_token проверяется в транзакции save_evaluation.
 
 `staff.notify` перед отправкой использует `await send_staff_notification(repo,event,send_vk)` из gim_db.outbox. Хелпер повторно проверяет сотрудника непосредственно перед сетевым вызовом и передаёт `send_vk(vk_id,group_id,random_id)`. Длительную подготовку текста делать до хелпера. Ранее отправленное уведомление/HTTP-запрос в полёте не отзывается.
 
 `file.export` получает event.payload.snapshot с уже зафиксированными четырьмя наборами данных. Не перечитывать текущие анкеты для этого файла. Получить pending file metadata по event.file_id, создать файл, загрузить immutable object, вызвать FileRepository.finish с фактическими SHA-256/размером; только потом handler возвращает успех. После падения повторять тот же file ID/object key. Постановку на экспорт делает staff через request_export, не произвольный клиент.
 
-ARQ max_jobs=10, max_tries=5, timeout=180s, keep_result=0. При исчерпании повторов без business completion издатель снова опубликует событие; last_error_code/publish_attempts позволяют выявить застрявшую работу. LLM может вызываться повторно после потери Redis/процесса; фиксация оценки идемпотентна. Это at-least-once, не обещание exactly-once внешнего вызова.
+Срок аренды по умолчанию 60 секунд, heartbeat каждые 20 секунд, timeout=180 секунд, максимум 5 попыток. Отмена и timeout оставляют событие повторяемым; после аварии аренда истекает. После исчерпания попыток failed_at останавливает автоматические повторы; данные события сохраняются. Повторы задерживаются на min(60, attempts*5) секунд. vk.incoming имеет FIFO по group_id/serial_key и порядку vk_random_id, включая ожидание предыдущего retry. Повтор внешней отправки использует сохранённый vk_random_id; это at-least-once, внешняя exactly-once не гарантируется.
 
 ## Excel/кабинет
 

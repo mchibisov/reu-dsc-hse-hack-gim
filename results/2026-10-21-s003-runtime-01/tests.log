@@ -1,0 +1,21 @@
+test_shared_runtime (unittest.loader._FailedTest.test_shared_runtime) ... ERROR
+
+======================================================================
+ERROR: test_shared_runtime (unittest.loader._FailedTest.test_shared_runtime)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_shared_runtime
+Traceback (most recent call last):
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\unittest\loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\unittest\loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_shared_runtime.py", line 7, in <module>
+    from gim.shared_config import SharedSettings
+ModuleNotFoundError: No module named 'gim.shared_config'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

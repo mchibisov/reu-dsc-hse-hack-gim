@@ -1,0 +1,22 @@
+test_answers_and_submission_survive_new_service_instance (test_service.ServiceTests.test_answers_and_submission_survive_new_service_instance) ... ok
+test_completed_application_has_contextual_question_snapshot (test_service.ServiceTests.test_completed_application_has_contextual_question_snapshot) ... ok
+test_export_can_be_opened_and_contains_saved_answers (test_service.ServiceTests.test_export_can_be_opened_and_contains_saved_answers) ... Executing <Task pending name='Task-24' coro=<ServiceTests.test_export_can_be_opened_and_contains_saved_answers() running at C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_service.py:142> wait_for=<Future pending cb=[Task.task_wakeup()] created at C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\asyncio\base_events.py:448> cb=[_run_until_complete_cb() at C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\asyncio\base_events.py:181] created at C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\asyncio\runners.py:100> took 0.109 seconds
+ok
+test_export_retry_uses_published_snapshot (test_service.ServiceTests.test_export_retry_uses_published_snapshot) ... ok
+test_export_uses_campaign_from_request_after_restart (test_service.ServiceTests.test_export_uses_campaign_from_request_after_restart) ... ok
+test_followup_service_failure_uses_contextual_fallback (test_service.ServiceTests.test_followup_service_failure_uses_contextual_fallback) ... ok
+test_no_consent_text_starts_with_name (test_service.ServiceTests.test_no_consent_text_starts_with_name) ... ok
+test_only_staff_can_retry_failed_job (test_service.ServiceTests.test_only_staff_can_retry_failed_job) ... ok
+test_optional_consent_mode_does_not_save_first_message_attachment (test_service.ServiceTests.test_optional_consent_mode_does_not_save_first_message_attachment) ... ok
+test_question_snapshot_survives_new_question_version (test_service.ServiceTests.test_question_snapshot_survives_new_question_version) ... ok
+test_resume_document_is_linked_without_advancing_empty_answer (test_service.ServiceTests.test_resume_document_is_linked_without_advancing_empty_answer) ... ok
+test_revoked_staff_cannot_receive_export (test_service.ServiceTests.test_revoked_staff_cannot_receive_export) ... ok
+test_scoring_contract_stores_evidence_and_omits_future_outcomes (test_service.ServiceTests.test_scoring_contract_stores_evidence_and_omits_future_outcomes) ... ok
+test_slash_start_resumes_questionnaire (test_service.ServiceTests.test_slash_start_resumes_questionnaire) ... ok
+test_staff_reply_carries_permission_guard (test_service.ServiceTests.test_staff_reply_carries_permission_guard) ... ok
+test_stale_export_cannot_publish_file (test_service.ServiceTests.test_stale_export_cannot_publish_file) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 2.688s
+
+OK

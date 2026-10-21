@@ -1,0 +1,11 @@
+test_missing_connections_names_are_clear_and_secret_free (test_shared_runtime.SettingsTests.test_missing_connections_names_are_clear_and_secret_free) ... ok
+test_runtime_rejects_operator_login (test_shared_runtime.SettingsTests.test_runtime_rejects_operator_login) ... ok
+test_three_service_logins_and_bounded_concurrency (test_shared_runtime.SettingsTests.test_three_service_logins_and_bounded_concurrency) ... ok
+test_objects_immutable_and_retry_safe (test_shared_runtime.StorageTests.test_objects_immutable_and_retry_safe) ... ok
+test_read_detects_corrupted_export (test_shared_runtime.StorageTests.test_read_detects_corrupted_export) ... ok
+test_rejects_paths_outside_private_root (test_shared_runtime.StorageTests.test_rejects_paths_outside_private_root) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.043s
+
+OK

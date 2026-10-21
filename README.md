@@ -1,5 +1,10 @@
 # VK-бот волонтёрской программы ГИМ
 
+**Запуск с загруженной общей БД:** [README-SHARED.md](README-SHARED.md), `setup_shared.cmd` → заполнить `.env` → `run_shared.cmd`.
+Он использует private schema `gim`, SQL-очередь и три runtime login, без Redis, LLM и оценок. [Спецификация](docs/specs/S003-shared-db-integration.md).
+
+Ниже сохранена документация прежнего запуска с public-схемой из восьми таблиц; его миграции и команды не подходят для private БД.
+
 MVP по схеме из восьми таблиц: `users`, `applications`, `answers`, `evaluations`,
 `audit_log`, `inbox_events`, `jobs`, `files`. PostgreSQL хранит FSM, анкеты и очередь.
 Redis и ARQ не используются. Один gateway принимает события; несколько worker

@@ -1,0 +1,5 @@
+keys ['filters', 'snapshot_at', 'recruitment_id', 'Сводка', 'Анкеты', 'Ответы', 'Собеседование']
+Traceback (most recent call last):
+types {'filters': 'dict', 'snapshot_at': 'str', 'recruitment_id': 'str', 'Сводка': 'dict', 'Анкеты': 'list', 'Ответы': 'list', 'Собеседование': 'list'}
+  File "<stdin>", line 10, in <module>
+KeyError: '������'

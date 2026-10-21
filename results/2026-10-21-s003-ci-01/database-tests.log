@@ -1,0 +1,137 @@
+
+=================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_config.py ____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_config.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_config.py:5: in <module>
+    from gim.config import Settings
+E   ModuleNotFoundError: No module named 'gim'
+_____________________ ERROR collecting tests/test_core.py _____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_core.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_core.py:6: in <module>
+    from gim.dialog import transition
+E   ModuleNotFoundError: No module named 'gim'
+__________________ ERROR collecting tests/test_followups.py ___________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_followups.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_followups.py:3: in <module>
+    from gim.followups import plan_followups, validate_plan
+E   ModuleNotFoundError: No module named 'gim'
+___________________ ERROR collecting tests/test_history.py ____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_history.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_history.py:2: in <module>
+    from gim.history import normalize_record
+E   ModuleNotFoundError: No module named 'gim'
+___________________ ERROR collecting tests/test_runtime.py ____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_runtime.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_runtime.py:10: in <module>
+    from gim.config import Settings
+E   ModuleNotFoundError: No module named 'gim'
+___________________ ERROR collecting tests/test_scoring.py ____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_scoring.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_scoring.py:2: in <module>
+    from gim.scoring import validate_evaluation
+E   ModuleNotFoundError: No module named 'gim'
+___________________ ERROR collecting tests/test_service.py ____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_service.py:9: in <module>
+    from gim.db import Database
+E   ModuleNotFoundError: No module named 'gim'
+_______________ ERROR collecting tests/test_shared_bootstrap.py _______________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_shared_bootstrap.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_shared_bootstrap.py:16: in <module>
+    from gim.shared_config import SharedSettings
+E   ModuleNotFoundError: No module named 'gim'
+________________ ERROR collecting tests/test_shared_gateway.py ________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_shared_gateway.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_shared_gateway.py:10: in <module>
+    from gim.shared_gateway import GatewayLedger, LeaseBusy, LeaseLost
+E   ModuleNotFoundError: No module named 'gim'
+________________ ERROR collecting tests/test_shared_runtime.py ________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_shared_runtime.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_shared_runtime.py:8: in <module>
+    from gim.shared_config import SharedSettings
+E   ModuleNotFoundError: No module named 'gim'
+________________ ERROR collecting tests/test_shared_service.py ________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_shared_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_shared_service.py:11: in <module>
+    from gim.shared_service import SharedService
+E   ModuleNotFoundError: No module named 'gim'
+______________________ ERROR collecting tests/test_vk.py ______________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_shared\tests\test_vk.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_vk.py:3: in <module>
+    from gim.vk import message_event, poll_next
+E   ModuleNotFoundError: No module named 'gim'
+=========================== short test summary info ===========================
+ERROR tests/test_config.py
+ERROR tests/test_core.py
+ERROR tests/test_followups.py
+ERROR tests/test_history.py
+ERROR tests/test_runtime.py
+ERROR tests/test_scoring.py
+ERROR tests/test_service.py
+ERROR tests/test_shared_bootstrap.py
+ERROR tests/test_shared_gateway.py
+ERROR tests/test_shared_runtime.py
+ERROR tests/test_shared_service.py
+ERROR tests/test_vk.py
+!!!!!!!!!!!!!!!!!! Interrupted: 12 errors during collection !!!!!!!!!!!!!!!!!!!
+12 errors in 0.99s

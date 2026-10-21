@@ -1,0 +1,10 @@
+# План S003: существующий бот + private БД
+
+Спецификация: [S003](../specs/S003-shared-db-integration.md). Пользователь явно поручил интеграцию и публикацию. Режим: независимые области SQL outbox и private dialog, затем сквозная проверка.
+
+- [x] R303: SQLQueue и новая миграция lease/checkpoint/topics; Redis/ARQ удалены из runtime, зависимостей, Compose и CI. Claim/ack/retry/fencing/heartbeat: [36 PostgreSQL tests](../../results/2026-10-21-s003-ci-03/report.md).
+- [x] R301–R305: SharedService поверх Repository и существующего VK-клиента; persisted binding, raw answers, staff ACL и snapshot XLSX. [Отказ согласия и followup RED→GREEN](../../results/2026-10-21-s003-dialog-index.md), [42 shared tests](../../results/2026-10-21-s003-postgres-03/report.md).
+- [x] R305–R306: LocalPrivateStorage, SharedSettings, gateway adapter, main и Windows launchers. [Настройки/запуск](../../results/2026-10-21-s003-runtime-08/report.md), [gateway PostgreSQL](../../results/2026-10-21-s003-runtime-05/report.md). Второй живой poller не запускался.
+- [x] R307: чистая установка, frozen lock, изолированная PostgreSQL18.4 и три LOGIN с SCRAM. [CI-команды](../../results/2026-10-21-s003-ci-03/report.md), [legacy regression](../../results/2026-10-21-s003-regression-01/report.md). Все отрицательные запуски сохранены в журнале.
+- [ ] Живая приёмка: operator применяет новую миграцию к облачной БД, выдаёт три DSN и UUID активного набора. Docker build/run,90одновременных пользователей и время5–7мин пока не проверены. Четыре предыдущие миграции не изменены.
+- [ ] R308: сканирование всей публикации на секреты, ревью, локальный коммит, push собственной ветки, проверка удалённого SHA. Если 403 сохраняется — конкретный готовый коммит и инструкция восстановления доступа.

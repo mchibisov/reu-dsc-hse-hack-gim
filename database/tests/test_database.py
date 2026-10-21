@@ -3,13 +3,14 @@ from pathlib import Path
 import psycopg
 import pytest
 
-DSN = os.environ.get('TEST_DATABASE_URL', 'postgresql://maxchibisov@127.0.0.1:55432/postgres')
+DSN = os.environ.get('TEST_DATABASE_URL')
+pytestmark = pytest.mark.skipif(not DSN, reason='set TEST_DATABASE_URL to disposable PostgreSQL')
 
 
-def test_twelve_private_tables():
+def test_thirteen_private_tables():
     with psycopg.connect(DSN) as c:
         tables = c.execute("SELECT tablename FROM pg_tables WHERE schemaname='gim'").fetchall()
-        assert {r[0] for r in tables} == {'users','staff_members','recruitments','question_templates','applications','dialog_questions','answers','evaluations','files','inbox_events','outbox_events','audit_log'}
+        assert {r[0] for r in tables} == {'users','staff_members','recruitments','question_templates','applications','dialog_questions','answers','evaluations','files','inbox_events','outbox_events','audit_log','gateway_checkpoints'}
 
 
 def test_no_public_or_staff_table_access():
@@ -28,6 +29,8 @@ from psycopg_pool import AsyncConnectionPool
 
 @pytest.fixture
 async def env():
+    if not DSN:
+        pytest.skip('set TEST_DATABASE_URL to disposable PostgreSQL')
     from gim_db.repository import Repository
     group = int(uuid.uuid4().int % 1000000000) + 1
     rubric = {'criteria':[{'code':'motivation','max_points':3}], 'approval':'synthetic-test-only'}

@@ -1,0 +1,9 @@
+Collecting uv
+  Downloading uv-0.13.4-py3-none-win_amd64.whl.metadata (11 kB)
+Downloading uv-0.13.4-py3-none-win_amd64.whl (15.3 MB)
+   ---------------------------------------- 15.3/15.3 MB 2.1 MB/s eta 0:00:00
+Installing collected packages: uv
+Successfully installed uv-0.13.4
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[notice] To update, run: C:\Users\User\PycharmProjects\meaningful_code\gim_shared\.venv\Scripts\python.exe -m pip install --upgrade pip

@@ -1,0 +1,16 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_____________ test_sql_runtime_has_no_external_queue_dependencies _____________
+
+    def test_sql_runtime_has_no_external_queue_dependencies():
+        import tomllib
+        root = Path(__file__).parents[1]
+        dependencies = tomllib.loads((root / 'pyproject.toml').read_text())['project']['dependencies']
+>       assert all(not name.startswith(('arq', 'redis')) for name in dependencies)
+E       assert False
+E        +  where False = all(<generator object test_sql_runtime_has_no_external_queue_dependencies.<locals>.<genexpr> at 0x0000018D66936C20>)
+
+database\tests\test_sql_runtime.py:77: AssertionError
+=========================== short test summary info ===========================
+FAILED database\tests\test_sql_runtime.py::test_sql_runtime_has_no_external_queue_dependencies
+1 failed, 4 deselected in 0.06s

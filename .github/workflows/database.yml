@@ -1,9 +1,9 @@
 name: database
 on:
   push:
-    paths: ['database/**', '.github/workflows/database.yml']
+    paths: ['database/**', 'gim/shared_*.py', 'tests/test_shared*.py', '.github/workflows/database.yml']
   pull_request:
-    paths: ['database/**', '.github/workflows/database.yml']
+    paths: ['database/**', 'gim/shared_*.py', 'tests/test_shared*.py', '.github/workflows/database.yml']
 permissions:
   contents: read
 jobs:
@@ -22,13 +22,9 @@ jobs:
         options: >-
           --health-cmd 'pg_isready -U postgres -d gim_test'
           --health-interval 3s --health-timeout 2s --health-retries 20
-      redis:
-        image: redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
-        ports: ['6379:6379']
     env:
       TEST_DATABASE_URL: postgresql://postgres:test-only@127.0.0.1:5432/gim_test
       DATABASE_ADMIN_URL: postgresql://postgres:test-only@127.0.0.1:5432/gim_test
-      TEST_REDIS_URL: redis://127.0.0.1:6379/0
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -37,4 +33,6 @@ jobs:
       - run: uv sync --frozen --extra test --extra materials
       - run: uv run python -m gim_db.migrate
       - run: uv run pytest -q
+      - run: uv run --project database python -m unittest discover -s tests -p 'test_shared*.py' -v
+        working-directory: .
       - run: docker build -t gim-db:test .

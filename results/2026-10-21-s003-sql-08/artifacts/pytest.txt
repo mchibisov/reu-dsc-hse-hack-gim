@@ -1,0 +1,174 @@
+..F.F.....F.FF......................                                     [100%]
+================================== FAILURES ===================================
+_____________ test_zero_is_not_missing_and_no_100_application_cap _____________
+
+env = (<gim_db.repository.Repository object at 0x000001ECEAD0FFE0>, <gim_db.repository.Repository object at 0x000001ECEAD0D0...itment_id': UUID('e579ccf2-e9b7-4e19-909a-88c886316725'), 'code': 'experience', 'kind': 'base', ...}, 10721487198, ...)
+
+    async def test_zero_is_not_missing_and_no_100_application_cap(env):
+        bot,worker,staff,r,t,vk,sid=env
+        a,q,ans=await complete_draft(env)
+        snap=await worker.evaluation_snapshot(a['id'])
+        criteria=[{'code':'motivation','points':0,'reason':'�� ������������','evidence':[],'needs_review':True}]
+        await worker.save_evaluation(a['id'],snapshot=snap,score=0,criteria=criteria,summary='����� ��������',request_key='zero')
+        import asyncio
+        await asyncio.gather(*[bot.start_application(r['id'],r['group_id']+i) for i in range(1,102)])
+        bundle=await staff.export_bundle(vk,r['id'])
+>       assert bundle['������']['total']==102 and bundle['������']['unscored']==101
+               ^^^^^^^^^^^^^^^^
+E       KeyError: '������'
+
+database\tests\test_access.py:45: KeyError
+________________________ test_real_login_provisioning _________________________
+
+env = (<gim_db.repository.Repository object at 0x000001ECEB0FE1E0>, <gim_db.repository.Repository object at 0x000001ECEB0FCD...itment_id': UUID('6e881efe-a94b-42dc-900f-2d31fa1df1f8'), 'code': 'experience', 'kind': 'base', ...}, 10461858505, ...)
+tmp_path = WindowsPath('C:/Users/User/AppData/Local/Temp/pytest-of-User/pytest-24/test_real_login_provisioning0')
+
+    async def test_real_login_provisioning(env,tmp_path):
+        import json,os,subprocess,sys
+        from pathlib import Path
+        from psycopg import sql
+        token=uuid.uuid4().hex[:12]
+        cfg={s:{'login':f'gim_test_{s}_{token}','password':uuid.uuid4().hex} for s in ('bot','worker','staff')}
+        f=tmp_path/'credentials.json';f.write_text(json.dumps(cfg));f.chmod(0o600)
+        try:
+>           subprocess.run([sys.executable,str(Path(__file__).resolve().parents[1]/'scripts'/'provision_runtime.py'),str(f)],env={'PATH':os.environ.get('PATH',''),'DATABASE_ADMIN_URL':DSN},check=True,capture_output=True)
+
+database\tests\test_access.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+input = None, capture_output = True, timeout = None, check = True
+popenargs = (['C:\\Users\\User\\PycharmProjects\\meaningful_code\\gim_bot\\.venv\\Scripts\\python.exe', 'C:\\Users\\User\\PycharmP... 'C:\\Users\\User\\AppData\\Local\\Temp\\pytest-of-User\\pytest-24\\test_real_login_provisioning0\\credentials.json'],)
+kwargs = {'env': {'PATH': 'C:\\Users\\User\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell;C:\...b774037a', 'DATABASE_ADMIN_URL': 'postgresql://gim_test@127.0.0.1:55439/gim_private_test'}, 'stdout': -1, 'stderr': -1}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['C:\\Users\\User\\PycharmProjects\\meaningful_code\\gim_bot\\.venv\\Scripts\\python.exe', 'C:\\Users\\User\\PycharmProjects\\meaningful_code\\gim_shared\\database\\scripts\\provision_runtime.py', 'C:\\Users\\User\\AppData\\Local\\Temp\\pytest-of-User\\pytest-24\\test_real_login_provisioning0\\credentials.json']' returned non-zero exit status 1.
+
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\subprocess.py:571: CalledProcessError
+_____________ test_evidence_manual_priority_and_staff_revocation ______________
+
+env = (<gim_db.repository.Repository object at 0x000001ECEB0FDB20>, <gim_db.repository.Repository object at 0x000001ECEB0FE1...itment_id': UUID('dbaa247e-6cf9-41d6-9d6b-28e8f1e6047c'), 'code': 'experience', 'kind': 'base', ...}, 10168503999, ...)
+
+    async def test_evidence_manual_priority_and_staff_revocation(env):
+        bot,worker,staff,r,t,vk,sid=env
+        a,q,answer=await complete_draft(env)
+        await bot.submit(a['id'])
+        snapshot=await worker.evaluation_snapshot(a['id'])
+        criteria=[{'code':'motivation','points':2,'reason':'���� ����','evidence':[{'source_type':'answer','source_id':str(answer['id']),'quote':'������ ��������'}]}]
+        await worker.save_evaluation(a['id'],snapshot=snapshot,score=2,criteria=criteria,summary='����',request_key='model1')
+        manual=await staff.curator_evaluation(vk,a['id'],revision=1,score=3,criteria=criteria,summary='�������� �����������',request_key='human1')
+        await worker.save_evaluation(a['id'],snapshot=snapshot,score=1,criteria=criteria,summary='������� �����',request_key='model2')
+        bundle=await staff.export_bundle(vk,r['id'])
+>       assert bundle['������'][0]['evaluation_id']==str(manual) and bundle['������'][0]['score']==3
+               ^^^^^^^^^^^^^^^^
+E       KeyError: '������'
+
+database\tests\test_database.py:115: KeyError
+________________________ test_50_concurrent_candidates ________________________
+
+env = (<gim_db.repository.Repository object at 0x000001ECEAC3BB60>, <gim_db.repository.Repository object at 0x000001ECEAC3AB...itment_id': UUID('1a96dcd8-7e91-462e-9c35-0af240769a21'), 'code': 'experience', 'kind': 'base', ...}, 10496222182, ...)
+
+    async def test_50_concurrent_candidates(env):
+        bot,worker,staff,r,t,vk,sid=env
+        start=time.perf_counter()
+        async def candidate(i):
+            a,q,ans=await complete_draft(env,i)
+            await bot.submit(a['id'])
+            return a['id']
+        ids=await asyncio.gather(*[candidate(i) for i in range(50)])
+        elapsed=time.perf_counter()-start
+        assert len(set(ids))==50
+        bundle=await staff.export_bundle(vk,r['id'])
+>       assert len(bundle['������'])==50 and bundle['������']['unscored']==50
+                   ^^^^^^^^^^^^^^^^
+E       KeyError: '������'
+
+database\tests\test_database.py:150: KeyError
+______________________ test_export_request_freezes_data _______________________
+
+env = (<gim_db.repository.Repository object at 0x000001ECEB14B290>, <gim_db.repository.Repository object at 0x000001ECEB148C...itment_id': UUID('90996dc5-9594-41a5-bcce-ead794214711'), 'code': 'experience', 'kind': 'base', ...}, 10206686663, ...)
+
+    async def test_export_request_freezes_data(env):
+        bot,worker,staff,r,t,vk,sid=env
+        a,q,answer=await complete_draft(env)
+        fid=await staff.request_export(vk,r['id'],request_key='frozen')
+        await bot.record_answer(a['id'],q['id'],group_id=r['group_id'],event_id='later',text='������������ �����',expected_revision=1)
+        with psycopg.connect(DSN) as c:
+            payload=c.execute("SELECT payload FROM gim.outbox_events WHERE file_id=%s",(fid,)).fetchone()[0]
+>           assert payload['snapshot']['������'][0]['answer_text']=='������ ��������'
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: '������'
+
+database\tests\test_database.py:161: KeyError
+=========================== short test summary info ===========================
+FAILED database\tests\test_access.py::test_zero_is_not_missing_and_no_100_application_cap
+FAILED database\tests\test_access.py::test_real_login_provisioning - subproce...
+FAILED database\tests\test_database.py::test_evidence_manual_priority_and_staff_revocation
+FAILED database\tests\test_database.py::test_50_concurrent_candidates - KeyEr...
+FAILED database\tests\test_database.py::test_export_request_freezes_data - Ke...
+5 failed, 31 passed in 5.75s

@@ -72,7 +72,9 @@ async def test_real_login_provisioning(env,tmp_path):
     cfg={s:{'login':f'gim_test_{s}_{token}','password':uuid.uuid4().hex} for s in ('bot','worker','staff')}
     f=tmp_path/'credentials.json';f.write_text(json.dumps(cfg));f.chmod(0o600)
     try:
-        subprocess.run([sys.executable,str(Path(__file__).resolve().parents[1]/'scripts'/'provision_runtime.py'),str(f)],env={'PATH':os.environ.get('PATH',''),'DATABASE_ADMIN_URL':DSN},check=True,capture_output=True)
+        child_env={key:os.environ[key] for key in ('PATH','SYSTEMROOT','WINDIR','TEMP','TMP') if key in os.environ}
+        child_env['DATABASE_ADMIN_URL']=DSN
+        subprocess.run([sys.executable,str(Path(__file__).resolve().parents[1]/'scripts'/'provision_runtime.py'),str(f)],env=child_env,check=True,capture_output=True)
         from psycopg.conninfo import conninfo_to_dict
         params=conninfo_to_dict(DSN)
         for service in cfg:

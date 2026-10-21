@@ -32,7 +32,7 @@ DATABASE_ADMIN_URL=postgresql://postgres.bytwrnvnujzscfjfmdhm:PASSWORD@aws-1-eu-
 postgresql://postgres:PASSWORD@db.bytwrnvnujzscfjfmdhm.supabase.co:5432/postgres?sslmode=require
 ```
 
-Не включать платный IPv4 add-on: shared pooler подходит для IPv4. Session endpoint сверяется в Connect при настройке. Для runtime transaction mode на 6543 адаптер отключает prepared statements (`prepare_threshold=None`), использует короткие транзакции и не хранит session state. Общий пул на экземпляр bot=5, worker=5, publisher=2, staff=3 — стартовая настройка, не гарантия лимитов Free. При масштабировании суммировать пулы всех реплик и смотреть pg_stat_activity.
+Не включать платный IPv4 add-on: shared pooler подходит для IPv4. Session endpoint сверяется в Connect при настройке. Для runtime transaction mode на 6543 адаптер отключает prepared statements (`prepare_threshold=None`), использует короткие транзакции и не хранит session state. Общий пул на экземпляр bot=5, worker=5, staff=3 — стартовая настройка, не гарантия лимитов Free. При масштабировании суммировать пулы всех реплик и смотреть pg_stat_activity.
 
 Скопировать `.env.example` в `.env`, заполнить секреты локально. В хранилище секретов сервера хранить отдельно operator, bot, worker и staff DSN. В рабочие контейнеры operator DSN не передаётся.
 
@@ -93,22 +93,21 @@ uv run --env-file .env python scripts/ensure_storage.py
 
 ## 6. Docker и обработчики команды
 
-Supabase размещает PostgreSQL/файлы. Для Python и Redis нужен отдельный компьютер/сервер команды. Никакой платный хостинг не создавался.
+Supabase размещает PostgreSQL/файлы. Для Python нужен отдельный компьютер/сервер команды. Никакой платный хостинг не создавался.
 
 ```sh
-docker compose --env-file .env up -d --build redis publisher
 # После добавления team_handlers в Docker-образ:
 docker compose --env-file .env --profile workers up -d --build worker
 ```
 
-В образ команды добавить модуль из `GIM_HANDLERS_MODULE` с `HANDLERS` (см. contracts.md). Пустого успешного LLM-обработчика здесь нет: при отсутствующем модуле worker не запускается, а при отсутствии topic handler намерение остаётся незавершённым.
+В образ команды добавить модуль из `GIM_HANDLERS_MODULE` с `HANDLERS` (см. contracts.md). При отсутствующем модуле worker не запускается; отсутствующий topic handler приводит к ограниченным повторам. В режиме без модели обработчик application.analyze возвращает None: событие завершается с analysis_disabled, оценка не создаётся.
 
-Для локального стенда `docker compose --env-file .env --profile local up -d db redis`; admin/service DSN внутри Docker используют host `db:5432`, порт хоста 55432 нужен только для локальных инструментов. `docker compose --profile tools run --rm migrate` применяет миграции. Затем создать service LOGIN и первого администратора операторскими скриптами. Секретный файл можно обрабатывать host Python через отдельный localhost operator DSN; он не встраивается в образ. В Compose Redis не публикуется наружу, AOF включён.
+Для локального стенда `docker compose --env-file .env --profile local up -d db`; admin/service DSN внутри Docker используют host `db:5432`, порт хоста 55432 нужен только для локальных инструментов. `docker compose --profile tools run --rm migrate` применяет миграции. Затем создать service LOGIN и первого администратора операторскими скриптами. Секретный файл можно обрабатывать host Python через отдельный localhost operator DSN; он не встраивается в образ.
 
 ## Резервирование и восстановление
 
-Издатель каждые 2 с проверяет outbox; незавершённые события повторно публикуются через 90 с. Redis loss не стирает вопросы, ответы, согласия, снимки или результаты. Остановить/запустить publisher и worker можно независимо. Для VK повторять сохранённый random_id; внешняя exactly-once доставка не гарантируется. Сетевой запрос, уже выполняющийся при отзыве сотрудника, нельзя отменить проверкой БД.
+SQL worker проверяет outbox, арендует событие на 60 секунд и продлевает аренду каждые 20 секунд. Просроченная аренда позволяет повторный захват с новым токеном; старый токен не может подтвердить событие. Максимум 5 попыток, затем failed_at; автоматической бесконечной перепубликации нет. vk.incoming исполняется последовательно по group_id + serial_key. Несколько worker могут работать с одной БД, VK_GROUP_ID ограничивает выборку одним сообществом. Для VK повторять сохранённый random_id; внешняя exactly-once доставка не гарантируется. Сетевой запрос, уже выполняющийся при отзыве сотрудника, нельзя отменить проверкой БД.
 
 Резервирование данных и Storage требуется настроить отдельно: приватные `pg_dump --format=custom --schema=gim --schema=gim_meta` через operator session/direct connection и отдельная копия файлов через Storage API. Не считать тариф Free гарантией PITR/HA. Проверять восстановление на отдельной тестовой БД; дампы/файлы не класть в Git.
 
-Источники технических ограничений: [Supabase connections](https://supabase.com/docs/guides/database/connecting-to-postgres), [Storage schema](https://supabase.com/docs/guides/storage/schema/design), [ARQ](https://arq-docs.helpmanual.io/).
+Источники технических ограничений: [Supabase connections](https://supabase.com/docs/guides/database/connecting-to-postgres), [Storage schema](https://supabase.com/docs/guides/storage/schema/design).
