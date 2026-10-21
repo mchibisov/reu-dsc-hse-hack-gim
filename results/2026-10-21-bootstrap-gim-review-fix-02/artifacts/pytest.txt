@@ -1,0 +1,23 @@
+........F...                                                             [100%]
+================================== FAILURES ===================================
+_________________ test_duplicate_vk_event_has_one_transition __________________
+
+store = <gim_bot.storage.Store object at 0x000001580CD26A50>
+
+    async def test_duplicate_vk_event_has_one_transition(store):
+        vk = FakeVK()
+        bot = Bot(Settings(), store, vk, FakeGateway())
+        await bot.process_update(event('Согласен', 1))
+        await bot.process_update(event('Тестовый Кандидат', 2))
+        await bot.process_update(event('Тестовый Кандидат', 2))
+        assert await store.current_key(123) == 'email'
+>       assert vk.sent[-1][2] == vk.sent[-2][2]
+E       AssertionError: assert 'outbox:e4540...d9f34433e72d2' == 'outbox:d8cf8...65b244710218f'
+E         
+E         - outbox:d8cf869a59e53ccf1d8e608e657b53997ecf617ee31941a7ea965b244710218f
+E         + outbox:e454026e5298d60d13c3a87c3912a5e4fd8e4b6cdba40706589d9f34433e72d2
+
+tests\test_bot.py:56: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_bot.py::test_duplicate_vk_event_has_one_transition - Assert...
+1 failed, 11 passed in 2.75s

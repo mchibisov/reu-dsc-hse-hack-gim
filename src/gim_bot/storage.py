@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from datetime import timedelta
@@ -7,10 +8,24 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from .config import Settings
-from .models import Application, Base, ExportRequest, MessageEvent, RuntimeState, now
+from .models import (
+    Application,
+    Base,
+    DeletedEvent,
+    ExportRequest,
+    MessageEvent,
+    OutgoingReply,
+    RuntimeState,
+    now,
+)
 from .questionnaire import QUESTIONS, applicable, select_followups, validate_answer
 
 CONFIRMATION = 'Спасибо! Ваша анкета получена. Сотрудники музея рассмотрят её и свяжутся с вами.'
+DELETED = 'Ваша анкета и ответы удалены.'
+
+
+def event_digest(user_id, event_id):
+    return hashlib.sha256(f'{user_id}:{event_id}'.encode()).hexdigest()
 
 
 @dataclass
@@ -19,6 +34,8 @@ class Reply:
     completed: bool = False
     application_id: int | None = None
     personalize: bool = False
+    deleted: bool = False
+    ignored: bool = False
 
 
 class Store:
@@ -71,6 +88,9 @@ class Store:
     async def handle_message(self, user_id: int, event_id: str, text: str) -> Reply:
         async with self._locks.setdefault(user_id, asyncio.Lock()):
             async with self.transaction() as session:
+                tombstone = await session.get(DeletedEvent, event_digest(user_id, event_id))
+                if tombstone:
+                    return Reply(DELETED, deleted=True) if tombstone.confirmation else Reply('', ignored=True)
                 event = await session.scalar(select(MessageEvent).where(
                     MessageEvent.user_id == user_id, MessageEvent.event_id == str(event_id)))
                 if event:
@@ -78,7 +98,10 @@ class Store:
                 app = await session.scalar(select(Application).where(
                     Application.user_id == user_id).with_for_update())
                 reply = await self._handle(session, app, user_id, text.strip())
-                session.add(MessageEvent(user_id=user_id, event_id=str(event_id), result=asdict(reply)))
+                if reply.deleted:
+                    session.add(DeletedEvent(digest=event_digest(user_id, event_id), confirmation=True))
+                else:
+                    session.add(MessageEvent(user_id=user_id, event_id=str(event_id), result=asdict(reply)))
                 return reply
 
     async def _handle(self, session, app, user_id, text):
@@ -91,9 +114,13 @@ class Store:
         if app and app.delete_pending:
             app.delete_pending = False
             if command == 'удалить':
+                prior_events = list(await session.scalars(select(MessageEvent).where(MessageEvent.user_id == user_id)))
+                for prior in prior_events:
+                    session.add(DeletedEvent(digest=event_digest(user_id, prior.event_id), confirmation=False))
                 await session.delete(app)
                 await session.execute(delete(MessageEvent).where(MessageEvent.user_id == user_id))
-                return Reply('Ваша анкета и ответы удалены.')
+                await session.execute(delete(OutgoingReply).where(OutgoingReply.user_id == user_id))
+                return Reply(DELETED, deleted=True)
             return Reply('Удаление отменено. Напишите /start, чтобы продолжить.')
         if not app:
             if command in ('согласен', 'согласна', 'даю согласие'):
@@ -149,7 +176,7 @@ class Store:
         app.analysis_status = 'queued'
         return Reply(CONFIRMATION, completed=True, application_id=app.id)
 
-    async def replace_followups(self, user_id, questions: list[dict], event_id):
+    async def replace_followups(self, user_id, questions: list[dict], event_id, prefix=''):
         async with self._locks.setdefault(user_id, asyncio.Lock()):
             async with self.transaction() as session:
                 app = await session.scalar(select(Application).where(Application.user_id == user_id))
@@ -157,7 +184,8 @@ class Store:
                     return None
                 if questions:
                     app.followups = [{**q, 'answer': '', 'source': 'llm'} for q in questions]
-                reply = Reply(self._prompt(app), application_id=app.id)
+                prompt = (prefix + '\n\n' if prefix else '') + self._prompt(app)
+                reply = Reply(prompt, application_id=app.id)
                 event = await session.scalar(select(MessageEvent).where(
                     MessageEvent.user_id == user_id, MessageEvent.event_id == str(event_id)))
                 if event:
@@ -206,6 +234,47 @@ class Store:
             await session.execute(update(Application).where(
                 Application.analysis_status == 'processing', Application.updated_at < now() - timedelta(minutes=10)
             ).values(analysis_status='queued'))
+            stale = (OutgoingReply.status == 'sending', OutgoingReply.updated_at < now() - timedelta(minutes=10))
+            await session.execute(update(OutgoingReply).where(*stale, OutgoingReply.attempts >= 5).values(
+                status='failed', user_id=None, text=''))
+            await session.execute(update(OutgoingReply).where(*stale, OutgoingReply.attempts < 5).values(status='queued'))
+
+    async def queue_reply(self, user_id, text, event_id):
+        key = event_digest(user_id, 'outgoing:' + event_id)
+        async with self.transaction() as session:
+            if not await session.get(OutgoingReply, key):
+                await session.execute(update(OutgoingReply).where(
+                    OutgoingReply.user_id == user_id, OutgoingReply.status.in_(('queued', 'sending'))
+                ).values(status='superseded', user_id=None, text=''))
+                session.add(OutgoingReply(key=key, user_id=user_id, text=text))
+        return key
+
+    async def pending_replies(self):
+        async with self.sessions() as session:
+            return list(await session.scalars(select(OutgoingReply).where(OutgoingReply.status == 'queued')))
+
+    async def claim_reply(self, key):
+        async with self.transaction() as session:
+            result = await session.execute(update(OutgoingReply).where(
+                OutgoingReply.key == key, OutgoingReply.status == 'queued', OutgoingReply.attempts < 5,
+                OutgoingReply.next_attempt <= now()).values(status='sending', attempts=OutgoingReply.attempts + 1))
+            return result.rowcount == 1
+
+    async def get_reply(self, key):
+        async with self.sessions() as session:
+            return await session.get(OutgoingReply, key)
+
+    async def finish_reply(self, key, success):
+        async with self.transaction() as session:
+            reply = await session.get(OutgoingReply, key, with_for_update=True)
+            if not reply or reply.status != 'sending':
+                return
+            if success or reply.attempts >= 5:
+                reply.status = 'sent' if success else 'failed'
+                reply.text, reply.user_id = '', None
+            else:
+                reply.status = 'queued'
+                reply.next_attempt = now() + timedelta(seconds=min(60 * reply.attempts, 300))
 
     async def load_runtime(self, key):
         async with self.sessions() as session:

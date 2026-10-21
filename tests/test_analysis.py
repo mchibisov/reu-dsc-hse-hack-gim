@@ -59,8 +59,13 @@ def test_sanitized_followup_answers_survive_gateway_boundary():
 
 
 async def test_provider_disabled_and_failure_are_safe():
-    provider = Provider(Settings(llm_api_key='', llm_model=''))
+    def unexpected_request(request):
+        pytest.fail('При отключённой модели внешних запросов быть не должно')
+
+    provider = Provider(Settings(llm_api_key='', llm_model=''),
+                        transport=httpx.MockTransport(unexpected_request))
     assert await provider.analyze({'experience': 'test'}) is None
+    assert await provider.followups({'experience': 'test'}, []) is None
     await provider.close()
     calls = []
 

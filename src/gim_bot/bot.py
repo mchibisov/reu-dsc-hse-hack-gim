@@ -7,8 +7,9 @@ from arq.connections import RedisSettings
 from .admin import Admin
 from .analysis import GatewayClient
 from .config import Settings, get_settings
+from .delivery import deliver_reply
 from .storage import Store
-from .vk import VKClient
+from .vk import VKClient, VKError
 
 logger = logging.getLogger(__name__)
 
@@ -53,18 +54,22 @@ class Bot:
             text = message.get('text', '')
             response = await self.admin.handle(user_id, user_id, text, event_id)
             if response is not None:
-                await self.vk.send(user_id, response, f'admin:{user_id}:{event_id}')
+                try:
+                    await self.vk.send(user_id, response, f'admin:{user_id}:{event_id}')
+                except VKError:
+                    logger.warning('admin_reply_undeliverable')
                 return
             reply = await self.store.handle_message(user_id, event_id, text)
+            if reply.ignored:
+                return
             if reply.personalize:
                 app = await self.store.get_by_user(user_id)
                 questions = await self.gateway.followups(app.answers, app.followups) if app else None
-                adjusted = await self.store.replace_followups(user_id, questions or [], event_id)
-                reply = adjusted or reply
                 intro = self._direction_intro((app.answers if app else {}).get('directions', ''))
-                if intro:
-                    reply.text = intro + '\n\n' + reply.text
-            await self.vk.send(user_id, reply.text, f'reply:{user_id}:{event_id}')
+                adjusted = await self.store.replace_followups(user_id, questions or [], event_id, prefix=intro)
+                reply = adjusted or reply
+            delivery_key = await self.store.queue_reply(user_id, reply.text, f'reply:{event_id}')
+            await deliver_reply(self.store, self.vk, delivery_key)
             if reply.completed and self.queue:
                 try:
                     await self.queue.enqueue_job('analyze_application', reply.application_id,

@@ -1,0 +1,18 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+______________ test_new_prompt_supersedes_old_undelivered_prompt ______________
+
+store = <gim_bot.storage.Store object at 0x000001F1D5C3A930>
+
+    async def test_new_prompt_supersedes_old_undelivered_prompt(store):
+        await store.queue_reply(123, 'Как вас зовут?', 'old-event')
+        await store.queue_reply(123, 'Ваш email?', 'new-event')
+        pending = await store.pending_replies()
+>       assert len(pending) == 1
+E       assert 2 == 1
+E        +  where 2 = len([<gim_bot.models.OutgoingReply object at 0x000001F1D605DC70>, <gim_bot.models.OutgoingReply object at 0x000001F1D605DCA0>])
+
+tests\test_reliability.py:128: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_reliability.py::test_new_prompt_supersedes_old_undelivered_prompt
+1 failed in 0.56s

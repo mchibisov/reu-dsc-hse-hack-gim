@@ -1,0 +1,12 @@
+{
+  "model": "mistral-small-2603",
+  "data": "synthetic only",
+  "analysis_available": false,
+  "score": null,
+  "criterion_count": 0,
+  "analysis_seconds": 3.713,
+  "followups_available": false,
+  "followup_seconds": 0.265,
+  "followups": [],
+  "request_key_not_logged": true
+}

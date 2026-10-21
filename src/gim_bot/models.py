@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, BigInteger, DateTime, Integer, String, UniqueConstraint
+from sqlalchemy import JSON, BigInteger, DateTime, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -14,6 +14,7 @@ class Base(DeclarativeBase):
 
 class Application(Base):
     __tablename__ = 'applications'
+    __table_args__ = {'sqlite_autoincrement': True}
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     status: Mapped[str] = mapped_column(String(20), default='base')
@@ -56,3 +57,20 @@ class RuntimeState(Base):
     __tablename__ = 'runtime_state'
     key: Mapped[str] = mapped_column(String(80), primary_key=True)
     value: Mapped[dict] = mapped_column(JSON)
+
+
+class DeletedEvent(Base):
+    __tablename__ = 'deleted_events'
+    digest: Mapped[str] = mapped_column(String(64), primary_key=True)
+    confirmation: Mapped[bool] = mapped_column(default=False)
+
+
+class OutgoingReply(Base):
+    __tablename__ = 'outgoing_replies'
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, index=True)
+    text: Mapped[str] = mapped_column(Text, default='')
+    status: Mapped[str] = mapped_column(String(20), default='queued', index=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)

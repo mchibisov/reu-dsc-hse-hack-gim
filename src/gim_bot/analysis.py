@@ -83,6 +83,8 @@ def validate_analysis(raw: dict, answers: dict) -> dict:
     analysis = AnalysisResult.model_validate(raw)
     for item in analysis.criteria:
         if item.level is not None:
+            if item.field not in ALLOWED_FIELDS and not re.fullmatch(r'followup_[1-4]_answer', item.field):
+                raise ValueError('Недопустимый источник: требуется ответ кандидата')
             source = answers.get(item.field, '')
             if not item.quote.strip() or item.quote not in source:
                 raise ValueError('Недостоверная цитата в критерии')
@@ -100,7 +102,8 @@ ANALYSIS_PROMPT = '''Ты помощник куратора ГИМ. Отвеча
 0 — явно слабое соответствие/прямо описанное ограничение;
 1 — частичное соответствие; 2 — конкретное соответствие с примерами;
 null — невозможно оценить из ответов. Не приравнивай неизвестное к минусу.
-Для известного уровня обязательны field и точная непрерывная quote из этого поля,
+Для известного уровня обязательны field и точная непрерывная quote из этого поля;
+источником может быть только ответ кандидата, а не followup_N_question (вопрос бота).
 для null — пустые field и quote. Не выдумывай факты, численные веса и итоговый балл.
 Страницы ВК недоступны; оцени только конкретные ответы. Рекомендация направления
 следует из интересов и самоотчётов, навыки не проверены практическим заданием.

@@ -1,0 +1,38 @@
+
+=================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_admin.py _____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_bot\tests\test_admin.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_admin.py:5: in <module>
+    from gim_bot.admin import Admin
+E   ModuleNotFoundError: No module named 'gim_bot.admin'
+______________________ ERROR collecting tests/test_vk.py ______________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_bot\tests\test_vk.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_vk.py:6: in <module>
+    from gim_bot.vk import VKClient
+E   ModuleNotFoundError: No module named 'gim_bot.vk'
+____________________ ERROR collecting tests/test_worker.py ____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_bot\tests\test_worker.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_worker.py:1: in <module>
+    from gim_bot.worker import analyze_application, reconcile
+E   ModuleNotFoundError: No module named 'gim_bot.worker'
+=========================== short test summary info ===========================
+ERROR tests/test_admin.py
+ERROR tests/test_vk.py
+ERROR tests/test_worker.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!
+3 errors in 0.44s

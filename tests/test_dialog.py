@@ -80,3 +80,13 @@ async def test_fund_expectations_and_alternatives(store):
     assert any('альтернатив' in q['question'].lower() or 'другие направления' in q['question'].lower()
                for q in questions)
     assert not any('фото' in q['question'].lower() for q in questions)
+
+
+async def test_student_keeps_other_university_faculty_and_course(store, monkeypatch):
+    for key, value in {'status': 'студент', 'university': 'другое', 'university_other': 'Тестовый университет',
+                       'faculty': 'Исторический факультет', 'course': '2'}.items():
+        monkeypatch.setitem(ANSWERS, key, value)
+    app = await finish(store)
+    assert app.answers['university_other'] == 'Тестовый университет'
+    assert app.answers['faculty'] == 'Исторический факультет'
+    assert app.answers['course'] == '2'

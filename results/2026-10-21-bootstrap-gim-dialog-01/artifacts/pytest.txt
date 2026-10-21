@@ -1,0 +1,16 @@
+
+=================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_dialog.py ____________________
+ImportError while importing test module 'C:\Users\User\PycharmProjects\meaningful_code\gim_bot\tests\test_dialog.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_dialog.py:3: in <module>
+    from gim_bot.storage import Store
+E   ModuleNotFoundError: No module named 'gim_bot.storage'
+=========================== short test summary info ===========================
+ERROR tests/test_dialog.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.17s

@@ -6,6 +6,7 @@ from arq.connections import RedisSettings
 
 from .analysis import GatewayClient
 from .config import get_settings
+from .delivery import deliver_reply
 from .export import build_excel
 from .storage import Store
 from .vk import VKClient
@@ -55,6 +56,10 @@ async def export_applications(ctx, request_id: int, admin_id: int):
     await ctx['store'].export_done(request_id)
 
 
+async def deliver_candidate_reply(ctx, key: str):
+    await deliver_reply(ctx['store'], ctx['vk'], key)
+
+
 async def reconcile(ctx):
     store = ctx['store']
     await store.recover_stale()
@@ -68,6 +73,8 @@ async def reconcile(ctx):
     for request in await store.pending_exports():
         await ctx['redis'].enqueue_job('export_applications', request.id, request.admin_id,
                                        _job_id=f'export:{request.id}')
+    for reply in await store.pending_replies():
+        await ctx['redis'].enqueue_job('deliver_candidate_reply', reply.key, _job_id='reply:' + reply.key)
 
 
 async def startup(ctx):
@@ -88,7 +95,7 @@ async def shutdown(ctx):
 
 
 class WorkerSettings:
-    functions = [analyze_application, notify_admin, export_applications]
+    functions = [analyze_application, notify_admin, export_applications, deliver_candidate_reply]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(get_settings().redis_url)

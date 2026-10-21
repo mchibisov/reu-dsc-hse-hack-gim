@@ -51,9 +51,10 @@ async def test_duplicate_vk_event_has_one_transition(store):
     bot = Bot(Settings(), store, vk, FakeGateway())
     await bot.process_update(event('Согласен', 1))
     await bot.process_update(event('Тестовый Кандидат', 2))
+    sent_before_replay = list(vk.sent)
     await bot.process_update(event('Тестовый Кандидат', 2))
     assert await store.current_key(123) == 'email'
-    assert vk.sent[-1][2] == vk.sent[-2][2]
+    assert vk.sent == sent_before_replay
 
 
 async def test_queue_uses_supported_arq_connection_interface(monkeypatch):

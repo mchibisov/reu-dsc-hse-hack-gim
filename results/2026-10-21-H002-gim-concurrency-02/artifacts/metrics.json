@@ -1,0 +1,9 @@
+{
+  "concurrent_candidates": 90,
+  "completed": 90,
+  "errors": 0,
+  "elapsed_seconds": 24.736,
+  "messages": 1620,
+  "p95_store_latency_ms": 1500.57,
+  "scope": "local SQLite Store only; excludes VK, Redis, PostgreSQL and LLM"
+}

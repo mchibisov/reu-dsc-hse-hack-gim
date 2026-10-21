@@ -1,0 +1,9 @@
+{
+  "analysis_available": false,
+  "http": [
+    {
+      "status": 429,
+      "error": "{\"object\":\"error\",\"message\":\"Rate limit exceeded\",\"type\":\"rate_limited\",\"param\":null,\"code\":\"1300\",\"raw_status_code\":429}"
+    }
+  ]
+}
