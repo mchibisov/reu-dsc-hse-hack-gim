@@ -10,7 +10,8 @@ BEGIN
   LEFT JOIN gim.applications a ON a.id=e.application_id LEFT JOIN gim.recruitments r ON r.id=a.recruitment_id
   LEFT JOIN gim.files f ON f.id=e.file_id LEFT JOIN gim.recruitments fr ON fr.id=f.recruitment_id
   WHERE COALESCE(r.group_id,fr.group_id,(e.payload->>'group_id')::bigint)=p_group
-  AND e.completed_at IS NULL AND e.failed_at IS NULL AND e.available_at<=now()) THEN RETURN NULL; END IF;
+  AND e.completed_at IS NULL AND e.failed_at IS NULL AND e.available_at<=now()
+  AND (e.lease_until IS NULL OR e.lease_until<=now())) THEN RETURN NULL; END IF;
  SELECT decrypted_secret INTO endpoint FROM vault.decrypted_secrets WHERE name='gim_worker_url';
  SELECT decrypted_secret INTO bearer FROM vault.decrypted_secrets WHERE name='gim_worker_key';
  IF endpoint IS NULL OR bearer IS NULL OR endpoint !~ '^https://[a-z0-9-]+[.]vercel[.]app/work$' THEN

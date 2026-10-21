@@ -76,7 +76,7 @@ async def drain(settings,*,budget=245):
      topics=['vk.send','question.send','staff.notify','file.export'] if delivery or remaining<185 else None
      if not await run_once(ctx,queue,limit=1,topics=topics):
       async with pools[1].connection() as c:
-       pending=await one(c,"""SELECT EXISTS(SELECT FROM gim.outbox_events e LEFT JOIN gim.applications a ON a.id=e.application_id LEFT JOIN gim.recruitments r ON r.id=a.recruitment_id LEFT JOIN gim.files f ON f.id=e.file_id LEFT JOIN gim.recruitments fr ON fr.id=f.recruitment_id WHERE COALESCE(r.group_id,fr.group_id,(e.payload->>'group_id')::bigint)=%s AND e.completed_at IS NULL AND e.failed_at IS NULL) pending""",(settings.group_id,))
+       pending=await one(c,"""SELECT EXISTS(SELECT FROM gim.outbox_events e LEFT JOIN gim.applications a ON a.id=e.application_id LEFT JOIN gim.recruitments r ON r.id=a.recruitment_id LEFT JOIN gim.files f ON f.id=e.file_id LEFT JOIN gim.recruitments fr ON fr.id=f.recruitment_id WHERE COALESCE(r.group_id,fr.group_id,(e.payload->>'group_id')::bigint)=%s AND e.completed_at IS NULL AND e.failed_at IS NULL AND e.available_at<=now() AND (e.lease_until IS NULL OR e.lease_until<=now()) AND (%s::text[] IS NULL OR e.topic=ANY(%s::text[]))) pending""",(settings.group_id,topics,topics))
       if not pending['pending']:return
       await asyncio.sleep(.4)
    async with asyncio.timeout(budget+5):
@@ -85,3 +85,7 @@ async def drain(settings,*,budget=245):
   finally:
    async with pools[1].connection() as c:
     await c.execute('UPDATE gim.runtime_leases SET expires_at=now() WHERE group_id=%s AND token=%s',(settings.group_id,token))
+   # Close the final-empty-check/release race and hand off remaining analysis
+   # to a fresh time budget. Cron still recovers crashes and delayed retries.
+   with suppress(Exception):
+    async with pools[0].connection() as c:await c.execute('SELECT gim.wake_worker(%s)',(settings.group_id,))

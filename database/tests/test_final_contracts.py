@@ -117,3 +117,28 @@ async def test_delayed_callback_uses_vk_order_not_arrival_time(env):
     with psycopg.connect(DSN) as c:
         receipt=c.execute("SELECT payload->'receipt' FROM gim.outbox_events WHERE dedupe_key=%s",(f"vk-in:{r['group_id']}:message:{admin}:49",)).fetchone()[0]
     assert receipt['question_id']==str(old['id'])
+
+async def test_bounded_dispatcher_hands_off_slow_work_without_idle_spin(env):
+    import time
+    from contextlib import asynccontextmanager
+    from types import SimpleNamespace
+    from unittest.mock import patch,AsyncMock
+    from gim.serverless import drain
+    from gim_db.repository import emit
+    bot,worker,staff,r,t,admin,sid=env
+    with psycopg.connect(DSN) as c:
+        c.execute("""CREATE OR REPLACE FUNCTION gim.wake_worker(bigint) RETURNS bigint LANGUAGE sql AS $$
+          INSERT INTO gim.audit_log(action,details) VALUES('test.cloud_wake',jsonb_build_object('group',$1)) RETURNING 1::bigint $$""")
+        c.execute('REVOKE ALL ON FUNCTION gim.wake_worker(bigint) FROM PUBLIC')
+        c.execute('GRANT EXECUTE ON FUNCTION gim.wake_worker(bigint) TO gim_bot')
+    async with worker.pool.connection() as c:await emit(c,None,'application.analyze','handoff-'+str(uuid.uuid4()),{'group_id':r['group_id']})
+    @asynccontextmanager
+    async def existing(dsn,**kwargs):yield {'bot':bot.pool,'worker':worker.pool,'staff':staff.pool}[dsn]
+    settings=SimpleNamespace(database_bot_url='bot',database_worker_url='worker',database_staff_url='staff',group_id=r['group_id'])
+    started=time.monotonic()
+    with patch('gim.serverless.create_pool',existing),patch('gim.serverless.VK',return_value=SimpleNamespace(close=AsyncMock())):
+        assert await drain(settings,budget=10)=='drained'
+    assert time.monotonic()-started<3
+    with psycopg.connect(DSN) as c:
+        assert c.execute("SELECT count(*) FROM gim.audit_log WHERE action='test.cloud_wake' AND details->>'group'=%s",(str(r['group_id']),)).fetchone()[0]==1
+        assert c.execute('SELECT expires_at<=now() FROM gim.runtime_leases WHERE group_id=%s',(r['group_id'],)).fetchone()[0]
