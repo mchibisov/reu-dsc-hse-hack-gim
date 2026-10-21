@@ -73,6 +73,20 @@ class StorageTests(unittest.IsolatedAsyncioTestCase):
 
 
 class MainTests(unittest.IsolatedAsyncioTestCase):
+    async def test_sigterm_cancellation_runs_cleanup_and_unregisters_handler(self):
+        import asyncio
+        import signal
+        from gim.shared_main import run_with_shutdown
+        loop=asyncio.get_running_loop()
+        with patch.object(loop,'add_signal_handler') as add, \
+             patch.object(loop,'remove_signal_handler') as remove, \
+             patch('gim.shared_main.run',new=AsyncMock(side_effect=asyncio.CancelledError)):
+            with self.assertRaises(asyncio.CancelledError):
+                await run_with_shutdown('gateway',SimpleNamespace())
+        if os.name!='nt':
+            self.assertEqual(add.call_args.args[0],signal.SIGTERM)
+            remove.assert_called_once_with(signal.SIGTERM)
+
     async def test_gateway_does_not_need_a_writable_file_directory(self):
         from gim.shared_main import run
         pools = [MagicMock() for _ in range(3)]

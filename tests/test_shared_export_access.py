@@ -20,3 +20,10 @@ class AccessProofTests(unittest.TestCase):
         from gim.shared_export_access import seal_export,valid_proof
         event=seal_export(self.event('/export'),'synthetic')
         self.assertFalse(valid_proof(event,'synthetic'))
+
+    def test_excel_alias_seals_code_before_persistence(self):
+        from gim.shared_export_access import seal_export,valid_proof
+        event=seal_export(self.event('/excel synthetic-private-code'),'synthetic-private-code')
+        self.assertNotIn('synthetic-private-code',str(event))
+        self.assertEqual(event['object']['message']['text'],'/export')
+        self.assertTrue(valid_proof(event,'synthetic-private-code'))

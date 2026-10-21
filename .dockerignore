@@ -16,3 +16,6 @@ work
 tests
 *.xlsx
 *.pdf
+_env
+_env.*
+.DS_Store

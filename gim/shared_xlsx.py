@@ -8,6 +8,30 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 
 SHEETS=('Анкеты','Ответы','Собеседование','Сводка')
+HEADERS={
+    'application_id':'ID анкеты','vk_id':'VK ID','full_name':'ФИО','email':'Email',
+    'birth_date':'Дата рождения','birth_date_raw':'Дата рождения (ответ)',
+    'status':'Статус','decision':'Решение сотрудника','selected_directions':'Выбранные направления',
+    'undecided':'Направление не выбрано','answers_revision':'Версия ответов','submitted_at':'Подана',
+    'evaluation_id':'ID оценки','score':'Балл 0–3','evaluation_source':'Источник оценки',
+    'reviewer_staff_id':'ID сотрудника','reviewer_name':'Сотрудник','summary':'AI-сводка',
+    'recommended_directions':'Рекомендованные направления','criteria_results':'Критерии и цитаты',
+    'evaluation_revision':'Версия оценки','evaluated_at':'Дата оценки','evaluation_stale':'Оценка устарела',
+    'question_id':'ID вопроса','position':'Порядок вопроса','question_text':'Вопрос',
+    'question_source':'Источник вопроса','purpose':'Назначение вопроса','target_slot':'Поле анкеты',
+    'answer_id':'ID ответа','revision':'Версия','answer_text':'Ответ кандидата',
+    'created_at':'Дата ответа','is_latest':'Последняя версия ответа','interview_questions':'Вопросы для собеседования',
+    'expectations':'Ответы об ожиданиях','metric':'Показатель','value':'Значение',
+    'continuation_part':'Часть текста','continuation_total':'Всего частей','field_encodings':'Кодировка полей',
+}
+LABELS={
+    'status':{'draft':'Черновик','submitted':'Подана','withdrawn':'Отозвана'},
+    'decision':{'pending':'Не принято','invited':'Приглашён','accepted':'Принят','rejected':'Отказ'},
+    'evaluation_source':{'algorithm':'AI','curator':'Сотрудник'},
+    'metric':{'total':'Всего анкет','scored':'С оценкой','unscored':'Без оценки','average_score':'Средний балл',
+              'score_distribution':'Распределение баллов','directions':'Направления','decisions':'Решения сотрудников'},
+}
+
 
 
 def _text(value):
@@ -30,6 +54,9 @@ def snapshot_xlsx(snapshot):
         prepared=[]
         for record in data:
             record=dict(record)
+            for key,labels in LABELS.items():
+                if isinstance(record.get(key),str):
+                    record[key]=labels.get(record[key],record[key])
             encoded={}
             for key,value in list(record.items()):
                 text=_text(value)
@@ -42,7 +69,7 @@ def snapshot_xlsx(snapshot):
         data=prepared
         columns=list(dict.fromkeys(k for row in data for k in row)) or ['Нет данных']
         columns += ['continuation_part','continuation_total']
-        sheet.append(columns)
+        sheet.append([HEADERS.get(k,k) for k in columns])
         for cell in sheet[1]:
             cell.font=Font(bold=True)
         for row in data:

@@ -178,7 +178,7 @@ class Repository:
             if not a: raise LookupError('Application not found')
             revision=a['answers_revision'] if revision is None else revision
             if not 0<=revision<=a['answers_revision']: raise ValueError('Invalid snapshot revision')
-            r=await one(c,'SELECT rubric,rubric_version FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
+            r=await one(c,'SELECT rubric,rubric_version,direction_info FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
             snapshot=await one(c,'SELECT gim.snapshot(%s,%s) AS data',(app_id,revision))
             answers=await all_rows(c,'''SELECT a.id,a.question_id,a.revision,a.answer_text,a.value,
                 CASE WHEN q.source='base' THEN q.target_slot ELSE 'clarification_'||q.position::text END AS target_slot
@@ -208,6 +208,13 @@ class Repository:
                  Jsonb(snapshot['input_snapshot']),summary,directions or [],Jsonb(interview_questions or []),model,prompt_version,request_key,source_event_id))
             if source_event_id:
                 await c.execute('UPDATE gim.outbox_events SET completed_at=now(),last_error_code=NULL,lease_token=NULL,lease_until=NULL WHERE id=%s',(source_event_id,))
+            recipients=await all_rows(c,'''SELECT s.id FROM gim.staff_members s
+                JOIN gim.recruitments r ON r.group_id=s.group_id
+                JOIN gim.applications a ON a.recruitment_id=r.id
+                WHERE a.id=%s AND s.active AND s.notify_new_applications''',(app_id,))
+            for recipient in recipients:
+                await emit(c,app_id,'staff.notify',f'analysis-ready:{row["id"]}:{recipient["id"]}',
+                           {'kind':'analysis_ready','score':score,'summary':summary},staff_id=recipient['id'])
             await audit(c,app_id,'evaluation.algorithm',{'evaluation_id':str(row['id']),'revision':snapshot['input_snapshot']['revision']})
             return row['id']
 

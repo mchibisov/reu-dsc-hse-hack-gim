@@ -18,7 +18,10 @@ def seal_export(event,secret):
     event=copy.deepcopy(event)
     msg=event['object']['message']
     parts=msg.get('text','').strip().split(maxsplit=1)
-    if len(parts)!=2 or parts[0].casefold()!='/export':
+    if not parts or parts[0].casefold() not in {'/export','/excel'}:
+        return event
+    msg['text']='/export'
+    if len(parts)!=2:
         return event
     argument=parts[1].strip()
     event['_export_access']={'proof':_proof(event,secret,argument)}
@@ -26,7 +29,6 @@ def seal_export(event,secret):
     if argument!=secret:
         try:event['_export_access']['application_id']=str(UUID(argument))
         except ValueError:pass
-    msg['text']='/export'
     return event
 
 

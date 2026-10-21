@@ -7,6 +7,13 @@ import httpx
 log = logging.getLogger(__name__)
 
 
+class VKAPIError(RuntimeError):
+    def __init__(self, method, error_code):
+        self.code='vk_'+str(int(error_code))
+        self.error_code=int(error_code)
+        super().__init__(f'VK API {method} error {self.error_code}')
+
+
 def message_event(event):
     if event.get('type') != 'message_new':
         return None
@@ -42,20 +49,39 @@ class VK:
         data = response.json()
         if 'error' in data:
             # Do not log request params: VK may echo access_token in errors.
-            raise RuntimeError(f"VK API {method} error {data['error'].get('error_code')}")
+            raise VKAPIError(method,data['error'].get('error_code',0))
         return data['response']
 
-    async def send(self, peer_id, text, random_id, attachment=None, role='candidate'):
-        buttons = [[{'action': {'type': 'text', 'label': 'Старт'}, 'color': 'primary'},
-                    {'action': {'type': 'text', 'label': '/status'}, 'color': 'secondary'}]]
+    async def send(self, peer_id, text, random_id, attachment=None, role='candidate',question_slot=None):
+        buttons = [[{'action': {'type': 'text', 'label': 'Начать'}, 'color': 'primary'},
+                    {'action': {'type': 'text', 'label': 'Статус'}, 'color': 'secondary'},
+                    {'action': {'type': 'text', 'label': 'Помощь'}, 'color': 'secondary'}]]
+        options={'consent':(('Согласен','Не согласен'),),
+                 'current_status':(('Студент','Работаю','Безработный'),),
+                 'directions':(('Организационное','Проектное'),('Фондовое','Инклюзивное'),('Медиа','Не определился')),
+                 'vk_url':(('Использовать мою страницу',),)}
+        for row in reversed(options.get(question_slot,())):
+            buttons.insert(0,[{'action':{'type':'text','label':label},'color':'positive'} for label in row])
+        if question_slot=='vk_url':
+            buttons.insert(0,[{'action':{'type':'open_link','label':'Открыть мою страницу VK',
+                                       'link':f'https://vk.com/id{peer_id}'}}])
         if role in ('curator', 'admin'):
             buttons.extend([[{'action': {'type': 'text', 'label': command}, 'color': 'secondary'}
-                             for command in row] for row in (('/top', '/export'), ('/stats', '/jobs'))])
+                             for command in row] for row in (('/top', '/export'), ('/stats', '/admin'))])
         params = {'peer_id': peer_id, 'message': text, 'random_id': random_id,
                   'keyboard': json.dumps({'one_time': False, 'buttons': buttons}, ensure_ascii=False)}
         if attachment:
             params['attachment'] = attachment
-        return await self.call('messages.send', **params)
+        try:
+            return await self.call('messages.send', **params)
+        except VKAPIError as exc:
+            if exc.error_code!=912:
+                raise
+            # Community messages work without bot keyboards. Keep the same
+            # random_id/attachment so a configuration mistake does not lose data.
+            log.warning('vk_keyboard_disabled group_id=%s',self.settings.group_id)
+            params.pop('keyboard')
+            return await self.call('messages.send', **params)
 
     async def diagnose(self):
         permissions = await self.call('groups.getTokenPermissions')
