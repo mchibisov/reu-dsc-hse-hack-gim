@@ -1,6 +1,6 @@
 # Передача MVP команде
 
-Основа: `main`. Демонстрационные исправления: `codex/demo-ready-mvp`. Актуальная фактическая проверка и инструкция для других людей: [docs/demo-verification.md](docs/demo-verification.md). База: Supabase PostgreSQL, private schema `gim`. Redis/ARQ не нужны.
+Основа: `main`. Демонстрационные исправления: `feature/demo-ready-mvp`. Актуальная фактическая проверка и инструкция для других людей: [docs/demo-verification.md](docs/demo-verification.md). База: Supabase PostgreSQL, private schema `gim`. Redis/ARQ не нужны.
 Запуск: `python -m gim.shared_main run` или `docker compose up --build -d`.
 
 ## Перед запуском
