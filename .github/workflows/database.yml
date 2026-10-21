@@ -1,0 +1,39 @@
+name: database
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  postgres:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: database
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+        env:
+          POSTGRES_PASSWORD: test-only
+          POSTGRES_DB: gim_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U postgres -d gim_test'
+          --health-interval 3s --health-timeout 2s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:test-only@127.0.0.1:5432/gim_test
+      DATABASE_ADMIN_URL: postgresql://postgres:test-only@127.0.0.1:5432/gim_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.11'
+      - run: uv sync --frozen --extra test --extra materials
+      - run: uv run python -m gim_db.migrate
+      - run: uv run pytest -q
+      - run: uv run --project database python -m unittest discover -s tests -p 'test_shared*.py' -v
+        working-directory: .
+      - run: docker build -t gim-db:test .
+      - run: docker build -t gim-bot:test .
+        working-directory: .

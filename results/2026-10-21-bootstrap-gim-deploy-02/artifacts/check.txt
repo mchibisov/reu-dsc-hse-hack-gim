@@ -1,2 +1,0 @@
-YAML: parsed; 6 services; no published ports; bot command verified.
-Full Docker/Compose build/start: NOT RUN, Docker unavailable.

@@ -1,1 +1,0 @@
-warning: unable to access 'C:\Users\User/.config/git/ignore': Permission denied

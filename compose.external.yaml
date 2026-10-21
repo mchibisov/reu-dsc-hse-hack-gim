@@ -1,0 +1,48 @@
+# Standalone alternative for an existing direct PostgreSQL/Supabase DATABASE_URL.
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile.legacy
+  env_file: .env
+  restart: unless-stopped
+  environment:
+    STORAGE_DIR: /data/files
+  volumes:
+    - reports:/data/files
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: '3'
+services:
+  migrate:
+    <<: *app
+    command: [python, -m, gim.main, migrate]
+    restart: 'no'
+  gateway:
+    <<: *app
+    command: [python, -m, gim.main, gateway]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  worker:
+    <<: *app
+    command: [python, -m, gim.main, worker]
+    environment:
+      STORAGE_DIR: /data/files
+      JOB_KINDS: dialog,send,send_file,score,prepare_followups
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  report-worker:
+    <<: *app
+    command: [python, -m, gim.main, worker]
+    environment:
+      STORAGE_DIR: /data/files
+      JOB_KINDS: export
+      WORKER_CONCURRENCY: '2'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+volumes:
+  reports:

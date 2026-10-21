@@ -1,6 +1,0 @@
-Локальный опрос в консоли. VK и Mistral не подключены; саммари и оценки отключены.
-Используйте вымышленные данные. Выход: /quit. Удаление анкеты: /delete.
-Ответы сохраняются в: C:\Users\User\PycharmProjects\meaningful_code\results\2026-10-21-bootstrap-gim-launcher-02\artifacts\root-main.db
-Волонтёрская программа ГИМ. Опрос займёт ориентировочно 5–7 минут. Согласны на обработку анкеты по политике https://shm.ru/politika-konfidentsialnosti/?
-Для начала напишите «Согласен» или «Согласна».
-> 

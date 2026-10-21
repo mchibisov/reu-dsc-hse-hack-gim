@@ -1,0 +1,41 @@
+name: Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: gim
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: gim_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd 'pg_isready -U gim -d gim_test'
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://gim:test_password@localhost:5432/gim_test
+      TEST_DATABASE_URL: postgresql://gim:test_password@localhost:5432/gim_test
+      REAL_POSTGRES_TESTS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - run: pip install -r requirements.shared.txt
+      - run: python -m gim.main migrate
+      # Private-schema integration tests run in database.yml against their own schema.
+      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+        env:
+          TEST_DATABASE_URL: ''
+      - run: python -m unittest discover -s tests -p 'test_service.py' -v
+      - run: python -m unittest discover -s tests -p 'test_db.py' -v
+      - run: python -m compileall -q gim
+      - run: |
+          cp .env.example .env
+          POSTGRES_PASSWORD=test docker compose --env-file .env.example config --quiet

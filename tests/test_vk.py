@@ -1,45 +1,24 @@
-import httpx
+import unittest
 
-from gim_bot.config import Settings
-from gim_bot.vk import VKClient
-
-
-async def test_vk_send_retries_with_stable_random_id():
-    requests = []
-
-    def respond(request):
-        requests.append(request)
-        if len(requests) == 1:
-            return httpx.Response(200, json={'error': {'error_code': 6}})
-        return httpx.Response(200, json={'response': 12})
-
-    client = VKClient(Settings(vk_token='secret'), transport=httpx.MockTransport(respond), rate_interval=0)
-    await client.send(123, 'Принято', 'unique-event')
-    assert len(requests) == 2
-    assert requests[0].content == requests[1].content
-    assert 'access_token' not in str(requests[0].url)
-    await client.close()
+from gim.vk import message_event, poll_next
 
 
-async def test_uploads_excel_and_sends_document():
-    paths = []
+class VKTests(unittest.TestCase):
+    def test_event_without_event_id_uses_stable_message_identifier(self):
+        event = {'type': 'message_new', 'group_id': 2,
+                 'object': {'message': {'id': 77, 'conversation_message_id': 9, 'from_id': 10, 'peer_id': 10, 'text': 'Привет'}}}
+        normalized = message_event(event)
+        self.assertIsNotNone(normalized)
+        self.assertEqual(normalized['event_id'], 'message:10:9')
+    def test_only_private_incoming_messages_are_accepted(self):
+        base = {'type': 'message_new', 'group_id': 2, 'event_id': 'abc',
+                'object': {'message': {'from_id': 10, 'peer_id': 10, 'out': 0, 'text': 'Привет'}}}
+        self.assertEqual(message_event(base)['object']['message']['text'], 'Привет')
+        base['object']['message']['peer_id'] = 2000000001
+        self.assertIsNone(message_event(base))
 
-    def respond(request):
-        paths.append(request.url.path)
-        if request.url.path.endswith('docs.getMessagesUploadServer'):
-            data = {'response': {'upload_url': 'https://upload.vk.com/doc'}}
-        elif request.url.host == 'upload.vk.com':
-            assert b'fake-xlsx' in request.content
-            data = {'file': 'uploaded-file'}
-        elif request.url.path.endswith('docs.save'):
-            data = {'response': {'type': 'doc', 'doc': {'owner_id': 1, 'id': 2, 'access_key': 'key'}}}
-        else:
-            data = {'response': 123}
-        return httpx.Response(200, json=data)
-
-    client = VKClient(Settings(vk_token='secret'), transport=httpx.MockTransport(respond), rate_interval=0)
-    attachment = await client.upload_document(999, b'fake-xlsx', 'gim.xlsx')
-    assert attachment == 'doc1_2_key'
-    await client.send(999, 'Выгрузка', 'export-1', attachment=attachment)
-    assert paths[-1].endswith('messages.send')
-    await client.close()
+    def test_longpoll_lost_ts_and_expired_key(self):
+        self.assertEqual(poll_next({'failed': 1, 'ts': '30'}, {'ts': '20'}), {'ts': '30'})
+        self.assertIsNone(poll_next({'failed': 2}, {'ts': '20'}))
+        self.assertIsNone(poll_next({'failed': 3}, {'ts': '20'}))
+        self.assertEqual(poll_next({'ts': '21'}, {'ts': '20', 'key': 'k'}), {'ts': '21', 'key': 'k'})
