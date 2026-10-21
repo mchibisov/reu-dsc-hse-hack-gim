@@ -49,3 +49,4 @@
 | 2026-10-21-s003-sql-08 | [отчёт](../results/2026-10-21-s003-sql-08/report.md) |
 | 2026-10-21-s003-sql-09 | [отчёт](../results/2026-10-21-s003-sql-09/report.md) |
 | 2026-10-21-s003-sql-10 | [отчёт](../results/2026-10-21-s003-sql-10/report.md) |
+| 2026-10-21-s003-publication-02 | [отчёт](../results/2026-10-21-s003-publication-02/report.md) |
