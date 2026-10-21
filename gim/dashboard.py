@@ -15,7 +15,7 @@ def dimensions(row):
 
 def dashboard(row):
  if row.get('score') is None:return 'Профиль кандидата: AI-анализ ещё не готов; график не рассчитан.'
- lines=['ПРОФИЛЬ КАНДИДАТА'+(' · исходный AI' if row.get('evaluation_source')=='curator' else '')]
+ lines=['ПРОФИЛЬ КАНДИДАТА'+(' · оценка сотрудника' if row.get('evaluation_source')=='curator' else '')]
  for d in dimensions(row):
   if d['points'] is None:lines.append(d['name']+': недостаточно данных');continue
   value=f'{d["points"]:g}'

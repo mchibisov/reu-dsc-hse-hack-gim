@@ -18,3 +18,10 @@ class HTTPTests(unittest.TestCase):
   self.assertEqual(h.get('X-Content-Type-Options'),'nosniff')
   self.assertIn("frame-ancestors 'none'",h.get('Content-Security-Policy',''))
   self.assertEqual(h.get('Referrer-Policy'),'no-referrer')
+
+ def test_cloud_router_cannot_serve_source_as_static_file(self):
+  import json
+  from pathlib import Path
+  config=json.loads(Path("vercel.json").read_text())
+  self.assertEqual(config["routes"],[{"src":"/(.*)","dest":"/api/index"}])
+  self.assertNotIn("rewrites",config)
