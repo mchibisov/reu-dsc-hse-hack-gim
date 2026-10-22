@@ -1,4 +1,5 @@
 """OpenAI-compatible chat-completions client (Mistral/OpenRouter/custom provider)."""
+import asyncio
 import json
 import logging
 import time
@@ -23,11 +24,11 @@ class LLMClient:
         if not key or not model or not base:
             raise ModelUnavailable('Configure LLM_API_KEY, LLM_MODEL and LLM_BASE_URL')
         effort=getattr(self.settings,'llm_reasoning_effort','')
-        enabled=getattr(self.settings,'llm_reasoning_enabled',None) if reasoning_enabled is None else reasoning_enabled
+        enabled=getattr(self.settings,'llm_reasoning_enabled',False) if reasoning_enabled is None else reasoning_enabled
         reasoning={'reasoning':{'enabled':enabled}} if enabled is not None else ({'reasoning':{'effort':effort}} if effort else {})
         started=time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=90) as client:
+            async with asyncio.timeout(30), httpx.AsyncClient(timeout=httpx.Timeout(30,connect=3,pool=3)) as client:
                 response = await client.post(base.rstrip('/') + '/chat/completions',
                     headers={'Authorization': 'Bearer ' + key}, json={
                         'model': model, 'temperature': 0.2, 'max_tokens': getattr(self.settings,'llm_max_tokens',6000),**reasoning,
@@ -49,6 +50,6 @@ class LLMClient:
                 return value
         except ModelUnavailable:
             raise
-        except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError):
+        except (TimeoutError, httpx.HTTPError, ValueError, KeyError, TypeError, IndexError):
             # Never include provider bodies, candidate answers or credentials in errors.
             raise ModelUnavailable('Invalid or unavailable model response') from None

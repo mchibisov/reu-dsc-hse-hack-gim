@@ -22,7 +22,7 @@ class LLMTests(unittest.IsolatedAsyncioTestCase):
             result = await LLMClient(settings).complete('Extract one personal question', {'answers': history, 'remaining_questions': 2})
         self.assertEqual(result['action'], 'ask')
         self.assertEqual(captured[0]['response_format'], {'type': 'json_object'})
-        self.assertEqual(captured[0]['reasoning'],{'effort':'low'})
+        self.assertEqual(captured[0]['reasoning'],{'enabled':False})
         self.assertEqual(captured[0]['max_tokens'],6000)
         payload = json.loads(captured[0]['messages'][1]['content'])
         self.assertEqual(payload['answers'], history)
@@ -44,3 +44,17 @@ class LLMTests(unittest.IsolatedAsyncioTestCase):
             await LLMClient(settings).complete('Extract facts',{},reasoning_enabled=False)
         self.assertEqual(captured[0]['model'],'pinned-model')
         self.assertEqual(captured[0]['reasoning'],{'enabled':False})
+
+    async def test_default_disables_reasoning_and_bounds_total_wait(self):
+        import asyncio
+        captured=[]
+        settings=SimpleNamespace(llm_api_key='test',llm_model='pinned-model',llm_base_url='https://test.invalid',llm_reasoning_effort='low')
+        def endpoint(request):
+            captured.append(json.loads(request.content))
+            return httpx.Response(200,json={'choices':[{'message':{'content':'{}'}}]})
+        factory=httpx.AsyncClient
+        real_timeout=asyncio.timeout
+        with patch('gim.llm.httpx.AsyncClient',lambda **kw:factory(transport=httpx.MockTransport(endpoint),**kw)), patch('asyncio.timeout',wraps=real_timeout) as deadline:
+            await LLMClient(settings).complete('Extract',{})
+        self.assertEqual(captured[0]['reasoning'],{'enabled':False})
+        self.assertLessEqual(deadline.call_args.args[0],30)

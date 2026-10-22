@@ -18,7 +18,7 @@ from gim_db.repository import Conflict, one, emit
 from gim_db.storage import FileRepository
 from gim.shared_domain import parse_answer, latest_slots, select_followups, covered_followup_topics, question_topics
 from gim.shared_xlsx import snapshot_xlsx, SHEETS
-from gim.vk import message_event
+from gim.vk import message_event, VKAPIError
 from gim.llm import LLMClient, ModelUnavailable
 from gim.shared_export_access import request_code_export,code_recipient
 from gim.shared_analysis import safe_answers, approved_rubric, validate_result, ANALYSIS_PROMPT, DIRECTION_NAMES
@@ -87,7 +87,7 @@ class SharedService:
                 key=f'reply:{event["id"]}:{suffix}'+(f':part{offset//3500+1}' if offset else '')
                 await emit(c,app_id,'vk.send',key,
                            {'peer_id':peer,'text':text[offset:offset+3500],'group_id':self.settings.group_id,
-                            'staff':staff,'question_slot':question_slot})
+                            'staff':staff,'question_slot':question_slot,'welcome':suffix=='welcome' and offset==0})
 
     async def incoming(self, event):
         payload=event['payload']
@@ -253,7 +253,7 @@ class SharedService:
         model_finished=False
         if count<limit and getattr(self.settings,'llm_api_key',''):
             try:
-                async with asyncio.timeout(20):
+                async with asyncio.timeout(3):
                     decision=await self.personal_question(ctx,direction['selected_directions'],limit-count)
                 model_finished=True
             except (ModelUnavailable,ValueError,TimeoutError) as exc:
@@ -410,8 +410,24 @@ class SharedService:
             if not staff:
                 return
             role=staff['role']
-        await self.vk.send(p['peer_id'],p['text'],event['vk_random_id'],role=role,
-                           question_slot=p.get('question_slot'))
+        attachment=None
+        if p.get('welcome'):
+            try:
+                branding=json.loads((Path(__file__).resolve().parents[1]/'config'/'vk-branding.json').read_text())
+                if branding.get('group_id')==self.settings.group_id:
+                    import re
+                    photo=branding.get('welcome_photo','')
+                    if re.fullmatch(r'photo-?[0-9]+_[0-9]+(?:_[A-Za-z0-9]+)?',photo):attachment=photo
+            except (OSError,ValueError,TypeError):
+                pass # Optional artwork must not block the questionnaire.
+        try:
+            await self.vk.send(p['peer_id'],p['text'],event['vk_random_id'],role=role,
+                               question_slot=p.get('question_slot'),attachment=attachment)
+        except VKAPIError as exc:
+            if not attachment or exc.error_code!=100:raise
+            # Invalid/deleted artwork must never delay the first question.
+            await self.vk.send(p['peer_id'],p['text'],event['vk_random_id'],role=role,
+                               question_slot=p.get('question_slot'))
 
     async def send_question(self,event):
         q=event['question']

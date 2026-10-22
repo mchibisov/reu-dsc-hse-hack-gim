@@ -238,9 +238,10 @@ class SharedServiceTests(unittest.IsolatedAsyncioTestCase):
         for text in ['/start','да','Synthetic','synthetic@example.test','01.01.2000']:
             await self.s.incoming(self.event(text))
         real_timeout=asyncio.timeout
-        with patch('asyncio.timeout',side_effect=lambda seconds:real_timeout(0.001)):
+        with patch('asyncio.timeout',side_effect=lambda seconds:real_timeout(0.001)) as deadline:
             await asyncio.wait_for(self.s.incoming(self.event('не определился')),0.2)
         self.assertEqual(self.repo.app['status'],'submitted')
+        self.assertLessEqual(deadline.call_args.args[0],3)
 
     async def test_followup_provider_outage_does_not_block_submission(self):
         self.s.settings.llm_api_key='synthetic'

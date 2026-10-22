@@ -67,3 +67,21 @@ class VKRequestTests(unittest.IsolatedAsyncioTestCase):
                 self.assertLessEqual(seen[0]['read'],10)
                 self.assertGreaterEqual(vk.http.timeout.read,25)
             finally:await vk.close()
+
+class WelcomeAttachmentTests(unittest.IsolatedAsyncioTestCase):
+    async def test_picture_only_for_welcome_and_matching_community(self):
+        from unittest.mock import AsyncMock
+        from gim.shared_service import SharedService
+        service=object.__new__(SharedService)
+        service.settings=SimpleNamespace(group_id=242476311)
+        service.vk=SimpleNamespace(send=AsyncMock())
+        event={'vk_random_id':7,'payload':{'group_id':242476311,'peer_id':1,'text':'Здравствуйте','welcome':True}}
+        await service.send(event)
+        self.assertTrue(service.vk.send.call_args.kwargs.get('attachment','').startswith('photo'))
+        event['payload']['welcome']=False
+        await service.send(event)
+        self.assertIsNone(service.vk.send.call_args.kwargs.get('attachment'))
+        service.settings.group_id=999
+        event['payload'].update(group_id=999,welcome=True)
+        await service.send(event)
+        self.assertIsNone(service.vk.send.call_args.kwargs.get('attachment'))
