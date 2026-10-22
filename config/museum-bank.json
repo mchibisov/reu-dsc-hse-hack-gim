@@ -1,0 +1,348 @@
+{
+  "source": "Музейная анкета и презентация «5 волонтёрских направлений», материалы кейса ГИМ; только незаполненные вопросы и описание задач, без данных кандидатов.",
+  "questions": [
+    {
+      "code": "consent",
+      "kind": "base",
+      "text": "Даю согласие на обработку персональных данных. Политика конфиденциальности — https://shm.ru/politika-konfidentsialnosti/",
+      "position": 1,
+      "required": true,
+      "target_slot": "consent",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "full_name",
+      "kind": "base",
+      "text": "ФИО",
+      "position": 2,
+      "required": true,
+      "target_slot": "full_name",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "email",
+      "kind": "base",
+      "text": "Электронная почта",
+      "position": 3,
+      "required": true,
+      "target_slot": "email",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "vk_url",
+      "kind": "base",
+      "text": "Ссылка на страницу ВК (Взаимодействие с действующими волонтерами осуществляется на базе соцсети ВКонтакте)",
+      "position": 4,
+      "required": true,
+      "target_slot": "vk_url",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "birth_date",
+      "kind": "base",
+      "text": "Дата рождения",
+      "position": 5,
+      "required": true,
+      "target_slot": "birth_date",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "current_status",
+      "kind": "base",
+      "text": "Ваш нынешний статус: Студент/работаю/безработный",
+      "position": 6,
+      "required": true,
+      "target_slot": "current_status",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "university",
+      "kind": "base",
+      "text": "ВУЗ\nМГУ имени М.В. Ломоносова /\nРоссийский государственный гуманитарный университет (РГГУ) /\nНациональный исследовательский университет /\n«Высшая школа экономики» (НИУ ВШЭ) /\nРоссийский университет дружбы народов (РУДН) /\nДругое",
+      "position": 7,
+      "required": true,
+      "target_slot": "university",
+      "validation": {
+        "allow_not_applicable": true
+      },
+      "directions": []
+    },
+    {
+      "code": "faculty",
+      "kind": "base",
+      "text": "Факультет, направление",
+      "position": 8,
+      "required": true,
+      "target_slot": "faculty",
+      "validation": {
+        "allow_not_applicable": true
+      },
+      "directions": []
+    },
+    {
+      "code": "course",
+      "kind": "base",
+      "text": "Курс",
+      "position": 9,
+      "required": true,
+      "target_slot": "course",
+      "validation": {
+        "allow_not_applicable": true
+      },
+      "directions": []
+    },
+    {
+      "code": "interests",
+      "kind": "base",
+      "text": "Сфера научных интересов",
+      "position": 10,
+      "required": true,
+      "target_slot": "interests",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "experience",
+      "kind": "base",
+      "text": "Опыт работы, стажировки, участие в проектах и т.д. (если имеется)",
+      "position": 11,
+      "required": true,
+      "target_slot": "experience",
+      "validation": {
+        "allow_not_applicable": true
+      },
+      "directions": []
+    },
+    {
+      "code": "languages",
+      "kind": "base",
+      "text": "Владение иностранными языками (B1 и выше)",
+      "position": 12,
+      "required": true,
+      "target_slot": "languages",
+      "validation": {
+        "allow_not_applicable": true
+      },
+      "directions": []
+    },
+    {
+      "code": "motivation",
+      "kind": "base",
+      "text": "Почему Вы выбрали волонтерскую программу Исторического музея?",
+      "position": 13,
+      "required": true,
+      "target_slot": "motivation",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "expectations",
+      "kind": "base",
+      "text": "Чего Вы ожидаете от волонтерства в Историческом музее?",
+      "position": 14,
+      "required": true,
+      "target_slot": "expectations",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "available_time",
+      "kind": "base",
+      "text": "Сколько времени Вы готовы уделять добровольческой деятельности в месяц?",
+      "position": 15,
+      "required": true,
+      "target_slot": "available_time",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "hobbies",
+      "kind": "base",
+      "text": "Ваши хобби",
+      "position": 16,
+      "required": true,
+      "target_slot": "hobbies",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "directions",
+      "kind": "base",
+      "text": "В работу какого направления волонтерской деятельности ГИМ Вы бы хотели включиться?\nОрганизационное направление (помощь в организации культурно-массовых мероприятий) /\nПроектное направление (разработка квестов/мастер-классов для культурно-массовых мероприятий) /\nФондовое направление /\nИнклюзивное направление /\nМедиа волонтерство /\nПока не определился",
+      "position": 17,
+      "required": true,
+      "target_slot": "directions",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "discovery",
+      "kind": "base",
+      "text": "Откуда Вы узнали о Волонтерской программе?\nСоциальные сети\nРекомендации друзей\nСайт Исторического музея\nДругое",
+      "position": 18,
+      "required": true,
+      "target_slot": "discovery",
+      "validation": {
+        "allow_not_applicable": false
+      },
+      "directions": []
+    },
+    {
+      "code": "followup_1",
+      "kind": "followup",
+      "text": "Какие фонды вас привлекают для работы?",
+      "position": 19,
+      "required": false,
+      "target_slot": "collections_interest",
+      "directions": [
+        "collections"
+      ],
+      "validation": {}
+    },
+    {
+      "code": "followup_2",
+      "kind": "followup",
+      "text": "Готовы работать исключительно в фондах, или рассматриваете и другие направления?",
+      "position": 20,
+      "required": false,
+      "target_slot": "alternatives",
+      "directions": [
+        "collections"
+      ],
+      "validation": {}
+    },
+    {
+      "code": "followup_3",
+      "kind": "followup",
+      "text": "Какие форматы вам ближе: мастер-классы, квесты, экскурсии, образовательные игры?",
+      "position": 21,
+      "required": false,
+      "target_slot": "project_formats",
+      "directions": [
+        "project"
+      ],
+      "validation": {}
+    },
+    {
+      "code": "followup_4",
+      "kind": "followup",
+      "text": "С какой категорией посетителей предпочитаете работать: дети, молодежь, средний возраст, пенсионеры?",
+      "position": 22,
+      "required": false,
+      "target_slot": "visitor_groups",
+      "directions": [
+        "organizational"
+      ],
+      "validation": {}
+    },
+    {
+      "code": "followup_5",
+      "kind": "followup",
+      "text": "Какая деятельность внутри направления вас привлекает: составление контент-плана, видеоформаты, фото, написание постов, разработка рубрик, дизайн?",
+      "position": 23,
+      "required": false,
+      "target_slot": "media_activity",
+      "directions": [
+        "media"
+      ],
+      "validation": {}
+    },
+    {
+      "code": "followup_6",
+      "kind": "followup",
+      "text": "Предпочитаете регулярный график или гибкий?",
+      "position": 24,
+      "required": false,
+      "target_slot": "schedule",
+      "directions": [],
+      "validation": {}
+    },
+    {
+      "code": "followup_7",
+      "kind": "followup",
+      "text": "В настоящее время вы состоите в других волонтерских программах, объединениях?",
+      "position": 25,
+      "required": false,
+      "target_slot": "other_commitments",
+      "directions": [],
+      "validation": {}
+    },
+    {
+      "code": "followup_8",
+      "kind": "followup",
+      "text": "Вам интереснее работать в команде или индивидуально вести проект?",
+      "position": 26,
+      "required": false,
+      "target_slot": "teamwork",
+      "directions": [],
+      "validation": {}
+    },
+    {
+      "code": "followup_9",
+      "kind": "followup",
+      "text": "Какие качества считаете полезными для волонтёра?",
+      "position": 27,
+      "required": false,
+      "target_slot": "qualities",
+      "directions": [],
+      "validation": {}
+    },
+    {
+      "code": "followup_10",
+      "kind": "followup",
+      "text": "Ваши ожидания от участия в волонтёрстве и какие результаты для вас важны?",
+      "position": 28,
+      "required": false,
+      "target_slot": "expectation_goals",
+      "directions": [],
+      "validation": {}
+    },
+    {
+      "code": "followup_11",
+      "kind": "followup",
+      "text": "Есть ли идеи по направлениям, которые стоит развивать в музее?",
+      "position": 29,
+      "required": false,
+      "target_slot": "project_ideas",
+      "directions": [],
+      "validation": {}
+    }
+  ],
+  "direction_info": {
+    "organizational": "Помощь в организации культурно-массовых мероприятий: проведение мастер-классов, координация посетителей \nОрганизационное направление\n●Музей детям●Ночь музеев●Концерты●День юного археолога●День Покровского собора●Олимпиада «Музеи. Парки. Усадьбы»\n●Фотографы",
+    "project": "Разработка игротеки, квестов, мастер-классов, информационных заметок для культурно-массовых мероприятий\n●Апрель 2027 юбилей программы●Художники●Творческая реализация●Новые форматы\nПроектное направление",
+    "collections": "Фондовое направление\n●Помощь в оцифровке предметов ●Помощь в составлении каталогов ●Работа с системой КАМИС\n●Археологический отдел●Книжный фонд●Отдел рукописей и старопечатных книг !Важно! физическая сила, тк работа будет связана с перестановкой рукописей и их маркировкой●Отдел изобразительных материалов!Важно! хороший почерк●Отдел дерева и мебели",
+    "inclusive": "Инклюзивное направление\n●Участие волонтеров в инклюзивных мероприятиях: встреча групп, помощь на мастер-классах, проведение специальных мероприятий (рассказ о тактильных моделях)●Участие в мероприятиях профильных организаций (Школа собак-проводников, профильные отделы других музеев)\n\nИнклюзивное направление\n●Отдельный отбор волонтеров из общего потока●Обучение волонтеров основам взаимодействия с посетителями с инвалидностью",
+    "media": "Медиа направление●Составление контент-плана●Написание постов●Пост релизы●Ведение рубрик\n\nМедиа направление●Райтеры●Редакторы●Фотографы●Видеомейкеры●Дизайн"
+  }
+}

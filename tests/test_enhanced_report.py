@@ -27,5 +27,5 @@ class EnhancedReport(unittest.IsolatedAsyncioTestCase):
   service.llm.complete=AsyncMock(side_effect=[grade,ModelUnavailable('Provider unavailable')])
   result=await service.analyze({'snapshot':snapshot})
   self.assertEqual(result['score'],2)
-  self.assertIn('Расширенный отчёт временно недоступен',result['summary'])
+  self.assertIn('Сохранён проверенный анализ',result['summary'])
   self.assertEqual(result['criteria'][0]['evidence'][0]['quote'],'Работал в музее')

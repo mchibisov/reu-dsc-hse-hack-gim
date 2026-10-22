@@ -6,6 +6,6 @@ COPY database ./database
 RUN pip install --no-cache-dir -r requirements.shared.txt
 COPY gim ./gim
 COPY config ./config
-RUN useradd --uid 10001 --create-home bot && mkdir -p /data/files && chown -R bot:bot /data
+RUN useradd --uid 10001 --create-home bot && mkdir -p /data/files /data/config && chown -R bot:bot /data
 USER bot
 CMD ["python", "-m", "gim.shared_main", "run"]

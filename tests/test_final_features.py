@@ -28,3 +28,20 @@ class FinalFeatures(unittest.TestCase):
         template={'position':1,'id':'t','target_slot':'alternatives','text':'Готовы ли рассмотреть другие направления?','kind':'followup','directions':[]}
         asked=[{'source':'generated','purpose':'expectations','target_slot':'expectations_match','text':'Подходят ли задачи и интересны ли альтернативы?'}]
         self.assertEqual(select_followups([template],asked,['collections'],3,{}),[])
+
+    def test_answers_are_current_named_and_grouped_without_repeated_summaries(self):
+        snapshot={'Анкеты':[{'application_id':'b','full_name':'Борис','summary':'Сводка'},
+                            {'application_id':'a','full_name':'Анна','summary':'Другая сводка'}],
+                  'Ответы':[{'application_id':'b','position':2,'question_text':'Опыт?','answer_text':'Новый','is_latest':True,'value':{'raw':'Новый'}},
+                            {'application_id':'b','position':2,'question_text':'Опыт?','answer_text':'Старый','is_latest':False},
+                            {'application_id':'a','position':1,'question_text':'Почему?','answer_text':'Интерес','is_latest':True}],
+                  'Собеседование':[{'application_id':'b','summary':'Сводка','expectations':[{'answer':'Новый'}],'interview_questions':['Какой опыт?']}]}
+        w=load_workbook(io.BytesIO(snapshot_xlsx(snapshot)))
+        rows=list(w['Ответы'].values);h=rows[0]
+        self.assertEqual(h[0],'ФИО')
+        self.assertEqual([r[h.index('ФИО')] for r in rows[1:]],['Анна','Борис'])
+        self.assertNotIn('Старый',str(rows))
+        self.assertNotIn('value',h)
+        interview=list(w['Собеседование'].values)
+        self.assertNotIn('AI-сводка',interview[0])
+        self.assertNotIn('Ответы об ожиданиях',interview[0])
