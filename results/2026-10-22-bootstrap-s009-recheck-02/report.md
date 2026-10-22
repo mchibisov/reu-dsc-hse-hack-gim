@@ -1,0 +1,11 @@
+# S009 — чистый запуск и повтор после исправлений
+
+Состояние: выполняется. Причина повтора — прямой запрос пользователя и две исправленные регрессии. Источник: Git archive6ca88c5 в runtime/s009-clean-02; отдельный venv s009-clean-venv, установленный с нуля из requirements. Новая пустая PostgreSQL gim_s009_second. Модель/production не меняются. Проверяются чистые миграции+повтор, полный pytest, unittest, CLI, запуск idle worker с тремя ограниченными LOGIN, синтетический18-вопросный сценарий и регрессии.
+
+Итог: успешно. Чистые миграции и повтор exit0; [207 passed in26.46s](pytest.log), без skip. Независимый runner unittest: [141 tests, OK](unittest.log); ожидаемые ModelUnavailable/TimeoutError в логах принадлежат отрицательным тестам, не сбою прогона. [pip check](pip-check.log), compileall, [CLI help](cli.log) exit0. Зависимость gim-db переустановлена editable именно на новый архив ([relocate-package.log](relocate-package.log)), а не на основную рабочую копию.
+
+[Реальный startup/smoke](runtime-smoke.log): check-db subprocess с тремя реальными ограниченными LOGIN; отдельный worker subprocess запущен и оставался живым до штатного завершения проверки. [Лог процесса](worker.log). Затем настоящие SharedService/Repository/SQLQueue и private storage прошли18 базовых вопросов,18 сохранённых ответов, submitted, исключён university_other, faculty с новым названием и полный XLSX с5листами. Вместо сети VK — явный SyntheticVK; AI не исполнялся без ключа. Доказательство: [воспроизводимый скрипт](runtime_smoke.py). Локальные LOGIN удалены после проверки; никакой производственный бот не запускался параллельно.
+
+[28 удалённых файлов](deleted-files.log) повторно сопоставлены со snapshot; независимый reviewer проверил все изменения, entry points, импорты, .cmd, Docker/Vercel/CI. Активных зависимостей от удалённого не обнаружено. Snapshot по-прежнему7d06b60, доступен для восстановления. Найденные побочные регрессии исправлены в6ca88c5.
+
+Свежие CI для6ca88c57b39c97bb45b57810848cd82e8821ccd5: [Tests success](https://github.com/mchibisov/reu-dsc-hse-hack-gim/actions/runs/39706048182), [database success](https://github.com/mchibisov/reu-dsc-hse-hack-gim/actions/runs/39706048195). Две Docker-сборки, packaged rubric, image entry point и Compose успешны. Локальный Docker Engine при этом остаётся HTTP500 (run01).

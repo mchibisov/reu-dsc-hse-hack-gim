@@ -1,0 +1,25 @@
+enhancement_unavailable error_type=ModelUnavailable
+analysis_repair validation=Unverifiable evidence
+analysis_repair validation=Integer score 0–3 required
+analysis_repair validation=Unknown or duplicate criterion
+analysis_repair validation=Score differs from criterion sum
+analysis_repair validation=Unverifiable evidence
+analysis_repair validation=Insufficient observed criterion weight; manual review required
+analysis_repair validation=Missing criterion must be explicitly excluded, not assigned points
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=Missing criterion must be explicitly excluded, not assigned points
+followup_fallback error_type=TimeoutError
+followup_fallback error_type=TimeoutError
+outbox_execution_failed event_id=5263a974-6dcb-49f2-9fd1-25b42d5e455a code=ModelUnavailable
+followup_fallback error_type=TimeoutError
+followup_fallback error_type=TimeoutError
+vk_keyboard_disabled group_id=17
+----------------------------------------------------------------------
+Ran 141 tests in 7.508s
+
+OK

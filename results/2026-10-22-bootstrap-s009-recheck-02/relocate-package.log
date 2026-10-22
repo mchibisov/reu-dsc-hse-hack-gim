@@ -1,0 +1,24 @@
+Obtaining file:///C:/Users/User/PycharmProjects/meaningful_code/gim_main/runtime/s009-clean-02/database
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: gim-db
+  Building editable for gim-db (pyproject.toml): started
+  Building editable for gim-db (pyproject.toml): finished with status 'done'
+  Created wheel for gim-db: filename=gim_db-0.1.0-0.editable-py3-none-any.whl size=1388 sha256=55785630082ecb25d4ad682bbb1ecc243d21a4b11cc9fe310229f7dc8cdbe072
+  Stored in directory: C:\Users\User\AppData\Local\Temp\pip-ephem-wheel-cache-d45se662\wheels\f4\a7\39\8be36fce605130372494ca7969fc02cfc02cdbbf02f9037cb3
+Successfully built gim-db
+Installing collected packages: gim-db
+  Attempting uninstall: gim-db
+    Found existing installation: gim-db 0.1.0
+    Uninstalling gim-db-0.1.0:
+      Successfully uninstalled gim-db-0.1.0
+Successfully installed gim-db-0.1.0
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[notice] To update, run: C:\Users\User\PycharmProjects\meaningful_code\gim_main\runtime\s009-clean-venv\Scripts\python.exe -m pip install --upgrade pip

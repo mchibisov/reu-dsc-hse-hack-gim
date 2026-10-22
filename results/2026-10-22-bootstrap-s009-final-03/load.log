@@ -1,0 +1,1 @@
+{"submitted": 50, "total": 50, "seconds": 3.594, "users": 50, "workers": 4, "reply_p50": 0.7969999999986612, "reply_p95": 1.3280000000013388, "scope": "Local PostgreSQL queue; synthetic VK transport; no LLM or real VK network"}
