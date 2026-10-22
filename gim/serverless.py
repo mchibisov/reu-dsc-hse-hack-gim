@@ -47,9 +47,12 @@ async def receive(event,settings):
  if event.get('type')=='confirmation':return 200,os.environ.get('VK_CONFIRMATION','')
  if event.get('type')!='message_new':return 200,'ok'
  async with create_pool(settings.database_bot_url,max_size=1) as pool:
-  async with pool.connection() as c,c.transaction():
-   await enqueue_events(c,[{k:v for k,v in event.items() if k!='secret'}],settings.group_id,settings.excel_access_code)
-   # pg_net dispatches only after COMMIT; VK receives an immediate durable ACK.
+  async with pool.connection() as c:
+   async with c.transaction():
+    await enqueue_events(c,[{k:v for k,v in event.items() if k!='secret'}],settings.group_id,settings.excel_access_code)
+   # Wake AFTER receipt COMMIT: if a previous owner exits concurrently,
+   # either its final scan sees this receipt or this wake sees its released lease.
+   # Waking inside the receipt transaction leaves a gap recovered only by Cron.
    await c.execute('SELECT gim.wake_worker(%s)',(settings.group_id,))
  return 200,'ok'
 

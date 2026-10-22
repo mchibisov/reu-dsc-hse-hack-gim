@@ -10,5 +10,8 @@
       "src": "/(.*)",
       "dest": "/api/index"
     }
+  ],
+  "regions": [
+    "fra1"
   ]
 }

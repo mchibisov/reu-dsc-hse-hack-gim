@@ -28,16 +28,48 @@ VK Callback → Vercel /callback → Supabase: сохранённое событ
 
 Нужны Python 3.12, своё сообщество VK с сообщениями и возможностями ботов, токен сообщества, PostgreSQL/Supabase и ключ Polza. Для Docker нужен Docker Compose; для облака — проект Vercel и Supabase с pg_net, pg_cron и Vault. Исторические анкеты с персональными данными для запуска **не нужны**.
 
+### Linux (Ubuntu / Debian)
+
+Установите Git, Python 3.12 с модулем venv (например, `sudo apt install git python3 python3-venv python3-pip` на Ubuntu 24.04). Проверьте `python3 --version`: нужен Python 3.12. На других дистрибутивах используйте свой менеджер пакетов.
+
+```sh
+git clone https://github.com/mchibisov/reu-dsc-hse-hack-gim.git
+cd reu-dsc-hse-hack-gim
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.shared.txt
+python -m pip install -e './database[materials]'
+cp .env.example .env
+```
+
+### macOS
+
+Установите Git и Python 3.12 с python.org либо через Homebrew (`brew install python@3.12 git`). Затем в Terminal:
+
 ```sh
 git clone https://github.com/mchibisov/reu-dsc-hse-hack-gim.git
 cd reu-dsc-hse-hack-gim
 python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.shared.txt
+python -m pip install -e './database[materials]'
 cp .env.example .env
 ```
 
-На Windows: `py -3.12 -m venv .venv`, затем `.venv\Scripts\Activate.ps1`; вместо `cp` используйте `Copy-Item`. При запрете PowerShell activation запускайте `.venv\Scripts\python.exe` напрямую.
+### Windows 10 / 11 (PowerShell, без Docker и WSL)
+
+Установите Git и Python 3.12 с python.org с Python Launcher. Откройте PowerShell:
+
+```powershell
+git clone https://github.com/mchibisov/reu-dsc-hse-hack-gim.git
+Set-Location reu-dsc-hse-hack-gim
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.shared.txt
+.\.venv\Scripts\python.exe -m pip install -e './database[materials]'
+Copy-Item .env.example .env
+```
+
+Активация окружения и изменение ExecutionPolicy не нужны. В дальнейших командах заменяйте `python` на `.\.venv\Scripts\python.exe`. Для Linux/macOS команды ниже выполняются в активированном venv, из корня проекта.
 
 **Новая БД ещё не готова к анкете:** нужны миграции, отдельные LOGIN, первый администратор, музейный банк вопросов и активный набор. Выполните [пошаговую подготовку с нуля](docs/setup-from-scratch.md). Для уже подготовленной БД повторно создавать роли и набор не требуется.
 
@@ -55,6 +87,32 @@ cp .env.example .env
 | `EXCEL_ACCESS_CODE` | Необязательный секрет для отдельной выдачи Excel без роли сотрудника; пустой отключает этот доступ |
 
 Остальные параметры оставьте по `.env.example`. `.env`, операторские подключения, файлы паролей и анкеты не коммитятся. Операторский `DATABASE_ADMIN_URL` нужен только при подготовке БД, не передаётся в рабочие контейнеры или Vercel.
+
+### Локальный запуск без Docker — все три ОС
+
+1. Выполните подготовку БД по ссылке ниже и заполните `.env`. Проще использовать собственный Supabase: локальный сервер PostgreSQL тогда не нужен. Либо установите PostgreSQL 16+ локально, создайте отдельную пустую БД и примените те же миграции/роли. Без банка вопросов, активного набора и трёх DSN бот не запустится.
+2. В **своём тестовом сообществе VK** включите сообщения, возможности ботов и Bots Long Poll (`message_new`). Подключите токен и ID этого сообщества в `.env`. Не подключайте локальный бот к сообществу с уже работающим облачным ботом.
+3. Проверьте подключения и запустите процесс:
+
+Linux / macOS:
+
+```sh
+python -m gim.shared_main check-db
+python -m gim.shared_main check-vk
+python -m gim.shared_main run
+```
+
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe -m gim.shared_main check-db
+.\.venv\Scripts\python.exe -m gim.shared_main check-vk
+.\.venv\Scripts\python.exe -m gim.shared_main run
+```
+
+`run` запускает gateway и воркеры вместе. Оставьте терминал открытым; остановка — Ctrl+C. Откройте `https://vk.me/clubВАШ_GROUP_ID`, разрешите сообщения и отправьте «Начать». Администратору предварительно нужна роль из шага bootstrap в [подготовке БД](docs/setup-from-scratch.md). Для проверки пройдите анкету, дождитесь AI-анализа и отправьте `/export` из учётной записи сотрудника. При отсутствии ключа Polza анкета сохраняется, но настоящий AI-анализ не выполняется.
+
+Если `check-db` сообщает об ошибке — проверьте три DSN, применённые миграции и активность `RECRUITMENT_ID`. Если `check-vk` не проходит — проверьте токен, ID и разрешения сообщений/Long Poll. Не публикуйте вывод с секретами.
 
 ### Вариант A: Docker / свой сервер с Long Poll
 
