@@ -11,3 +11,4 @@
 | 22.10.2026 | GREEN: Unicode/BOM, импорт и операторский bootstrap успешны | [encoding-green-01](../results/2026-10-22-bootstrap-s006-encoding-green-01/report.md) |
 | 22.10.2026 | 191 unittest успешны; bare pytest: 47 async-тестов не исполнялись из-за config | [full-01](../results/2026-10-22-bootstrap-s006-full-01/report.md) |
 | 22.10.2026 | Исправлен root pytest config; 246 passed без skip; CLI/Compose/pip успешны | [full-02](../results/2026-10-22-bootstrap-s006-full-02/report.md) |
+| 22.10.2026 | main опубликована, SHA подтверждён; оба CI success, Windows/Linux и три Docker-сборки прошли | [publication-01](../results/2026-10-22-bootstrap-s006-publication-01/report.md) |

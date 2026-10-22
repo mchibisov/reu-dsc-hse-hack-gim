@@ -1,6 +1,6 @@
 # Продолжение S006 — 22.10.2026, Windows
 
-Актуальная main 3f95b67 загружена и исправлена по новому поручению пользователя: UTF-8/BOM конфигов и JSONL, root Dockerfile config/, root pytest discovery, регрессии чистого bootstrap и Windows CI. Проверка на отдельной PostgreSQL: 191 unittest и полный pytest 246 passed без skip. [Отчёт](output/S006_IT_REPORT.md), [журнал](docs/hypotheses.md), [план](docs/plans/S006-it-readiness.md). Локальный Docker Engine HTTP 500; сборка образов проверяется CI. Облачный deployment не менялся; актуальная независимая точность и два человеческих прохождения всё ещё требуют отдельной работы. Эти новые данные имеют приоритет над историческим статусом ниже.
+Актуальная main 3f95b67 загружена и исправлена по новому поручению пользователя: UTF-8/BOM конфигов и JSONL, root Dockerfile config/, root pytest discovery, регрессии чистого bootstrap и Windows CI. Код **551a634** опубликован в main, оба GitHub workflow успешны, все три Docker-образа собраны и проверены в CI. Проверка на отдельной PostgreSQL: 191 unittest и полный pytest 246 passed без skip. [Отчёт](output/S006_IT_REPORT.md), [журнал](docs/hypotheses.md), [план](docs/plans/S006-it-readiness.md). Локальный Docker Engine HTTP 500. Облачный deployment не менялся; актуальная независимая точность и два человеческих прохождения всё ещё требуют отдельной работы. Эти новые данные имеют приоритет над историческим статусом ниже.
 
 # Передача MVP команде (историческое состояние)
 
