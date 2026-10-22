@@ -85,11 +85,14 @@ class SQLQueue:
             event = await one(c, '''UPDATE gim.outbox_events SET
                 completed_at=CASE WHEN %s THEN now() ELSE NULL END,
                 failed_at=CASE WHEN NOT %s AND attempts>=max_attempts THEN now() ELSE NULL END,
-                available_at=CASE WHEN %s THEN available_at ELSE now()+(LEAST(60,attempts*5) * interval '1 second') END,
+                available_at=CASE WHEN %s THEN available_at ELSE now()+(
+                    CASE WHEN topic IN ('vk.send','question.send','staff.notify') AND attempts<=2
+                        AND %s IN ('ConnectTimeout','ConnectError') THEN 0.5
+                        ELSE LEAST(60,attempts*5) END * interval '1 second') END,
                 last_error_code=%s,lease_token=NULL,lease_until=NULL
                 WHERE id=%s AND lease_token=%s AND lease_until>now()
                 AND completed_at IS NULL AND failed_at IS NULL RETURNING *''',
-                (success, success, success, error_code, event_id, token))
+                (success, success, success, error_code, error_code, event_id, token))
             if event and success and error_code is None and event['topic'] == 'question.send':
                 await c.execute('UPDATE gim.dialog_questions SET asked_at=COALESCE(asked_at,now()) WHERE id=%s AND application_id=%s',
                                 (event['payload']['question_id'], event['application_id']))

@@ -172,3 +172,15 @@ async def test_stale_analyzer_cannot_persist_or_acknowledge(env):
     with psycopg.connect(DSN) as c:
         assert c.execute('SELECT count(*) FROM gim.evaluations WHERE application_id=%s', (app['id'],)).fetchone()[0] == 0
         assert c.execute('SELECT completed_at IS NULL FROM gim.outbox_events WHERE id=%s', (event['id'],)).fetchone()[0]
+
+@pytest.mark.parametrize('topic,code,fast',[
+    ('vk.send','ConnectTimeout',True),('question.send','ConnectError',True),
+    ('vk.send','ReadTimeout',False),('vk.send','VKAPIError',False),('vk.incoming','ConnectTimeout',False)])
+async def test_delivery_connection_retry_is_fast_but_other_backoff_stays(env,topic,code,fast):
+    _,repo,_,recruitment,*_=env
+    group=recruitment['group_id'];row=enqueue(group,topic=topic);queue=SQLQueue(repo.pool,group)
+    event=await queue.claim([topic]);assert event['id']==row['id']
+    assert await queue.finish(event['id'],event['lease_token'],False,code)
+    with psycopg.connect(DSN) as c:
+        delay=c.execute('SELECT extract(epoch from available_at-now()) FROM gim.outbox_events WHERE id=%s',(row['id'],)).fetchone()[0]
+    assert (0<delay<1.1) if fast else delay>4
