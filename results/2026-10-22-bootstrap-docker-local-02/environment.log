@@ -1,0 +1,27 @@
+[
+  {
+    "command": [
+      "wsl.exe",
+      "--status"
+    ],
+    "exit_code": 0,
+    "output": "����������� �� ���������: docker-desktop\r\n������ �� ���������: 2\r\n"
+  },
+  {
+    "command": [
+      "wsl.exe",
+      "--list",
+      "--verbose"
+    ],
+    "exit_code": 0,
+    "output": "  NAME              STATE           VERSION\r\n* docker-desktop    Running         2\r\n"
+  },
+  {
+    "command": [
+      "C:/Program Files/Docker/Docker/resources/bin/docker.exe",
+      "version"
+    ],
+    "exit_code": 0,
+    "output": "Client:\n Version:           29.9.1\n API version:       1.56\n Go version:        go1.26.9\n Git commit:        dfc520d\n Built:             Wed Oct 14 18:34:24 2026\n OS/Arch:           windows/amd64\n Context:           desktop-linux\n\nServer: Docker Desktop 4.96.0 (243774)\n Engine:\n  Version:          29.9.1\n  API version:      1.56 (minimum version 1.40)\n  Go version:       go1.26.9\n  Git commit:       b26fb77\n  Built:            Wed Oct 14 18:32:24 2026\n  OS/Arch:          linux/amd64\n  Experimental:     false\n containerd:\n  Version:          v2.4.2\n  GitCommit:        b7a25261e029d68978bbf290df0a62fc819b3c51\n runc:\n  Version:          1.5.2\n  GitCommit:        v1.5.2-0-g29dd3dc2\n docker-init:\n  Version:          0.19.0\n  GitCommit:        de40ad0\n"
+  }
+]

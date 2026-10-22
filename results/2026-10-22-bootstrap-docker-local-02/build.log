@@ -1,0 +1,165 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 450B 0.0s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/python:3.12-slim
+#2 ...
+
+#3 [auth] library/python:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12-slim
+#2 DONE 4.2s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 245B done
+#4 DONE 0.0s
+
+#5 [1/8] FROM docker.io/library/python:3.12-slim@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2
+#5 resolve docker.io/library/python:3.12-slim@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2 0.0s done
+#5 ...
+
+#6 [internal] load build context
+#6 transferring context: 727.89kB 0.1s done
+#6 DONE 0.1s
+
+#5 [1/8] FROM docker.io/library/python:3.12-slim@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2
+#5 sha256:5c397e4307db7bd392eff1d36de88b04da2a137a4b906b7e0e4657bada560645 0B / 249B 0.2s
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 0B / 12.12MB 0.2s
+#5 sha256:be6443c06d3c9914acdca3ffb368adad23d4f282b55e71e730878ad3e3c3f75c 0B / 1.29MB 0.2s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 0B / 29.84MB 0.2s
+#5 sha256:5c397e4307db7bd392eff1d36de88b04da2a137a4b906b7e0e4657bada560645 249B / 249B 0.4s done
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 1.05MB / 12.12MB 1.5s
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 2.10MB / 12.12MB 1.7s
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 3.15MB / 12.12MB 2.0s
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 5.24MB / 12.12MB 2.1s
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 8.39MB / 12.12MB 2.6s
+#5 sha256:be6443c06d3c9914acdca3ffb368adad23d4f282b55e71e730878ad3e3c3f75c 1.05MB / 1.29MB 2.6s
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 9.44MB / 12.12MB 2.9s
+#5 sha256:be6443c06d3c9914acdca3ffb368adad23d4f282b55e71e730878ad3e3c3f75c 1.29MB / 1.29MB 2.7s done
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 11.53MB / 12.12MB 3.0s
+#5 sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 12.12MB / 12.12MB 3.1s done
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 2.10MB / 29.84MB 3.2s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 4.19MB / 29.84MB 3.8s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 6.29MB / 29.84MB 4.5s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 8.39MB / 29.84MB 5.1s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 10.49MB / 29.84MB 5.6s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 12.58MB / 29.84MB 6.2s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 14.68MB / 29.84MB 6.6s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 16.78MB / 29.84MB 6.9s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 18.87MB / 29.84MB 7.2s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 20.97MB / 29.84MB 7.5s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 23.07MB / 29.84MB 7.8s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 25.17MB / 29.84MB 8.3s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 27.26MB / 29.84MB 8.6s
+#5 sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 29.84MB / 29.84MB 8.9s done
+#5 extracting sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034
+#5 extracting sha256:f2be67225471500c788ce88c597eb5ea8336e912ad1ca4815650e0281afe2034 1.1s done
+#5 DONE 10.2s
+
+#5 [1/8] FROM docker.io/library/python:3.12-slim@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2
+#5 extracting sha256:be6443c06d3c9914acdca3ffb368adad23d4f282b55e71e730878ad3e3c3f75c
+#5 extracting sha256:be6443c06d3c9914acdca3ffb368adad23d4f282b55e71e730878ad3e3c3f75c 0.2s done
+#5 DONE 10.4s
+
+#5 [1/8] FROM docker.io/library/python:3.12-slim@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2
+#5 extracting sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7
+#5 extracting sha256:b524bb3aba7394d85233f3a0a742b8f1b56179e8f61492f73d42a1ff118623b7 0.6s done
+#5 DONE 11.0s
+
+#5 [1/8] FROM docker.io/library/python:3.12-slim@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2
+#5 extracting sha256:5c397e4307db7bd392eff1d36de88b04da2a137a4b906b7e0e4657bada560645 0.0s done
+#5 DONE 11.0s
+
+#7 [2/8] WORKDIR /app
+#7 DONE 0.3s
+
+#8 [3/8] COPY requirements.txt requirements.shared.txt ./
+#8 DONE 0.0s
+
+#9 [4/8] COPY database ./database
+#9 DONE 0.1s
+
+#10 [5/8] RUN pip install --no-cache-dir -r requirements.shared.txt
+#10 1.357 Obtaining file:///app/database (from -r requirements.shared.txt (line 2))
+#10 1.362   Installing build dependencies: started
+#10 5.786   Installing build dependencies: finished with status 'done'
+#10 5.789   Checking if build backend supports build_editable: started
+#10 6.279   Checking if build backend supports build_editable: finished with status 'done'
+#10 6.281   Getting requirements to build editable: started
+#10 6.742   Getting requirements to build editable: finished with status 'done'
+#10 6.745   Preparing editable metadata (pyproject.toml): started
+#10 7.202   Preparing editable metadata (pyproject.toml): finished with status 'done'
+#10 7.769 Collecting httpx==0.28.1 (from -r /app/requirements.txt (line 1))
+#10 8.542   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+#10 8.737 Collecting psycopg==3.2.13 (from psycopg[binary,pool]==3.2.13->-r /app/requirements.txt (line 2))
+#10 8.853   Downloading psycopg-3.2.13-py3-none-any.whl.metadata (4.5 kB)
+#10 8.981 Collecting psycopg-pool==3.3.3 (from -r /app/requirements.txt (line 3))
+#10 9.138   Downloading psycopg_pool-3.3.3-py3-none-any.whl.metadata (2.8 kB)
+#10 9.282 Collecting openpyxl==3.1.5 (from -r /app/requirements.txt (line 4))
+#10 9.446   Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+#10 9.587 Collecting anyio (from httpx==0.28.1->-r /app/requirements.txt (line 1))
+#10 9.690   Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+#10 9.835 Collecting certifi (from httpx==0.28.1->-r /app/requirements.txt (line 1))
+#10 9.958   Downloading certifi-2026.10.19-py3-none-any.whl.metadata (2.5 kB)
+#10 10.07 Collecting httpcore==1.* (from httpx==0.28.1->-r /app/requirements.txt (line 1))
+#10 10.26   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+#10 10.47 Collecting idna (from httpx==0.28.1->-r /app/requirements.txt (line 1))
+#10 10.57   Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+#10 10.79 Collecting typing-extensions>=4.6 (from psycopg==3.2.13->psycopg[binary,pool]==3.2.13->-r /app/requirements.txt (line 2))
+#10 10.91   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+#10 11.09 Collecting et-xmlfile (from openpyxl==3.1.5->-r /app/requirements.txt (line 4))
+#10 11.19   Downloading et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+#10 11.90 Collecting psycopg-binary==3.2.13 (from psycopg[binary,pool]==3.2.13->-r /app/requirements.txt (line 2))
+#10 11.99   Downloading psycopg_binary-3.2.13-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.9 kB)
+#10 12.10 Collecting h11>=0.16 (from httpcore==1.*->httpx==0.28.1->-r /app/requirements.txt (line 1))
+#10 12.35   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+#10 12.45 Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+#10 12.76 Downloading psycopg-3.2.13-py3-none-any.whl (206 kB)
+#10 12.99 Downloading psycopg_pool-3.3.3-py3-none-any.whl (40 kB)
+#10 13.16 Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+#10 13.37 Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+#10 13.48 Downloading psycopg_binary-3.2.13-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.4 MB)
+#10 14.50    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 4.9 MB/s eta 0:00:00
+#10 14.67 Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#10 14.77 Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+#10 15.08 Downloading idna-3.20-py3-none-any.whl (69 kB)
+#10 15.17 Downloading certifi-2026.10.19-py3-none-any.whl (136 kB)
+#10 15.46 Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+#10 15.60 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+#10 15.62 Building wheels for collected packages: gim-db
+#10 15.63   Building editable for gim-db (pyproject.toml): started
+#10 16.30   Building editable for gim-db (pyproject.toml): finished with status 'done'
+#10 16.30   Created wheel for gim-db: filename=gim_db-0.1.0-0.editable-py3-none-any.whl size=1321 sha256=c4d267df9f8d5b2bdfb15f29520a56bd01df0eab27f01c4b561c0df9c1c1107a
+#10 16.30   Stored in directory: /tmp/pip-ephem-wheel-cache-2safn7va/wheels/7f/f6/c3/785c9614cc48ccc4ccfec5640cc56089a77b827fb0aa30aea1
+#10 16.31 Successfully built gim-db
+#10 16.32 Installing collected packages: typing-extensions, psycopg-binary, idna, h11, et-xmlfile, certifi, psycopg-pool, psycopg, openpyxl, httpcore, anyio, httpx, gim-db
+#10 17.25 Successfully installed anyio-4.15.1 certifi-2026.10.19 et-xmlfile-2.0.0 gim-db-0.1.0 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.20 openpyxl-3.1.5 psycopg-3.2.13 psycopg-binary-3.2.13 psycopg-pool-3.3.3 typing-extensions-4.16.0
+#10 17.25 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#10 17.74 
+#10 17.74 [notice] A new release of pip is available: 25.0.1 -> 26.2.2
+#10 17.74 [notice] To update, run: pip install --upgrade pip
+#10 DONE 18.0s
+
+#11 [6/8] COPY gim ./gim
+#11 DONE 0.1s
+
+#12 [7/8] COPY config ./config
+#12 DONE 0.0s
+
+#13 [8/8] RUN useradd --uid 10001 --create-home bot && mkdir -p /data/files && chown -R bot:bot /data
+#13 DONE 0.3s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 1.0s done
+#14 exporting manifest sha256:45912ace7eab3398092ff1d801bfebbb5d94c5d9fd79a038f0c4826b326e13b0 0.0s done
+#14 exporting config sha256:8e90c0fcf11bd4230318e74181c21d37ef62bc0ad889d2b91bd9ba99d5ef2975 0.0s done
+#14 exporting attestation manifest sha256:b7684ccab85784315696028995d61d429a69d9da59683e91aba018cadf09445b 0.0s done
+#14 exporting manifest list sha256:ca79e2a9950728c0486448164d06987961b194d44563faca8717e78964bdbf4e 0.0s done
+#14 naming to docker.io/library/gim-local-check:20261022 done
+#14 unpacking to docker.io/library/gim-local-check:20261022
+#14 unpacking to docker.io/library/gim-local-check:20261022 2.4s done
+#14 DONE 3.5s

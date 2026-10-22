@@ -31,3 +31,4 @@
 | 22.10.2026 | S009 GREEN: безопасный поздний ответ и динамический прогресс нагрузки | [s009-green-01](../results/2026-10-22-bootstrap-s009-green-01/report.md) |
 | 22.10.2026 | S009 final: чистый Git-архив, отдельный venv, новая БД, реальный worker | [s009-recheck-02](../results/2026-10-22-bootstrap-s009-recheck-02/report.md) |
 | 22.10.2026 | S009 контроль: повтор11 критических сценариев,50анкет и реального запуска после review | [s009-final-03](../results/2026-10-22-bootstrap-s009-final-03/report.md) |
+| 22.10.2026 | Docker: повтор после сообщения пользователя об установке Linux | [docker-local-02](../results/2026-10-22-bootstrap-docker-local-02/report.md) |
