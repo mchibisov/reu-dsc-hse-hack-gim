@@ -74,7 +74,8 @@ class VK:
             buttons.extend([[{'action': {'type': 'text', 'label': command}, 'color': 'secondary'}
                              for command in row] for row in (('/top', '/export'), ('/stats', '/admin'),('/new', '/jobs'))])
         if role=='admin':
-            buttons.append([{'action':{'type':'text','label':'/reset'},'color':'negative'}])
+            buttons.append([{'action':{'type':'text','label':'/staff'},'color':'secondary'},
+                            {'action':{'type':'text','label':'/reset'},'color':'negative'}])
         params = {'peer_id': peer_id, 'message': text, 'random_id': random_id,
                   'keyboard': json.dumps({'one_time': False, 'buttons': buttons}, ensure_ascii=False)}
         if want_cmid:

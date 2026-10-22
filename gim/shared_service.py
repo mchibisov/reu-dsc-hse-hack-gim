@@ -14,6 +14,7 @@ from datetime import date
 from uuid import UUID
 
 from psycopg.types.json import Jsonb
+from psycopg.errors import RaiseException
 from gim_db.repository import Conflict, one, emit
 from gim_db.storage import FileRepository
 from gim.shared_domain import parse_answer, latest_slots, select_followups, covered_followup_topics, question_topics
@@ -24,7 +25,13 @@ from gim.shared_export_access import request_code_export,code_recipient
 from gim.shared_analysis import safe_answers, approved_rubric, validate_result, ANALYSIS_PROMPT, DIRECTION_NAMES
 
 HELP = 'Это бот волонтёрской программы ГИМ. В VK бот штатно отвечает в личных сообщениях сообщества — отдельный аккаунт бота не нужен. Команды: /start — начать или продолжить, /status — статус, /help — помощь. Ответьте текстом на текущий вопрос. Для неприменимого поля напишите «не относится». Резюме и PDF в этом режиме не принимаются.'
-STAFF_HELP = 'Команды сотрудника: /admin, /help, /top, /stats, /application UUID (или /candidate UUID), /export [UUID], /new [СТРАНИЦА], /top [СТРАНИЦА], /score UUID БАЛЛ ПРИЧИНА, /jobs. Администратору: /reset. Автоматическая оценка требует ключ модели и утверждённую рубрику. Решение о приёме принимает сотрудник.'
+STAFF_HELP = ('Команды сотрудника ГИМ\n\n'
+    'Анкеты\n/new — новые заявки\n/top — рейтинг и краткие сводки\n/application UUID — полная карточка кандидата\n'
+    '/stats — сводка набора\n/export — Excel всех анкет\n/export UUID — Excel кандидата\n\n'
+    'Оценка\n/score UUID БАЛЛ ПРИЧИНА — сохранить оценку сотрудника\n'
+    'Исходный AI-анализ остаётся в истории. Решение о приглашении принимает сотрудник.\n\n'
+    'Администратору\n/staff — добавить сотрудника или отозвать доступ\n/reset — заново пройти собственную тестовую анкету\n'
+    '/jobs — состояние обработки\n\nВ списках доступны страницы: /new 2, /top 2.')
 WELCOME = 'Здравствуйте! Я бот волонтёрской программы Государственного исторического музея. Помогу заполнить заявку и уточню важные детали вашего опыта. Ориентир прохождения — 5–7 минут (время зависит от подробности ответов): 18 основных вопросов и до трёх коротких уточнений от AI. Достаточно 1–3 предложений на содержательный вопрос; если поле не подходит, напишите «не относится». Ответы увидит куратор; решение о приглашении принимает сотрудник музея.\n\nКнопки «Начать», «Статус» и «Помощь» доступны всем. Начнём с согласия на обработку данных.'
 
 
@@ -111,7 +118,7 @@ class SharedService:
                 await self._emit(event,actor,'Готовлю файл Excel (.xlsx). Он придёт отдельным вложением в этот диалог.' if allowed
                     else 'Доступ не подтверждён. Проверьте код или повторите через 10 минут.')
             return
-        staff_commands={'/admin','/top','/stats','/application','/candidate','/export','/score','/jobs','/new','/reset'}
+        staff_commands={'/admin','/top','/stats','/application','/candidate','/export','/score','/jobs','/new','/reset','/staff'}
         if command in staff_commands or (staff and command=='/help'):
             if not staff:
                 await self._emit(event,actor,'Команда доступна только активным сотрудникам сообщества.')
@@ -122,7 +129,7 @@ class SharedService:
             await self._emit(event,actor,HELP)
             return
         if command=='/delete':
-            await self._emit(event,actor,'Автоматическое полное удаление данных и неизменяемой истории пока не реализовано. Обратитесь к оператору сообщества с запросом на удаление; эта команда не удаляет анкету.')
+            await self._emit(event,actor,'Запросы на удаление персональных данных принимает администрация сообщества. Напишите «Удаление данных» в обращении к сообществу. Эта команда не удаляет анкету автоматически.')
             return
         if msg.get('attachments'):
             await self._emit(event,actor,'В этом режиме принимаются только текстовые ответы; загрузка резюме и PDF не поддерживается.')
@@ -224,7 +231,7 @@ class SharedService:
             return
         base=sorted((t for t in ctx['templates'] if t['kind']=='base'),key=lambda t:(t['target_slot']!='consent',t['position']))
         if not base or not any(t['target_slot']=='consent' for t in base):
-            await self._emit(event,actor,'Банк вопросов не подготовлен оператором; начать анкету пока нельзя.',app_id=app_id)
+            await self._emit(event,actor,'Анкета временно недоступна. Ранее сохранённые ответы не потеряны.',app_id=app_id)
             return
         for t in base:
             answer=slots.get(t['target_slot'])
@@ -279,7 +286,7 @@ class SharedService:
         birth=slots.get('birth_date')
         parsed=parse_answer('birth_date',birth['answer_text'])[0] if birth else None
         if not app.get('consent_at') or not parsed or not (direction['selected_directions'] or direction['undecided']):
-            await self._emit(event,actor,'Для подачи база требует согласие, полную дату рождения с возрастом 18+ и выбранное направление либо «не определился». Обратитесь к оператору, если в банке нет нужных вопросов.',app_id=app_id)
+            await self._emit(event,actor,'Для подачи заявки нужны согласие, полная дата рождения (18+) и выбранное направление либо ответ «Не определился». Нажмите «Начать», чтобы продолжить заполнение.',app_id=app_id)
             return
         facts={slot:{'value':parse_answer(slot,a['answer_text'])[0],'answer_ids':[str(a['id'])]} for slot,a in slots.items()}
         await self.bot_repo.set_profile(app_id,expected_revision=app['answers_revision'],birth_date=date.fromisoformat(parsed),
@@ -293,6 +300,29 @@ class SharedService:
             await self._emit(event,actor,STAFF_HELP,staff=True)
             return
         parts=text.strip().split()
+        if command=='/staff':
+            staff=await self._staff(actor)
+            if not staff or staff['role']!='admin':
+                await self._emit(event,actor,'Управление сотрудниками доступно администратору.',staff=True)
+                return
+            try:
+                adding=len(parts)==4 and parts[1]=='add' and parts[3] in {'admin','curator'}
+                removing=len(parts)==3 and parts[1]=='remove'
+                if not (adding or removing):raise ValueError()
+                target=int(parts[2])
+                if not 0<target<2**63:raise ValueError()
+            except (ValueError,IndexError):
+                await self._emit(event,actor,'Добавить сотрудника: /staff add VK_ID curator\nДобавить администратора: /staff add VK_ID admin\nОтозвать доступ: /staff remove VK_ID\nVK_ID — проверенный числовой ID сотрудника.',staff=True)
+                return
+            try:
+                await self.staff_repo.set_staff(actor,self.settings.group_id,target,
+                    role=parts[3] if adding else 'curator',active=adding,notify=adding)
+            except RaiseException:
+                await self._emit(event,actor,'Изменение доступа отклонено. В сообществе должен оставаться хотя бы один администратор.',staff=True)
+                return
+            label='администратор' if adding and parts[3]=='admin' else 'куратор'
+            await self._emit(event,actor,f'Доступ для VK ID {target}: '+(label+'. Меню сотрудника: /admin.' if adding else 'отозван. Уведомления отключены.'),staff=True)
+            return
         if command=='/reset':
             staff=await self._staff(actor)
             if not staff or staff['role']!='admin':
@@ -360,7 +390,7 @@ class SharedService:
                     card+=f' | рейтинг S: {r["ranking_score"]:.3f}/3'
                 if not app_id:
                     summary=' '.join((r.get('summary') or '').split())
-                    card+='\nAI-сводка: '+(summary[:300]+('…' if len(summary)>300 else '') if summary else 'пока нет; оценка не выставлена')
+                    card+='\nAI-сводка: '+(summary[:300]+('…' if len(summary)>300 else '') if summary else 'Анкета сохранена; AI-сводка отсутствует')
                     card+=f'\n/application {r["application_id"]}'
                 cards.append(card)
             text='\n\n'.join(cards) or 'Анкеты не найдены.'
@@ -494,7 +524,7 @@ class SharedService:
                     checked=await analyze(self.llm,snapshot,scored=checked)
             except (ModelUnavailable,ValueError,TimeoutError) as exc:
                 logging.getLogger(__name__).warning('enhancement_unavailable error_type=%s',type(exc).__name__)
-                checked={**checked,'summary':checked['summary']+'\n\nРасширенный отчёт временно недоступен; сохранён проверенный базовый анализ.'}
+                checked={**checked,'summary':checked['summary']+'\n\nСохранён проверенный анализ. Дополнительные сведения можно уточнить на собеседовании.'}
         return {**checked,
                 'model':self.settings.llm_model,'prompt_version':'shared-analysis-v1'}
 

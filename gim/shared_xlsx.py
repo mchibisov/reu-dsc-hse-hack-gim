@@ -30,8 +30,8 @@ HEADERS={
 HEADERS.update({'ai_score':'Исходный балл AI','ai_summary':'Исходное резюме AI','criterion':'Критерий','criterion_status':'Статус критерия','reason':'Обоснование','quote':'Подтверждающая цитата','points':'Вклад в оценку','source_id':'ID исходного ответа','fact':'Проверяемый факт','group_share':'Основания / максимум группы','group_points':'Баллы группы','full_ai_report':'Полный AI-отчёт'})
 ORDER={
  'Анкеты':['full_name','ranking_score','score','ai_score','status','decision','selected_directions','recommended_directions','summary','candidate_profile','ai_summary','email','submitted_at','evaluated_at','criteria_results'],
- 'Ответы':['application_id','position','question_text','answer_text','question_source','purpose','target_slot','is_latest'],
- 'Собеседование':['application_id','summary','expectations','interview_questions'],
+ 'Ответы':['full_name','position','question_text','answer_text','question_source','purpose','target_slot','application_id'],
+ 'Собеседование':['full_name','interview_questions','application_id'],
  'Оценка':['full_name','criterion','fact','criterion_status','group_points','group_share','points','reason','quote','application_id','source_id'],
  'Сводка':['metric','value'],
 }
@@ -58,6 +58,14 @@ def snapshot_xlsx(snapshot):
     snapshot=ranked_bundle({**snapshot,'Анкеты':[dict(r) for r in snapshot.get('Анкеты',[])]})
     from gim.dashboard import dashboard
     for row in snapshot.get('Анкеты',[]):row['candidate_profile']=dashboard(row)
+    names={str(r['application_id']):r.get('full_name','') for r in snapshot.get('Анкеты',[])}
+    # Source answers are unique; retain them, but hide obsolete revisions from the working export.
+    answers=[dict(r,full_name=names.get(str(r.get('application_id')),''))
+             for r in snapshot.get('Ответы',[]) if r.get('is_latest') is not False]
+    answers.sort(key=lambda r:(r['full_name'],str(r.get('application_id','')),r.get('position') or 0))
+    interview=[{k:v for k,v in dict(r,full_name=names.get(str(r.get('application_id')),'')).items()
+                if k not in {'summary','expectations'}} for r in snapshot.get('Собеседование',[])]
+    snapshot={**snapshot,'Ответы':answers,'Собеседование':interview}
     wb=Workbook()
     wb.remove(wb.active)
     wb.properties.created=wb.properties.modified=datetime(2000,1,1)
@@ -84,6 +92,9 @@ def snapshot_xlsx(snapshot):
         prepared=[]
         for record in data:
             record=dict(record)
+            if name=='Ответы':
+                for key in ('value','revision','is_latest','created_at'):
+                    record.pop(key,None)
             if name=='Анкеты' and isinstance(record.get('summary'),str):
                 record['full_ai_report']=record['summary']
                 record['summary']=record['summary'].split('\n\n')[0]
@@ -136,7 +147,7 @@ def snapshot_xlsx(snapshot):
         for i,k in enumerate(columns,1):
             sheet.column_dimensions[get_column_letter(i)].width=(65 if k in {'candidate_profile','summary','ai_summary','answer_text','question_text','reason','quote','criteria_results','interview_questions'} else 30 if k not in {'score','ai_score','points','position','continuation_part','continuation_total'} else 14)
         for i,k in enumerate(columns,1):
-            if k in {'criteria_results','full_ai_report','field_encodings'} or (k in {'continuation_part','continuation_total'} and all(len(_text(r.get('answer_text','')))<15000 for r in data)):
+            if k.endswith('_id') or k in {'question_source','purpose','target_slot','evaluation_revision','answers_revision','criteria_results','full_ai_report','field_encodings'} or (k in {'continuation_part','continuation_total'} and all(len(_text(r.get('answer_text','')))<15000 for r in data)):
                 sheet.column_dimensions[get_column_letter(i)].hidden=True
         if name=='Оценка' and 'group_share' in columns and sheet.max_row>1:
             letter=get_column_letter(columns.index('group_share')+1)

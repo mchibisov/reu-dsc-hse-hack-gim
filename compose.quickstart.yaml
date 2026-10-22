@@ -1,0 +1,55 @@
+# Isolated first installation. No host database port and no production DSN.
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    environment:
+      POSTGRES_DB: gim
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.quickstart}
+    volumes: [local_database:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d gim']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+    logging: &logs
+      driver: json-file
+      options: {max-size: '10m', max-file: '3'}
+  setup:
+    image: gim-portable:local
+    build: .
+    command: [python, -m, gim.local_setup, init]
+    environment:
+      LOCAL_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      VK_GROUP_ID: ${VK_GROUP_ID:?Set VK_GROUP_ID}
+      ADMIN_VK_ID: ${ADMIN_VK_ID:?Set ADMIN_VK_ID}
+    volumes: [local_configuration:/data/config]
+    depends_on:
+      postgres: {condition: service_healthy}
+    logging: *logs
+  bot:
+    image: gim-portable:local
+    build: .
+    command: [python, -m, gim.local_setup, run]
+    environment:
+      VK_TOKEN: ${VK_TOKEN:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: https://polza.ai/api/v1
+      LLM_MODEL: deepseek/deepseek-v4.1-flash-1017
+      EXCEL_ACCESS_CODE: ${EXCEL_ACCESS_CODE:-}
+      STORAGE_DIR: /data/files
+    volumes:
+      - local_configuration:/data/config:ro
+      - local_files:/data/files
+    depends_on:
+      setup: {condition: service_completed_successfully}
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 45s
+    read_only: true
+    tmpfs: [/tmp]
+    logging: *logs
+volumes:
+  local_database:
+  local_configuration:
+  local_files:

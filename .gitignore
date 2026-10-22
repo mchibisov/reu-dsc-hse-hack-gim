@@ -18,3 +18,5 @@ _env.*
 .DS_Store
 
 .superpowers/
+
+!.env.quickstart.example
