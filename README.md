@@ -28,16 +28,48 @@ VK Callback → Vercel /callback → Supabase: сохранённое событ
 
 Нужны Python 3.12, своё сообщество VK с сообщениями и возможностями ботов, токен сообщества, PostgreSQL/Supabase и ключ Polza. Для Docker нужен Docker Compose; для облака — проект Vercel и Supabase с pg_net, pg_cron и Vault. Исторические анкеты с персональными данными для запуска **не нужны**.
 
+### Linux (Ubuntu / Debian)
+
+Установите Git, Python 3.12 с модулем venv (например, `sudo apt install git python3 python3-venv python3-pip` на Ubuntu 24.04). Проверьте `python3 --version`: нужен Python 3.12. На других дистрибутивах используйте свой менеджер пакетов.
+
+```sh
+git clone https://github.com/mchibisov/reu-dsc-hse-hack-gim.git
+cd reu-dsc-hse-hack-gim
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.shared.txt
+python -m pip install -e './database[materials]'
+cp .env.example .env
+```
+
+### macOS
+
+Установите Git и Python 3.12 с python.org либо через Homebrew (`brew install python@3.12 git`). Затем в Terminal:
+
 ```sh
 git clone https://github.com/mchibisov/reu-dsc-hse-hack-gim.git
 cd reu-dsc-hse-hack-gim
 python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.shared.txt
+python -m pip install -e './database[materials]'
 cp .env.example .env
 ```
 
-На Windows: `py -3.12 -m venv .venv`, затем `.venv\Scripts\Activate.ps1`; вместо `cp` используйте `Copy-Item`. При запрете PowerShell activation запускайте `.venv\Scripts\python.exe` напрямую.
+### Windows 10 / 11 (PowerShell, без Docker и WSL)
+
+Установите Git и Python 3.12 с python.org с Python Launcher. Откройте PowerShell:
+
+```powershell
+git clone https://github.com/mchibisov/reu-dsc-hse-hack-gim.git
+Set-Location reu-dsc-hse-hack-gim
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.shared.txt
+.\.venv\Scripts\python.exe -m pip install -e './database[materials]'
+Copy-Item .env.example .env
+```
+
+Активация окружения и изменение ExecutionPolicy не нужны. В дальнейших командах заменяйте `python` на `.\.venv\Scripts\python.exe`. Для Linux/macOS команды ниже выполняются в активированном venv, из корня проекта.
 
 **Новая БД ещё не готова к анкете:** нужны миграции, отдельные LOGIN, первый администратор, музейный банк вопросов и активный набор. Выполните [пошаговую подготовку с нуля](docs/setup-from-scratch.md). Для уже подготовленной БД повторно создавать роли и набор не требуется.
 
@@ -55,6 +87,32 @@ cp .env.example .env
 | `EXCEL_ACCESS_CODE` | Необязательный секрет для отдельной выдачи Excel без роли сотрудника; пустой отключает этот доступ |
 
 Остальные параметры оставьте по `.env.example`. `.env`, операторские подключения, файлы паролей и анкеты не коммитятся. Операторский `DATABASE_ADMIN_URL` нужен только при подготовке БД, не передаётся в рабочие контейнеры или Vercel.
+
+### Локальный запуск без Docker — все три ОС
+
+1. Выполните подготовку БД по ссылке ниже и заполните `.env`. Проще использовать собственный Supabase: локальный сервер PostgreSQL тогда не нужен. Либо установите PostgreSQL 16+ локально, создайте отдельную пустую БД и примените те же миграции/роли. Без банка вопросов, активного набора и трёх DSN бот не запустится.
+2. В **своём тестовом сообществе VK** включите сообщения, возможности ботов и Bots Long Poll (`message_new`). Подключите токен и ID этого сообщества в `.env`. Не подключайте локальный бот к сообществу с уже работающим облачным ботом.
+3. Проверьте подключения и запустите процесс:
+
+Linux / macOS:
+
+```sh
+python -m gim.shared_main check-db
+python -m gim.shared_main check-vk
+python -m gim.shared_main run
+```
+
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe -m gim.shared_main check-db
+.\.venv\Scripts\python.exe -m gim.shared_main check-vk
+.\.venv\Scripts\python.exe -m gim.shared_main run
+```
+
+`run` запускает gateway и воркеры вместе. Оставьте терминал открытым; остановка — Ctrl+C. Откройте `https://vk.me/clubВАШ_GROUP_ID`, разрешите сообщения и отправьте «Начать». Администратору предварительно нужна роль из шага bootstrap в [подготовке БД](docs/setup-from-scratch.md). Для проверки пройдите анкету, дождитесь AI-анализа и отправьте `/export` из учётной записи сотрудника. При отсутствии ключа Polza анкета сохраняется, но настоящий AI-анализ не выполняется.
+
+Если `check-db` сообщает об ошибке — проверьте три DSN, применённые миграции и активность `RECRUITMENT_ID`. Если `check-vk` не проходит — проверьте токен, ID и разрешения сообщений/Long Poll. Не публикуйте вывод с секретами.
 
 ### Вариант A: Docker / свой сервер с Long Poll
 
@@ -111,24 +169,22 @@ XLSX приходит вложением. Пять листов: «Анкеты�
 
 ## Проверка и эксплуатация
 
-Актуальная повторная приёмка после очистки S009: **207 pytest без пропусков**, отдельно141unittest, чистый Git-архив и отдельный venv/новая PostgreSQL; два запуска worker и два18-вопросных SQL/XLSX сценария. Внешний VK транспорт в сценариях синтетический, AI без ключа не вызывался. Обе Docker-сборки и entry point/Compose прошли свежий CI; локальный Docker Desktop пока возвращает HTTP500. [Полный отчёт и границы проверки](output/S009_TECHNICAL_RECHECK.md).
+Последняя проверка: **209 pytest прошли** на отдельной PostgreSQL. Текущая 18-вопросная версия развёрнута в Vercel; сохранность прежних ответов/оценок проверена. Полная API-цепочка с настоящими Polza, Supabase, VK-уведомлениями и скачанным XLSX проверена. Шесть команд доставлены за **1,25–2,19 сек**. [Подробности выпуска и ограничения](output/CLOUD_RELEASE_2026-10-22.md).
 
-**Позднейшая проверка Docker22.10.2026 после установки Linux:** локальные WSL2/Engine работают, образ проекта собран, контейнерные CLI/rubric/storage и Compose config прошли. Прежний HTTP500 больше не воспроизводится. [Доказательства](results/2026-10-22-bootstrap-docker-local-02/report.md). Полный запуск VK по-прежнему требует рабочих подключений в .env.
+Локальные проверки без БД:
 
 ```sh
 python -m unittest discover -s tests -q
 ```
 
-Для проверок с БД используйте **отдельную одноразовую PostgreSQL**, примените к ней те же миграции и задайте `TEST_DATABASE_URL`. Не направляйте тесты на рабочие данные.
+Для интеграционных тестов используйте **отдельную одноразовую PostgreSQL**. Установите тестовые зависимости, примените к ней миграции по [инструкции](docs/setup-from-scratch.md), задайте `TEST_DATABASE_URL` и запускайте:
 
 ```sh
-python -m pip install -e './database[test]'
-python -m pytest database/tests -q
+python -m pip install -e './database[test,materials]'
+python -m pytest -q
 ```
 
-Проверка S006 на чистой Windows/Python 3.12 и PostgreSQL 18: **191 unittest и 55 тестов БД, без пропусков**; общий `python -m pytest -q` — **246 passed**. Числа относятся к сохранённой версии S006; после очистки тесты старого public-runtime удалены вместе с ним. Текущий прогон использует только private-миграции в одноразовой БД. Установка и импорт музейного банка, создание трёх LOGIN, первого администратора и `check-db` проверены автоматически на синтетических материалах. Конфиги JSON принимаются в UTF-8 с BOM или без него. [Подробный отчёт S006](output/S006_IT_REPORT.md).
-
-Историческая проверка выпуска до S006–S009:190unittest (один платформенный skip),52теста PostgreSQL, реальные API Supabase/Polza/VK и доставка скачанного XLSX. Она не подтверждает живую интеграцию текущих изменений автоматически. Человеческая браузерная приёмка и нагрузка50реальных VK/LLM-пользователей не подтверждены.
+Для Windows замените `python` на `.\.venv\Scripts\python.exe`, включая команды в руководстве подготовки БД; переменные окружения задавайте через `$env:ИМЯ = 'значение'`. Никогда не направляйте тесты на рабочую БД. В операторских командах не печатайте и не сохраняйте пароли в истории.
 
 Для постоянной эксплуатации нужны контроль квот/баланса, регулярные внешние резервные копии и согласованные музеем правила хранения/удаления персональных данных. Бесплатный хостинг не означает гарантии бессрочной бесплатной работы. Автоматическое полное удаление данных и просмотр VK-профиля не реализованы; `/delete` направляет к оператору. PDF и отдельный веб-кабинет не входят в выпуск.
 
@@ -138,4 +194,4 @@ python -m pytest database/tests -q
 
 До очистки и изменения анкеты сохранена [«Работающая версия»](https://github.com/mchibisov/reu-dsc-hse-hack-gim/tree/working-version-2026-10-22), commit 7d06b60. Старый public-runtime и его инструкции доступны в этой метке; текущая ветка содержит только private PostgreSQL runtime.
 
-Анкета обновлена: 18 основных вопросов; «ВУЗ (Другое)» удалён, «Факультет, направление» объединён в одно поле. Для существующего production сначала приостановите запуск `/work` и recovery Cron, дождитесь завершения уже работающих workers, затем примените миграцию 20261022030000_questionnaire_revision.sql и обновите deployment; после этого возобновите обработку очереди. Callback должен продолжать сохранять события, очередь не очищается. Это исключает повторное создание старого вопроса прежним worker после миграции; старые ответы сохраняются.
+Анкета содержит 18 основных вопросов; «ВУЗ (Другое)» исключён, «Факультет, направление» — одно поле. Миграция `20261022030000_questionnaire_revision.sql` уже применена к действующему облаку. Для обновления другой существующей установки временно приостановите запуск обработчиков, сохранив Callback и очередь, дождитесь старых workers, примените миграцию, обновите код и возобновите обработку. Старые ответы не удаляются.

@@ -42,11 +42,12 @@ def poll_next(response, current):
 class VK:
     def __init__(self, settings):
         self.settings = settings
-        self.http = httpx.AsyncClient(timeout=40)
+        self.http = httpx.AsyncClient(timeout=httpx.Timeout(40, connect=3, pool=3))
 
     async def call(self, method, **params):
         response = await self.http.post('https://api.vk.com/method/' + method,
-            data={**params, 'access_token': self.settings.vk_token, 'v': self.settings.api_version})
+            data={**params, 'access_token': self.settings.vk_token, 'v': self.settings.api_version},
+            timeout=httpx.Timeout(10, connect=3, pool=3))
         response.raise_for_status()
         data = response.json()
         if 'error' in data:

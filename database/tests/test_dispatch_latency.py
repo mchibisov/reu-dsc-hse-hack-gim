@@ -149,3 +149,38 @@ async def test_failed_lane_stops_siblings_before_releasing_owner(env):
             'SELECT expires_at<=now() AS released FROM gim.runtime_leases WHERE group_id=%s',
             (recruitment['group_id'],))).fetchone()
     assert row['released']
+
+async def test_callback_commits_receipt_before_wake_to_close_exit_race(env):
+    """The exiting owner's final scan must see the callback before wake checks its lease."""
+    from gim.serverless import receive
+    bot, worker, _, recruitment, _, actor, _ = env
+    install_test_wake()
+    event_id='commit-wake-'+str(uuid.uuid4())
+    observed=[]
+
+    class ObservedConnection:
+        def __init__(self, connection):self.connection=connection
+        def __getattr__(self, name):return getattr(self.connection,name)
+        async def execute(self, query, params=None, **kwargs):
+            if query=='SELECT gim.wake_worker(%s)':
+                async with worker.pool.connection() as observer:
+                    row=await (await observer.execute("SELECT count(*) n FROM gim.outbox_events WHERE dedupe_key=%s",
+                        (f'vk-in:{recruitment["group_id"]}:{event_id}',))).fetchone()
+                assert row['n']==1, 'Wake ran before receipt COMMIT: exiting worker can miss it until Cron'
+                observed.append(True)
+            return await self.connection.execute(query,params,**kwargs)
+
+    class ObservedPool:
+        @asynccontextmanager
+        async def connection(self):
+            async with bot.pool.connection() as connection:yield ObservedConnection(connection)
+
+    @asynccontextmanager
+    async def existing(*args, **kwargs):yield ObservedPool()
+
+    event={'group_id':recruitment['group_id'],'secret':'test','type':'message_new','event_id':event_id,
+           'object':{'message':{'from_id':actor,'peer_id':actor,'text':'/help'}}}
+    settings=SimpleNamespace(group_id=recruitment['group_id'],database_bot_url='bot',excel_access_code='')
+    with patch.dict('os.environ',{'VK_CALLBACK_SECRET':'test'}),patch('gim.serverless.create_pool',existing):
+        assert await receive(event,settings)==(200,'ok')
+    assert observed==[True]
