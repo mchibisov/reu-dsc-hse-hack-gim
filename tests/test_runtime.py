@@ -52,3 +52,18 @@ class VKRequestTests(unittest.IsolatedAsyncioTestCase):
             self.assertNotIn('secret', str(error.exception))
         finally:
             await vk.close()
+
+    async def test_api_timeout_is_short_but_longpoll_keeps_its_wait_budget(self):
+        seen=[]
+        factory=httpx.AsyncClient
+        def endpoint(request):
+            seen.append(request.extensions['timeout'])
+            return httpx.Response(200,json={'response':1})
+        with patch('gim.vk.httpx.AsyncClient',lambda **kwargs:factory(transport=httpx.MockTransport(endpoint),**kwargs)):
+            vk=VK(SimpleNamespace(vk_token='test',api_version='5.199'))
+            try:
+                await vk.call('messages.send',peer_id=1,message='test',random_id=1)
+                self.assertLessEqual(seen[0]['connect'],3)
+                self.assertLessEqual(seen[0]['read'],10)
+                self.assertGreaterEqual(vk.http.timeout.read,25)
+            finally:await vk.close()
