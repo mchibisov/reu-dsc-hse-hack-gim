@@ -24,3 +24,5 @@
 | 22.10.2026 | S008: удаление legacy и дублирования после snapshot | [s008-cleanup-01](../results/2026-10-22-bootstrap-s008-cleanup-01/report.md) |
 | 22.10.2026 | S008: новая пустая private БД и все актуальные тесты | [s008-full-01](../results/2026-10-22-bootstrap-s008-full-01/report.md) |
 | 22.10.2026 | S008 final: stale template, сохранность отвеченного8, безопасный rollout | [s008-full-02](../results/2026-10-22-bootstrap-s008-full-02/report.md) |
+| 22.10.2026 | S008: main/tag опубликованы; CI выявил отсутствие тестового .env для Compose | [s008-publication-01](../results/2026-10-22-bootstrap-s008-publication-01/report.md) |
+| 22.10.2026 | S008: после подготовки env оба CI success, включая две Docker-сборки и Compose | [s008-publication-02](../results/2026-10-22-bootstrap-s008-publication-02/report.md) |

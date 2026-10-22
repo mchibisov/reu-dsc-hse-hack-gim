@@ -16,6 +16,8 @@
 
 Число тестов уменьшилось потому, что старые тесты удалены вместе с выведенным из использования public-runtime; это не маскировка ошибок актуального runtime. [RED](../results/2026-10-22-bootstrap-s008-red-01/report.md), [проверка анкеты](../results/2026-10-22-bootstrap-s008-green-01/report.md), [итог](../results/2026-10-22-bootstrap-s008-full-02/report.md).
 
+Main опубликована; оба CI для e305329 успешны: [Tests Windows/Linux](https://github.com/mchibisov/reu-dsc-hse-hack-gim/actions/runs/39704930701), [PostgreSQL, две Docker-сборки, entry point и Compose](https://github.com/mchibisov/reu-dsc-hse-hack-gim/actions/runs/39704930683). В первом CI исправлена подготовка тестового .env; [история и повтор](../results/2026-10-22-bootstrap-s008-publication-02/report.md). Удалены7 каталогов генерируемого Python/pytest-кэша, временная БД остановлена. Локальный Docker Desktop всё ещё требует настройки WSL; это отдельная проблема окружения.
+
 ## Рабочий VK
 
 Production пока не изменён: Vercel/Supabase не подключены, push не вызывает автоматический deploy. Для существующего запуска нужен контролируемый rollout: приостановить новые /work и recovery Cron → дождаться завершения старых workers → применить миграцию → обновить deployment → возобновить очередь. Callback продолжает сохранять события; очередь/анкеты не очищаются. Этот порядок исключает повторное создание старого вопроса старой версией кода.

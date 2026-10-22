@@ -1,0 +1,7 @@
+gim\__pycache__
+api\__pycache__
+tests\__pycache__
+database\src\gim_db\__pycache__
+database\tests\__pycache__
+scripts\__pycache__
+.pytest_cache
