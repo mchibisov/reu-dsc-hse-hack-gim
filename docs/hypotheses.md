@@ -19,3 +19,8 @@
 | 22.10.2026 | S007 GREEN-02: SQL array и отмена sibling lanes | [dispatch-green-02](../results/2026-10-22-bootstrap-s007-dispatch-green-02/report.md) |
 | 22.10.2026 | S007 полный набор после исправления очереди | [full-01](../results/2026-10-22-bootstrap-s007-full-01/report.md) |
 | 22.10.2026 | S007: узкие пулы max_size=2, как в облаке | [small-pools-01](../results/2026-10-22-bootstrap-s007-small-pools-01/report.md) |
+| 22.10.2026 | S008 RED: убрать вопрос8, изменить9, сохранить snapshot | [s008-red-01](../results/2026-10-22-bootstrap-s008-red-01/report.md) |
+| 22.10.2026 | S008 GREEN: новая анкета/сохранность данных | [s008-green-01](../results/2026-10-22-bootstrap-s008-green-01/report.md) |
+| 22.10.2026 | S008: удаление legacy и дублирования после snapshot | [s008-cleanup-01](../results/2026-10-22-bootstrap-s008-cleanup-01/report.md) |
+| 22.10.2026 | S008: новая пустая private БД и все актуальные тесты | [s008-full-01](../results/2026-10-22-bootstrap-s008-full-01/report.md) |
+| 22.10.2026 | S008 final: stale template, сохранность отвеченного8, безопасный rollout | [s008-full-02](../results/2026-10-22-bootstrap-s008-full-02/report.md) |

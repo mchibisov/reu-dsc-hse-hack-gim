@@ -3,6 +3,8 @@ _env*
 .git
 .venv
 runtime
+results
+.pytest_cache
 work
 .superpowers
 outputs

@@ -1,6 +1,6 @@
 # Старый runtime public-схемы
 
-Сохранён для совместимости: `gim.main`, корневые `migrations/`, `compose.legacy.yaml`, `compose.external.yaml`, `Dockerfile.legacy`, `.env.legacy.example`.
+Удалён из текущего дерева при очистке S008; восстановить исходники и инструкции можно из [метки «Работающая версия»](https://github.com/mchibisov/reu-dsc-hse-hack-gim/tree/working-version-2026-10-22).
 
 Это отдельная схема с `DATABASE_URL`. Не применяйте эти миграции к основной private БД и не запускайте старый gateway одновременно с новым для одного сообщества.
 

@@ -1,5 +1,4 @@
 import os
-from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -19,55 +18,3 @@ def load_dotenv(path='.env'):
         if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
             value = value[1:-1]
         os.environ.setdefault(key.strip(), value.replace('\\n', '\n'))
-
-
-@dataclass
-class Settings:
-    database_url: str
-    vk_token: str
-    group_id: int
-    campaign: str
-    admin_ids: tuple[int, ...]
-    consent_text: str
-    scoring_url: str
-    scoring_token: str
-    storage_dir: str
-    concurrency: int
-    api_version: str
-    test_mode: bool = False
-    followup_url: str = ''
-    service_token: str = ''
-    job_kinds: tuple[str, ...] = ()
-    llm_base_url: str = ''
-    llm_api_key: str = ''
-    llm_model: str = ''
-    max_followups: int = 3
-    rubric_path: str = ''
-
-    @classmethod
-    def load(cls):
-        result = cls(
-            os.environ['DATABASE_URL'], os.environ.get('VK_TOKEN', ''),
-            int(os.environ.get('VK_GROUP_ID') or '0'), os.environ.get('CAMPAIGN', 'autumn-2026'),
-            tuple(int(v.strip()) for v in os.environ.get('ADMIN_VK_IDS', '').split(',') if v.strip()),
-            os.environ.get('CONSENT_TEXT', ''), os.environ.get('SCORING_URL', ''),
-            os.environ.get('SCORING_TOKEN', ''), os.environ.get('STORAGE_DIR', '/data/files'),
-            int(os.environ.get('WORKER_CONCURRENCY', '4')), os.environ.get('VK_API_VERSION', '5.199'),
-            os.environ.get('TEST_MODE', '').lower() in ('true', '1'),
-            os.environ.get('FOLLOWUP_URL', ''), os.environ.get('SERVICE_TOKEN', ''),
-            tuple(v.strip() for v in os.environ.get('JOB_KINDS', '').split(',') if v.strip()),
-            os.environ.get('LLM_BASE_URL', ''), os.environ.get('LLM_API_KEY', ''),
-            os.environ.get('LLM_MODEL', ''), int(os.environ.get('MAX_FOLLOWUPS', '3')),
-            os.environ.get('RUBRIC_PATH', ''),
-        )
-        if not 1 <= result.concurrency <= 8:
-            raise ValueError('WORKER_CONCURRENCY must be between 1 and 8')
-        if result.group_id < 0 or not result.campaign.strip():
-            raise ValueError('Invalid group or campaign')
-        if result.test_mode and not result.admin_ids:
-            raise ValueError('TEST_MODE requires ADMIN_VK_IDS')
-        if set(result.job_kinds) - {'dialog', 'send', 'send_file', 'score', 'export', 'prepare_followups'}:
-            raise ValueError('Unknown JOB_KINDS entry')
-        if not 0 <= result.max_followups <= 5:
-            raise ValueError('MAX_FOLLOWUPS must be between 0 and 5')
-        return result

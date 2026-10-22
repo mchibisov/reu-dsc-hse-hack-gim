@@ -25,13 +25,19 @@ from gim.shared_analysis import safe_answers, approved_rubric, validate_result, 
 
 HELP = 'Это бот волонтёрской программы ГИМ. В VK бот штатно отвечает в личных сообщениях сообщества — отдельный аккаунт бота не нужен. Команды: /start — начать или продолжить, /status — статус, /help — помощь. Ответьте текстом на текущий вопрос. Для неприменимого поля напишите «не относится». Резюме и PDF в этом режиме не принимаются.'
 STAFF_HELP = 'Команды сотрудника: /admin, /help, /top, /stats, /application UUID (или /candidate UUID), /export [UUID], /new [СТРАНИЦА], /top [СТРАНИЦА], /score UUID БАЛЛ ПРИЧИНА, /jobs. Администратору: /reset. Автоматическая оценка требует ключ модели и утверждённую рубрику. Решение о приёме принимает сотрудник.'
-WELCOME = 'Здравствуйте! Я бот волонтёрской программы Государственного исторического музея. Помогу заполнить заявку и уточню важные детали вашего опыта. Ориентир прохождения — 5–7 минут (время зависит от подробности ответов): 19 основных вопросов и до трёх коротких уточнений от AI. Достаточно 1–3 предложений на содержательный вопрос; если поле не подходит, напишите «не относится». Ответы увидит куратор; решение о приглашении принимает сотрудник музея.\n\nКнопки «Начать», «Статус» и «Помощь» доступны всем. Начнём с согласия на обработку данных.'
+WELCOME = 'Здравствуйте! Я бот волонтёрской программы Государственного исторического музея. Помогу заполнить заявку и уточню важные детали вашего опыта. Ориентир прохождения — 5–7 минут (время зависит от подробности ответов): 18 основных вопросов и до трёх коротких уточнений от AI. Достаточно 1–3 предложений на содержательный вопрос; если поле не подходит, напишите «не относится». Ответы увидит куратор; решение о приглашении принимает сотрудник музея.\n\nКнопки «Начать», «Статус» и «Помощь» доступны всем. Начнём с согласия на обработку данных.'
 
 
-def question_text(question,actor):
-    text=question['text']
+def question_text(question,actor,templates=None):
+    text='Факультет, направление' if question['target_slot']=='faculty' else question['text']
     if question.get('source')=='base' and question.get('position'):
-        text=f'Основная анкета · {question["position"]} из 19\n\n'+text
+        position=question.get('base_position') or question['position']
+        total=question.get('base_total') or 18
+        if templates is not None:
+            base=sorted((t for t in templates if t['kind']=='base'),key=lambda t:t['position'])
+            total=len(base)
+            position=next((i for i,t in enumerate(base,1) if t['id']==question.get('template_id')),position)
+        text=f'Основная анкета · {position} из {total}\n\n'+text
     elif question.get('purpose')=='expectations':
         text='Совпали ли ожидания?\n\n'+text
     elif question.get('source') in {'generated','template'}:
@@ -159,6 +165,9 @@ class SharedService:
         q=next((q for q in ctx['questions'] if str(q['id'])==str(qid)),None)
         if q is None:
             raise Conflict('Bound question missing')
+        if q['status']=='skipped':
+            await self._advance(event,actor,ctx,resume=True)
+            return
         if q['target_slot']=='vk_url' and text.strip().casefold()=='использовать мою страницу':
             text=f'https://vk.com/id{actor}'
         if not text.strip():
@@ -210,7 +219,7 @@ class SharedService:
         if current:
             if resume:
                 question=next(q for q in ctx['questions'] if str(q['id'])==str(current))
-                await self._emit(event,actor,question_text(question,actor),app_id=app_id,suffix='resume',
+                await self._emit(event,actor,question_text(question,actor,ctx['templates']),app_id=app_id,suffix='resume',
                                  question_slot=question['target_slot'])
             return
         base=sorted((t for t in ctx['templates'] if t['kind']=='base'),key=lambda t:(t['target_slot']!='consent',t['position']))

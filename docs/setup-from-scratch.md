@@ -11,7 +11,7 @@ python -m pip install -e './database[materials]'
 mkdir -p runtime/materials
 ```
 
-Поместите исходную музейную анкету DOCX в `runtime/materials/questionnaire.docx`, PDF пяти направлений — в `runtime/materials/directions.pdf`. Загрузчик ожидает музейную анкету из кейса: 19 основных вопросов и 11 примеров уточнений. Исторические персональные анкеты не нужны. Документы и заполненные конфиги не публикуются в Git.
+Поместите исходную музейную анкету DOCX в `runtime/materials/questionnaire.docx`, PDF пяти направлений — в `runtime/materials/directions.pdf`. Загрузчик ожидает музейную анкету из кейса: 18 основных вопросов и 11 примеров уточнений; исходный DOCX из кейса может содержать прежний вопрос «ВУЗ (Другое)», загрузчик его исключает. Исторические персональные анкеты не нужны. Документы и заполненные конфиги не публикуются в Git.
 
 Создайте отдельную PostgreSQL/Supabase БД. Возьмите операторский DSN из Connect своего проекта; для миграций используйте direct/session connection, поддерживающее сессию и advisory lock. В Supabase включите SSL. Не подставляйте адрес чужого проекта из старой документации.
 
@@ -66,7 +66,7 @@ python database/scripts/provision_runtime.py runtime/runtime-credentials.json
 {
   "group_id": 123456789,
   "title": "Волонтёры ГИМ — тестовый набор",
-  "questionnaire_version": "museum-v1",
+  "questionnaire_version": "museum-v2",
   "rubric_version": "gim-ranking-50-35-15-v1",
   "rubric": {
     "approved_by": "mchibisov: formula supplied 2026-10-22",

@@ -34,7 +34,7 @@ cd reu-dsc-hse-hack-gim
 python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.shared.txt
-cp .env.shared.example .env
+cp .env.example .env
 ```
 
 На Windows: `py -3.12 -m venv .venv`, затем `.venv\Scripts\Activate.ps1`; вместо `cp` используйте `Copy-Item`. При запрете PowerShell activation запускайте `.venv\Scripts\python.exe` напрямую.
@@ -54,7 +54,7 @@ cp .env.shared.example .env
 | `ANALYSIS_RUBRIC_PATH` | `config/ranking-50-35-15.json` для действующей формулы новых анкет |
 | `EXCEL_ACCESS_CODE` | Необязательный секрет для отдельной выдачи Excel без роли сотрудника; пустой отключает этот доступ |
 
-Остальные параметры оставьте по `.env.shared.example`. `.env`, операторские подключения, файлы паролей и анкеты не коммитятся. Операторский `DATABASE_ADMIN_URL` нужен только при подготовке БД, не передаётся в рабочие контейнеры или Vercel.
+Остальные параметры оставьте по `.env.example`. `.env`, операторские подключения, файлы паролей и анкеты не коммитятся. Операторский `DATABASE_ADMIN_URL` нужен только при подготовке БД, не передаётся в рабочие контейнеры или Vercel.
 
 ### Вариант A: Docker / свой сервер с Long Poll
 
@@ -122,7 +122,7 @@ python -m pip install -e './database[test]'
 python -m pytest database/tests -q
 ```
 
-Проверка S006 на чистой Windows/Python 3.12 и PostgreSQL 18: **191 unittest и 55 тестов БД, без пропусков**; общий `python -m pytest -q` — **246 passed**. Для общего прогона нужны обе тестовые схемы: private-миграции и legacy public-миграции, исключительно в одноразовой БД. Установка и импорт музейного банка, создание трёх LOGIN, первого администратора и `check-db` проверены автоматически на синтетических материалах. Конфиги JSON принимаются в UTF-8 с BOM или без него. [Подробный отчёт S006](output/S006_IT_REPORT.md).
+Проверка S006 на чистой Windows/Python 3.12 и PostgreSQL 18: **191 unittest и 55 тестов БД, без пропусков**; общий `python -m pytest -q` — **246 passed**. Числа относятся к сохранённой версии S006; после очистки тесты старого public-runtime удалены вместе с ним. Текущий прогон использует только private-миграции в одноразовой БД. Установка и импорт музейного банка, создание трёх LOGIN, первого администратора и `check-db` проверены автоматически на синтетических материалах. Конфиги JSON принимаются в UTF-8 с BOM или без него. [Подробный отчёт S006](output/S006_IT_REPORT.md).
 
 Финальный выпуск проверен: 190 unittest (один платформенный skip), 52 теста PostgreSQL, реальные API Supabase/Polza/VK и доставка скачанного XLSX. Моки не выдаются за реальную интеграцию. Человеческая браузерная приёмка и нагрузка 50 реальных VK/LLM-пользователей не подтверждены.
 
@@ -130,6 +130,8 @@ python -m pytest database/tests -q
 
 [Итоговый статус](output/FINAL_STATUS.md) · [Сверка QA](output/REQUIREMENTS_AUDIT.md) · [Оценка по критериям](output/JURY_ASSESSMENT.md) · [Киллерфичи](output/KILLER_FEATURES.md) · [Демо](docs/demo-guide.md) · [Безопасность](docs/security-review.md).
 
-## Старые варианты
+## Сохранённая работающая версия
 
-`gim.main`, корневые `migrations/`, `compose.legacy.yaml`, `Dockerfile.legacy` и `compose.external.yaml` относятся к старой public-схеме. Не используйте их для новой private-БД. Старые инструкции компонента БД сохранены как исторические; актуальный порядок запуска находится выше и в `docs/setup-from-scratch.md`.
+До очистки и изменения анкеты сохранена [«Работающая версия»](https://github.com/mchibisov/reu-dsc-hse-hack-gim/tree/working-version-2026-10-22), commit 7d06b60. Старый public-runtime и его инструкции доступны в этой метке; текущая ветка содержит только private PostgreSQL runtime.
+
+Анкета обновлена: 18 основных вопросов; «ВУЗ (Другое)» удалён, «Факультет, направление» объединён в одно поле. Для существующего production сначала приостановите запуск `/work` и recovery Cron, дождитесь завершения уже работающих workers, затем примените миграцию 20261022030000_questionnaire_revision.sql и обновите deployment; после этого возобновите обработку очереди. Callback должен продолжать сохранять события, очередь не очищается. Это исключает повторное создание старого вопроса прежним worker после миграции; старые ответы сохраняются.

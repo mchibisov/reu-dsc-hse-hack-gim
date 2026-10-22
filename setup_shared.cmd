@@ -7,6 +7,6 @@ py -3.12 -m venv .venv
 if errorlevel 1 exit /b 1
 .venv\Scripts\python.exe -m pip install -r requirements.shared.txt
 if errorlevel 1 exit /b 1
-if not exist .env copy .env.shared.example .env >nul
-echo Заполните .env по инструкции README-SHARED.md, затем запустите run_shared.cmd
+if not exist .env copy .env.example .env >nul
+echo Заполните .env по инструкции README.md, затем запустите run_shared.cmd
 pause

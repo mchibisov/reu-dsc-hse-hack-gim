@@ -1,4 +1,5 @@
 from pathlib import Path
+import pytest
 from gim_db.materials import FEATURE_COLUMNS,prepare_history,questionnaire_from_docx
 
 
@@ -11,7 +12,8 @@ def test_private_jsonl_is_utf8_and_preserves_unicode(tmp_path):
     assert [json.loads(line) for line in path.read_text(encoding='utf-8').splitlines()] == records
 
 
-def test_utf8_bom_recruitment_import_on_empty_database(tmp_path):
+@pytest.mark.parametrize('include_old_question', [True, False])
+def test_utf8_bom_recruitment_import_on_empty_database(tmp_path, include_old_question):
     import json
     import os
     import subprocess
@@ -31,6 +33,8 @@ def test_utf8_bom_recruitment_import_on_empty_database(tmp_path):
                 'Факультет', 'Курс', 'Сфера научных интересов', 'Опыт работы',
                 'Владение иностранными языками', 'Почему Вы выбрали', 'Чего Вы ожидаете',
                 'Сколько времени', 'Ваши хобби', 'В работу какого направления', 'Откуда Вы узнали']
+    if not include_old_question:
+        headings.remove('ВУЗ (Другое)')
     for heading in headings:
         document.add_paragraph(heading)
     document.add_paragraph('Критерии оценки')
@@ -57,7 +61,7 @@ def test_utf8_bom_recruitment_import_on_empty_database(tmp_path):
                             capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr
     imported = json.loads(result.stdout)
-    assert imported['status'] == 'draft' and imported['templates'] == 30
+    assert imported['status'] == 'draft' and imported['templates'] == 29
     with psycopg.connect(dsn) as connection:
         row = connection.execute('SELECT title,rubric,direction_info FROM gim.recruitments WHERE id=%s',
                                  (imported['recruitment_id'],)).fetchone()
@@ -93,7 +97,7 @@ def test_utf8_bom_recruitment_import_on_empty_database(tmp_path):
         checked = subprocess.run([sys.executable, '-m', 'gim.shared_main', 'check-db'],
                                  cwd=root, env=runtime_env, capture_output=True, text=True, timeout=30)
         assert checked.returncode == 0, checked.stderr
-        assert json.loads(checked.stdout)['base_questions'] == 19
+        assert json.loads(checked.stdout)['base_questions'] == 18
     finally:
         from psycopg import sql
         with psycopg.connect(dsn, autocommit=True) as connection:

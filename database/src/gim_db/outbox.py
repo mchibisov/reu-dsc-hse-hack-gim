@@ -114,7 +114,13 @@ async def _handle(ctx, event):
     if topic == 'question.send':
         async with repo.pool.connection() as c:
             question = await one(c, '''SELECT q.*,u.vk_id,r.group_id,a.status AS application_status,
-                a.current_question_id FROM gim.dialog_questions q
+                a.current_question_id,
+                (SELECT count(*) FROM gim.question_templates t WHERE t.recruitment_id=a.recruitment_id
+                 AND t.kind='base' AND COALESCE(t.validation->>'retired','false')<>'true') AS base_total,
+                (SELECT count(*) FROM gim.question_templates t JOIN gim.question_templates current ON current.id=q.template_id
+                 WHERE t.recruitment_id=a.recruitment_id AND t.kind='base' AND t.position<=current.position
+                 AND COALESCE(t.validation->>'retired','false')<>'true') AS base_position
+                FROM gim.dialog_questions q
                 JOIN gim.applications a ON a.id=q.application_id JOIN gim.users u ON u.id=a.user_id
                 JOIN gim.recruitments r ON r.id=a.recruitment_id WHERE q.id=%s AND q.application_id=%s''',
                 (event['payload']['question_id'], event['application_id']))

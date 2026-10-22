@@ -10,7 +10,7 @@
 
 1. Установить Python-зависимости из `requirements.txt`; код private Repository включён из `database/src`.
 2. Применить checksummed миграции `database/supabase/migrations` оператором БД; runtime использует три отдельные ограниченные роли.
-3. Развернуть `api/index.py` по `vercel.json`. Настроить encrypted production-переменные из `.env.shared.example` и `VK_CALLBACK_SECRET`, `VK_CONFIRMATION`, `WORKER_DISPATCH_KEY`. Не копировать секреты в Git, логи, чат или публичную страницу.
+3. Развернуть `api/index.py` по `vercel.json`. Настроить encrypted production-переменные из `.env.example` и `VK_CALLBACK_SECRET`, `VK_CONFIRMATION`, `WORKER_DISPATCH_KEY`. Не копировать секреты в Git, логи, чат или публичную страницу.
 4. Для этого облачного режима применить `deploy/supabase-dispatch.sql`. Сохранить URL `/work` и ключ в Vault с именами `gim_worker_url`/`gim_worker_key`. Создать обязательное минутное расписание `gim-worker-recovery` из комментария в этом файле. В рабочем проекте расписание уже включено.
 5. Callback подтверждает VK только после транзакции записи в outbox. pg_net запускает ограниченный HTTP-worker; Cron подхватывает потерянное пробуждение, отложенную попытку или истёкшую аренду. Вне активной очереди Vercel-worker не вызывается. Завершённые формы не зависят от жизни HTTP-процесса.
 

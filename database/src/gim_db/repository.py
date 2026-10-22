@@ -111,7 +111,7 @@ class Repository:
             r=await one(c,'SELECT * FROM gim.recruitments WHERE id=%s',(a['recruitment_id'],))
             questions=await all_rows(c,'SELECT * FROM gim.dialog_questions WHERE application_id=%s ORDER BY position',(app_id,))
             answers=await all_rows(c,'SELECT * FROM gim.answers WHERE application_id=%s ORDER BY revision',(app_id,))
-            templates=await all_rows(c,'SELECT * FROM gim.question_templates WHERE recruitment_id=%s ORDER BY position',(a['recruitment_id'],))
+            templates=await all_rows(c,"SELECT * FROM gim.question_templates WHERE recruitment_id=%s AND COALESCE(validation->>'retired','false')<>'true' ORDER BY position",(a['recruitment_id'],))
             return {'application':a,'questions':questions,'answers':answers,'templates':templates,
                 'known_facts':a['profile'],'direction_info':r['direction_info'],'followup_policy':r['followup_policy']}
 
@@ -129,6 +129,7 @@ class Repository:
             if template_id:
                 t=await one(c,'SELECT * FROM gim.question_templates WHERE id=%s AND recruitment_id=%s',(template_id,a['recruitment_id']))
                 if not t: raise ValueError('Foreign question template')
+                if t['validation'].get('retired'): raise Conflict('Question template retired')
                 source='base' if t['kind']=='base' else 'template'
                 if source=='base' or text is None: text=t['text']
                 target_slot=t['target_slot']

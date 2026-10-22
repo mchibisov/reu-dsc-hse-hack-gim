@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import httpx
 
-from gim.config import Settings
 from gim.vk import VK
 
 
@@ -22,13 +21,6 @@ class EnvironmentTests(unittest.TestCase):
                 self.assertEqual(os.environ['VK_GROUP_ID'], '999')
                 self.assertEqual(os.environ['VK_TOKEN'], 'local-token')
                 self.assertEqual(os.environ['CONSENT_TEXT'], 'Тест\nВторая строка')
-
-    def test_concurrency_must_be_bounded(self):
-        for value in ('0', '-1', '1000'):
-            with self.subTest(value=value), patch.dict(os.environ, {'DATABASE_URL': 'postgresql://localhost/test', 'WORKER_CONCURRENCY': value}, clear=True):
-                with self.assertRaises(ValueError):
-                    Settings.load()
-
 
 class VKRequestTests(unittest.IsolatedAsyncioTestCase):
     async def test_keyboard_is_role_aware_and_random_id_stable(self):

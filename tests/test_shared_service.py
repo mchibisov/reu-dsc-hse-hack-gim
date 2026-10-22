@@ -516,7 +516,7 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
         self.candidate=self.group+2000000000
         self.admin=self.group+3000000000
         self.codes=['consent','full_name','email','vk_url','birth_date','current_status','university',
-                    'university_other','faculty','course','interests','experience','languages','motivation',
+                    'faculty','course','interests','experience','languages','motivation',
                     'expectations','available_time','hobbies','directions','discovery']
         self.owner=await psycopg.AsyncConnection.connect(dsn,autocommit=True,row_factory=dict_row)
         async with self.owner.transaction():
@@ -616,7 +616,7 @@ class SharedDatabaseIntegration(unittest.IsolatedAsyncioTestCase):
             await self.drain()
         ctx=await self.bot.dialog_context(app['id'])
         self.assertEqual(ctx['application']['status'],'submitted')
-        self.assertEqual(len(ctx['answers']),23)
+        self.assertEqual(len(ctx['answers']),22)
         self.assertEqual(sum(q['source']!='base' for q in ctx['questions']),3)
         self.assertEqual(ctx['application']['selected_directions'],['media'])
         count=await (await self.owner.execute('SELECT count(*) AS n FROM gim.evaluations WHERE application_id=%s',(app['id'],))).fetchone()

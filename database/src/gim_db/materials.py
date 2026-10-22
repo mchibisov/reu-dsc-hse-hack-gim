@@ -76,6 +76,8 @@ def questionnaire_from_docx(path):
     begin=next(i for i,p in enumerate(paragraphs) if p.startswith('Даю согласие'))
     end=next(i for i in range(begin,len(paragraphs)) if 'Критерии оценки' in paragraphs[i])
     bank=paragraphs[begin:end]
+    if not any(p.startswith('ВУЗ (Другое)') for p in bank):
+        starts.pop(7); codes.pop(7)
     result=[];cursor=0
     for position,(prefix,code) in enumerate(zip(starts,codes),1):
         found=next((i for i in range(cursor,len(bank)) if bank[i].startswith(prefix)),None)
@@ -99,6 +101,10 @@ def questionnaire_from_docx(path):
         result.append({'code':f'followup_{i+1}','kind':'followup','text':text,'position':len(starts)+i+1,
            'required':False,'target_slot':slots[i][0],'directions':slots[i][1],'validation':{}})
     if len(followups)!=11:raise ValueError('Followup bank changed; review parser')
+    result=[q for q in result if q['target_slot']!='university_other']
+    for position,q in enumerate(result,1):
+        q['position']=position
+        if q['target_slot']=='faculty':q['text']='Факультет, направление'
     return result
 
 

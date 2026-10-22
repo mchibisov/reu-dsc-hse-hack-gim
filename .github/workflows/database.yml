@@ -44,8 +44,9 @@ jobs:
           "import json; from pathlib import Path; from gim.shared_config import SharedSettings;
           rubric = json.loads(Path(SharedSettings.__dataclass_fields__['analysis_rubric_path'].default).read_text(encoding='utf-8-sig'));
           assert rubric['rubric']['scoring_method'] == 'binary_50_35_15'"
-      - run: docker build -f Dockerfile.shared -t gim-shared:test .
+      - name: Verify image entry point
         working-directory: .
-      - name: Verify shared image entry point
+        run: docker run --rm gim-bot:test python -m gim.shared_main --help
+      - name: Verify Compose
         working-directory: .
-        run: docker run --rm gim-shared:test python -m gim.shared_main --help
+        run: docker compose --env-file .env.example config --no-env-resolution --quiet

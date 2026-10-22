@@ -19,7 +19,7 @@ class LLMTests(unittest.IsolatedAsyncioTestCase):
         history = [{'id': 'a1', 'question_text': 'Ваш опыт?', 'answer_text': 'Каталогизация'},
                    {'id': 'a2', 'question_text': 'Какие предметы?', 'answer_text': 'Монеты'}]
         with patch('gim.llm.httpx.AsyncClient', lambda **kwargs: factory(transport=httpx.MockTransport(endpoint), **kwargs)):
-            result = await LLMClient(settings).next_question(history, ['funds'], 2)
+            result = await LLMClient(settings).complete('Extract one personal question', {'answers': history, 'remaining_questions': 2})
         self.assertEqual(result['action'], 'ask')
         self.assertEqual(captured[0]['response_format'], {'type': 'json_object'})
         self.assertEqual(captured[0]['reasoning'],{'effort':'low'})
@@ -31,7 +31,7 @@ class LLMTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_no_key_never_substitutes_pattern_question(self):
         with self.assertRaises(ModelUnavailable):
-            await LLMClient(SimpleNamespace()).next_question([], ['funds'], 3)
+            await LLMClient(SimpleNamespace()).complete('Extract', {})
 
     async def test_structured_extraction_can_disable_reasoning_per_call(self):
         captured=[]

@@ -37,7 +37,7 @@ async def check_database(settings, pools):
         recruitment = await one(c, 'SELECT group_id,status,questionnaire_version FROM gim.recruitments WHERE id=%s', (settings.recruitment_id,))
         if not recruitment or recruitment['group_id'] != settings.group_id or recruitment['status'] != 'active':
             raise StartupError('RECRUITMENT_ID должен указывать активный набор своего VK_GROUP_ID')
-        templates = await all_rows(c, "SELECT target_slot FROM gim.question_templates WHERE recruitment_id=%s AND kind='base'", (settings.recruitment_id,))
+        templates = await all_rows(c, "SELECT target_slot FROM gim.question_templates WHERE recruitment_id=%s AND kind='base' AND COALESCE(validation->>'retired','false')<>'true'", (settings.recruitment_id,))
         if not {'consent', 'birth_date', 'directions'} <= {t['target_slot'] for t in templates}:
             raise StartupError('В банке обязательны согласие, дата рождения и выбор направлений')
         # Fail before Long Poll if the new SQL runtime migration has not been applied.

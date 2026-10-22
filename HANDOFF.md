@@ -1,4 +1,10 @@
-# Продолжение S006 — 22.10.2026, Windows
+# Актуальное продолжение — S008, 22.10.2026
+
+До очистки опубликована [«Работающая версия»](https://github.com/mchibisov/reu-dsc-hse-hack-gim/tree/working-version-2026-10-22), commit7d06b60: включает S007, модель сохранена. В текущем дереве один private PostgreSQL runtime; legacy и дубли удалены. Вопрос8 «ВУЗ (Другое)» выведен из использования, бывший9 назван «Факультет, направление», всего18 основных. Старые ответы сохраняются. Полный прогон204 passed на новой private-only БД; [отчёт S008](output/S008_CLEANUP_REPORT.md), [задержки S007](output/S007_LATENCY_REPORT.md).
+
+Production пока не менялся. До применения новой миграции приостановить /work и recovery Cron, дождаться старых workers, затем migration+redeploy и возобновить очередь; Callback должен сохранять события. Доступ Vercel/Supabase пока не подключён. Исторические сведения ниже не являются текущей инструкцией запуска; актуальные — README и setup-from-scratch.
+
+# Предыдущая проверка S006
 
 Актуальная main 3f95b67 загружена и исправлена по новому поручению пользователя: UTF-8/BOM конфигов и JSONL, root Dockerfile config/, root pytest discovery, регрессии чистого bootstrap и Windows CI. Код **551a634** опубликован в main, оба GitHub workflow успешны, все три Docker-образа собраны и проверены в CI. Проверка на отдельной PostgreSQL: 191 unittest и полный pytest 246 passed без skip. [Отчёт](output/S006_IT_REPORT.md), [журнал](docs/hypotheses.md), [план](docs/plans/S006-it-readiness.md). Локальный Docker Engine HTTP 500. Облачный deployment не менялся; актуальная независимая точность и два человеческих прохождения всё ещё требуют отдельной работы. Эти новые данные имеют приоритет над историческим статусом ниже.
 

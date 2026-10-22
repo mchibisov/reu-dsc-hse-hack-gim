@@ -1,7 +1,6 @@
 .env
 .env.*
 !.env.example
-!.env.shared.example
 .venv/
 __pycache__/
 *.pyc
@@ -14,11 +13,8 @@ work/
 runtime/
 .ruff_cache/
 *.egg-info/
-!.env.legacy.example
 _env
 _env.*
 .DS_Store
 
 .superpowers/
-
-.venv

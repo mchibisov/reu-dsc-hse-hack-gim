@@ -6,7 +6,12 @@ from gim.shared_xlsx import snapshot_xlsx
 class FinalFeatures(unittest.TestCase):
     def test_base_question_shows_progress(self):
         text=question_text({'text':'Ваш опыт?','target_slot':'experience','position':12,'source':'base'},42)
-        self.assertIn('12 из 19',text)
+        self.assertIn('12 из 18',text)
+
+    def test_faculty_prompt_has_requested_name(self):
+        text=question_text({'text':'Старое название','target_slot':'faculty','position':8,'source':'base'},42)
+        self.assertIn('Факультет, направление',text)
+        self.assertNotIn('Старое название',text)
 
     def test_export_is_a_readable_working_list_with_numeric_scores(self):
         bundle={'Анкеты':[{'application_id':'app','full_name':'Тест','summary':'Содержательная сводка','score':2,'selected_directions':['media']}],
