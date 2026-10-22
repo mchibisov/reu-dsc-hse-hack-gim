@@ -26,3 +26,6 @@
 | 22.10.2026 | S008 final: stale template, сохранность отвеченного8, безопасный rollout | [s008-full-02](../results/2026-10-22-bootstrap-s008-full-02/report.md) |
 | 22.10.2026 | S008: main/tag опубликованы; CI выявил отсутствие тестового .env для Compose | [s008-publication-01](../results/2026-10-22-bootstrap-s008-publication-01/report.md) |
 | 22.10.2026 | S008: после подготовки env оба CI success, включая две Docker-сборки и Compose | [s008-publication-02](../results/2026-10-22-bootstrap-s008-publication-02/report.md) |
+| 22.10.2026 | S009: повторная техническая приёмка после очистки по запросу пользователя | [s009-recheck-01](../results/2026-10-22-bootstrap-s009-recheck-01/report.md) |
+| 22.10.2026 | S009 RED: receipt после миграции и нагрузочный скрипт | [s009-red-01](../results/2026-10-22-bootstrap-s009-red-01/report.md) |
+| 22.10.2026 | S009 GREEN: безопасный поздний ответ и динамический прогресс нагрузки | [s009-green-01](../results/2026-10-22-bootstrap-s009-green-01/report.md) |

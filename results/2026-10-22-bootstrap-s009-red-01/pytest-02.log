@@ -1,0 +1,124 @@
+..FF                                                                     [100%]
+================================== FAILURES ===================================
+_____ test_new_receipt_after_retirement_preserves_previous_answer[False] ______
+
+env = (<gim_db.repository.Repository object at 0x00000143BF708C20>, <gim_db.repository.Repository object at 0x00000143BF70B7...erience', 'directions': [], 'id': UUID('deaed4e7-60c2-4107-9961-cf24dfbed00c'), 'kind': 'base', ...}, 10235119391, ...)
+next_prompt_sent = False
+
+    @pytest.mark.parametrize('next_prompt_sent', [False, True])
+    async def test_new_receipt_after_retirement_preserves_previous_answer(env, next_prompt_sent):
+        from types import SimpleNamespace
+        from gim.shared_gateway import enqueue_events
+        from gim.shared_service import SharedService
+        from gim_db.outbox import SQLQueue, run_once
+    
+        bot,worker,staff,recruitment,_,vk,_=env
+        actor=vk+200
+        with psycopg.connect(DSN) as c:
+            rid=c.execute("""INSERT INTO gim.recruitments(group_id,title,questionnaire_version,rubric_version,rubric)
+                VALUES(%s,'Synthetic late receipt','museum-v1','test',%s) RETURNING id""",
+                (recruitment['group_id'],Jsonb(recruitment['rubric']))).fetchone()[0]
+            templates={}
+            for position,slot in [(1,'consent'),(7,'university'),(8,'university_other'),(9,'faculty')]:
+                templates[slot]=c.execute("""INSERT INTO gim.question_templates
+                    (recruitment_id,code,kind,text,position,required,target_slot)
+                    VALUES(%s,%s,'base',%s,%s,true,%s) RETURNING id""",(rid,slot,slot,position,slot)).fetchone()[0]
+            c.execute("UPDATE gim.recruitments SET status='active',opened_at=now() WHERE id=%s",(rid,))
+        app=await bot.start_application(rid,actor)
+        await bot.set_consent(app['id'],'test')
+        for revision,slot,text in [(0,'consent','Согласен'),(1,'university','Сохранённый университет')]:
+            question=await bot.prepare_question(app['id'],request_key=slot,expected_revision=revision,template_id=templates[slot])
+            await bot.record_answer(app['id'],question['id'],group_id=recruitment['group_id'],event_id=str(uuid.uuid4()),
+                                    text=text,expected_revision=revision)
+        retired=await bot.prepare_question(app['id'],request_key='old-visible',expected_revision=2,template_id=templates['university_other'])
+        with psycopg.connect(DSN) as c:
+            c.execute("UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=20 WHERE id=%s",(retired['id'],))
+            migration=Path(__file__).parents[1]/'supabase/migrations/20261022030000_questionnaire_revision.sql'
+            c.execute(migration.read_text(encoding='utf-8'),prepare=False)
+        faculty=None
+        if next_prompt_sent:
+            faculty=await bot.prepare_question(app['id'],request_key='next-visible',expected_revision=2,template_id=templates['faculty'])
+            with psycopg.connect(DSN) as c:
+                c.execute("UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=22 WHERE id=%s",(faculty['id'],))
+        event_id=str(uuid.uuid4())
+        event={'type':'message_new','group_id':recruitment['group_id'],'event_id':event_id,
+               'object':{'message':{'from_id':actor,'peer_id':actor,'conversation_message_id':23 if next_prompt_sent else 21,
+                                    'text':'История, музеология' if next_prompt_sent else 'Поздний ответ на удалённый вопрос'}}}
+        async with bot.pool.connection() as c,c.transaction():
+            await enqueue_events(c,[event],recruitment['group_id'],'')
+        with psycopg.connect(DSN) as c:
+            from gim.vk import message_event
+            receipt=c.execute("SELECT payload->'receipt' FROM gim.outbox_events WHERE dedupe_key=%s",
+                              (f"vk-in:{recruitment['group_id']}:{message_event(event)['event_id']}",)).fetchone()[0]
+>       assert receipt['question_id']==str(faculty['id'] if next_prompt_sent else retired['id'])
+E       AssertionError: assert 'dd2f76e5-af9...-88bb6b71e1cb' == 'f9beebdd-ea3...-33be0a4d1224'
+E         
+E         - f9beebdd-ea39-4f13-86ba-33be0a4d1224
+E         + dd2f76e5-af95-4ab0-a34a-88bb6b71e1cb
+
+database\tests\test_questionnaire_revision.py:114: AssertionError
+______ test_new_receipt_after_retirement_preserves_previous_answer[True] ______
+
+env = (<gim_db.repository.Repository object at 0x00000143BFD185C0>, <gim_db.repository.Repository object at 0x00000143BFD183...erience', 'directions': [], 'id': UUID('07e4cd2c-8aa5-4324-b55b-091b0a5ee2e1'), 'kind': 'base', ...}, 10490243453, ...)
+next_prompt_sent = True
+
+    @pytest.mark.parametrize('next_prompt_sent', [False, True])
+    async def test_new_receipt_after_retirement_preserves_previous_answer(env, next_prompt_sent):
+        from types import SimpleNamespace
+        from gim.shared_gateway import enqueue_events
+        from gim.shared_service import SharedService
+        from gim_db.outbox import SQLQueue, run_once
+    
+        bot,worker,staff,recruitment,_,vk,_=env
+        actor=vk+200
+        with psycopg.connect(DSN) as c:
+            rid=c.execute("""INSERT INTO gim.recruitments(group_id,title,questionnaire_version,rubric_version,rubric)
+                VALUES(%s,'Synthetic late receipt','museum-v1','test',%s) RETURNING id""",
+                (recruitment['group_id'],Jsonb(recruitment['rubric']))).fetchone()[0]
+            templates={}
+            for position,slot in [(1,'consent'),(7,'university'),(8,'university_other'),(9,'faculty')]:
+                templates[slot]=c.execute("""INSERT INTO gim.question_templates
+                    (recruitment_id,code,kind,text,position,required,target_slot)
+                    VALUES(%s,%s,'base',%s,%s,true,%s) RETURNING id""",(rid,slot,slot,position,slot)).fetchone()[0]
+            c.execute("UPDATE gim.recruitments SET status='active',opened_at=now() WHERE id=%s",(rid,))
+        app=await bot.start_application(rid,actor)
+        await bot.set_consent(app['id'],'test')
+        for revision,slot,text in [(0,'consent','Согласен'),(1,'university','Сохранённый университет')]:
+            question=await bot.prepare_question(app['id'],request_key=slot,expected_revision=revision,template_id=templates[slot])
+            await bot.record_answer(app['id'],question['id'],group_id=recruitment['group_id'],event_id=str(uuid.uuid4()),
+                                    text=text,expected_revision=revision)
+        retired=await bot.prepare_question(app['id'],request_key='old-visible',expected_revision=2,template_id=templates['university_other'])
+        with psycopg.connect(DSN) as c:
+            c.execute("UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=20 WHERE id=%s",(retired['id'],))
+            migration=Path(__file__).parents[1]/'supabase/migrations/20261022030000_questionnaire_revision.sql'
+            c.execute(migration.read_text(encoding='utf-8'),prepare=False)
+        faculty=None
+        if next_prompt_sent:
+            faculty=await bot.prepare_question(app['id'],request_key='next-visible',expected_revision=2,template_id=templates['faculty'])
+            with psycopg.connect(DSN) as c:
+                c.execute("UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=22 WHERE id=%s",(faculty['id'],))
+        event_id=str(uuid.uuid4())
+        event={'type':'message_new','group_id':recruitment['group_id'],'event_id':event_id,
+               'object':{'message':{'from_id':actor,'peer_id':actor,'conversation_message_id':23 if next_prompt_sent else 21,
+                                    'text':'История, музеология' if next_prompt_sent else 'Поздний ответ на удалённый вопрос'}}}
+        async with bot.pool.connection() as c,c.transaction():
+            await enqueue_events(c,[event],recruitment['group_id'],'')
+        with psycopg.connect(DSN) as c:
+            from gim.vk import message_event
+            receipt=c.execute("SELECT payload->'receipt' FROM gim.outbox_events WHERE dedupe_key=%s",
+                              (f"vk-in:{recruitment['group_id']}:{message_event(event)['event_id']}",)).fetchone()[0]
+        assert receipt['question_id']==str(faculty['id'] if next_prompt_sent else retired['id'])
+        service=SharedService(bot,worker,staff,None,SimpleNamespace(group_id=recruitment['group_id'],recruitment_id=rid,
+            analysis_rubric_path='',max_followups=0,llm_api_key='',max_answer_length=2000,consent_version='test'),None)
+        await run_once({'repository':worker,'handlers':service.handlers},SQLQueue(worker.pool,recruitment['group_id']),
+                       limit=1,topics=['vk.incoming'])
+        context=await bot.dialog_context(app['id'])
+>       university=[a for a in context['answers'] if a['target_slot']=='university']
+                                                     ^^^^^^^^^^^^^^^^
+E       KeyError: 'target_slot'
+
+database\tests\test_questionnaire_revision.py:120: KeyError
+=========================== short test summary info ===========================
+FAILED database\tests\test_questionnaire_revision.py::test_new_receipt_after_retirement_preserves_previous_answer[False]
+FAILED database\tests\test_questionnaire_revision.py::test_new_receipt_after_retirement_preserves_previous_answer[True]
+2 failed, 2 passed in 1.59s

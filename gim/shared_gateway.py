@@ -84,7 +84,8 @@ async def enqueue_events(c,events,group_id,excel_access_code):
         receipt=await one(c,'''SELECT a.id app_id,q.id question_id FROM gim.applications a
             JOIN gim.users u ON u.id=a.user_id JOIN gim.recruitments r ON r.id=a.recruitment_id
             LEFT JOIN LATERAL (SELECT dq.id FROM gim.dialog_questions dq WHERE dq.application_id=a.id
-              AND ((dq.id=a.current_question_id AND dq.asked_at IS NOT NULL) OR dq.status='answered')
+              AND ((dq.id=a.current_question_id AND dq.asked_at IS NOT NULL) OR dq.status='answered'
+                   OR (dq.status='skipped' AND dq.asked_at IS NOT NULL))
               AND (%s::bigint IS NULL OR dq.sent_cmid IS NULL OR dq.sent_cmid<%s)
               ORDER BY (dq.id=a.current_question_id) DESC,dq.position DESC LIMIT 1) q ON true
             WHERE u.vk_id=%s AND r.group_id=%s AND r.status='active' AND a.status='draft' AND NOT a.archived

@@ -1,0 +1,27 @@
+Obtaining file:///C:/Users/User/PycharmProjects/meaningful_code/gim_main/database (from -r runtime/s009-clean-01/requirements.shared.txt (line 2))
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  pip subprocess to install build dependencies did not run successfully.
+  exit code: 1
+  
+  [7 lines of output]
+  WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x000001B3B9C16510>: Failed to establish a new connection: [WinError 10013] ������� ������� ������� � ������ �������, ����������� ������� �������')': /simple/setuptools/
+  WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x000001B3B5FB7500>: Failed to establish a new connection: [WinError 10013] ������� ������� ������� � ������ �������, ����������� ������� �������')': /simple/setuptools/
+  WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x000001B3B9F17470>: Failed to establish a new connection: [WinError 10013] ������� ������� ������� � ������ �������, ����������� ������� �������')': /simple/setuptools/
+  WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x000001B3B9F17830>: Failed to establish a new connection: [WinError 10013] ������� ������� ������� � ������ �������, ����������� ������� �������')': /simple/setuptools/
+  WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x000001B3B9F17A40>: Failed to establish a new connection: [WinError 10013] ������� ������� ������� � ������ �������, ����������� ������� �������')': /simple/setuptools/
+  ERROR: Could not find a version that satisfies the requirement setuptools>=75 (from versions: none)
+  ERROR: No matching distribution found for setuptools>=75
+  [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: subprocess-exited-with-error
+
+pip subprocess to install build dependencies did not run successfully.
+exit code: 1
+
+See above for output.
+
+note: This error originates from a subprocess, and is likely not a problem with pip.

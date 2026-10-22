@@ -1,5 +1,5 @@
 """50 synthetic users through private SQL queue. No external API or production DSN."""
-import asyncio,json,time,uuid
+import asyncio,json,os,re,time,uuid
 from types import SimpleNamespace
 from datetime import date
 import psycopg
@@ -9,8 +9,11 @@ from psycopg_pool import AsyncConnectionPool
 from gim_db.repository import Repository,emit,one
 from gim_db.outbox import SQLQueue,run_once
 from gim.shared_service import SharedService
-DSN='postgresql://postgres:local-test-only@127.0.0.1:55433/postgres'
+from psycopg.conninfo import conninfo_to_dict
+DSN=os.environ.get('TEST_DATABASE_URL','')
 async def main():
+ if not DSN or conninfo_to_dict(DSN).get('host') not in {'127.0.0.1','localhost','::1'}:
+  raise ValueError('Нужна отдельная локальная TEST_DATABASE_URL, не рабочая БД')
  group=uuid.uuid4().int%1000000000+1000000000
  async with await psycopg.AsyncConnection.connect(DSN,autocommit=True,row_factory=dict_row) as c:
   r=await one(c,"INSERT INTO gim.recruitments(group_id,title,questionnaire_version,rubric_version,rubric,followup_policy) VALUES(%s,'Synthetic 50 users','test','test',%s,%s) RETURNING id",(group,Jsonb({'criteria':[{'code':'synthetic','max_points':3}]}),Jsonb({'max_followups':0})))
@@ -43,7 +46,7 @@ async def main():
   for answer in ['Согласен','01.01.2000','Медиа']:
    while True:
     message=await asyncio.wait_for(sent[actor].get(),30)
-    if message in {'consent','birth_date','directions'} or 'из 19' in message:break
+    if re.match(r'^Основная анкета · \d+ из \d+\n',message):break
    await enqueue(actor,answer)
   while True:
    message=await asyncio.wait_for(sent[actor].get(),30)
@@ -59,4 +62,6 @@ async def main():
   stop=True
   await asyncio.gather(*tasks)
   for p in pools:await p.close()
-if __name__=='__main__':asyncio.run(main())
+if __name__=='__main__':
+ if os.name=='nt':asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+ asyncio.run(main())

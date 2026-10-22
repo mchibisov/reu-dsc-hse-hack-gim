@@ -1,0 +1,110 @@
+..FF                                                                     [100%]
+================================== FAILURES ===================================
+_____ test_new_receipt_after_retirement_preserves_previous_answer[False] ______
+
+env = (<gim_db.repository.Repository object at 0x000002ACE3525DF0>, <gim_db.repository.Repository object at 0x000002ACE3B9B8...erience', 'directions': [], 'id': UUID('9dc6e221-96ce-4e1a-9f32-b0f14444bed0'), 'kind': 'base', ...}, 10275085713, ...)
+next_prompt_sent = False
+
+    @pytest.mark.parametrize('next_prompt_sent', [False, True])
+    async def test_new_receipt_after_retirement_preserves_previous_answer(env, next_prompt_sent):
+        from types import SimpleNamespace
+        from gim.shared_gateway import enqueue_events
+        from gim.shared_service import SharedService
+        from gim_db.outbox import SQLQueue, run_once
+    
+        bot,worker,staff,recruitment,_,vk,_=env
+        actor=vk+200
+        with psycopg.connect(DSN) as c:
+            rid=c.execute("""INSERT INTO gim.recruitments(group_id,title,questionnaire_version,rubric_version,rubric)
+                VALUES(%s,'Synthetic late receipt','museum-v1','test',%s) RETURNING id""",
+                (recruitment['group_id'],Jsonb(recruitment['rubric']))).fetchone()[0]
+            templates={}
+            for position,slot in [(1,'consent'),(7,'university'),(8,'university_other'),(9,'faculty')]:
+                templates[slot]=c.execute("""INSERT INTO gim.question_templates
+                    (recruitment_id,code,kind,text,position,required,target_slot)
+                    VALUES(%s,%s,'base',%s,%s,true,%s) RETURNING id""",(rid,slot,slot,position,slot)).fetchone()[0]
+            c.execute("UPDATE gim.recruitments SET status='active',opened_at=now() WHERE id=%s",(rid,))
+        app=await bot.start_application(rid,actor)
+        await bot.set_consent(app['id'],'test')
+        for revision,slot,text in [(0,'consent','Согласен'),(1,'university','Сохранённый университет')]:
+            question=await bot.prepare_question(app['id'],request_key=slot,expected_revision=revision,template_id=templates[slot])
+            await bot.record_answer(app['id'],question['id'],group_id=recruitment['group_id'],event_id=str(uuid.uuid4()),
+                                    text=text,expected_revision=revision)
+        retired=await bot.prepare_question(app['id'],request_key='old-visible',expected_revision=2,template_id=templates['university_other'])
+        with psycopg.connect(DSN) as c:
+            c.execute("UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=20 WHERE id=%s",(retired['id'],))
+            migration=Path(__file__).parents[1]/'supabase/migrations/20261022030000_questionnaire_revision.sql'
+            c.execute(migration.read_text(encoding='utf-8'),prepare=False)
+        faculty=None
+        if next_prompt_sent:
+            faculty=await bot.prepare_question(app['id'],request_key='next-visible',expected_revision=2,template_id=templates['faculty'])
+            with psycopg.connect(DSN) as c:
+                c.execute("UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=22 WHERE id=%s",(faculty['id'],))
+        event_id=str(uuid.uuid4())
+        event={'type':'message_new','group_id':recruitment['group_id'],'event_id':event_id,
+               'object':{'message':{'from_id':actor,'peer_id':actor,'conversation_message_id':23 if next_prompt_sent else 21,
+                                    'text':'История, музеология' if next_prompt_sent else 'Поздний ответ на удалённый вопрос'}}}
+        async with bot.pool.connection() as c,c.transaction():
+            await enqueue_events(c,[event],recruitment['group_id'],'')
+        with psycopg.connect(DSN) as c:
+>           receipt=c.execute("SELECT payload->'receipt' FROM gim.outbox_events WHERE dedupe_key=%s",
+                              (f"vk-in:{recruitment['group_id']}:{event_id}",)).fetchone()[0]
+E           TypeError: 'NoneType' object is not subscriptable
+
+database\tests\test_questionnaire_revision.py:111: TypeError
+______ test_new_receipt_after_retirement_preserves_previous_answer[True] ______
+
+env = (<gim_db.repository.Repository object at 0x000002ACE3E38500>, <gim_db.repository.Repository object at 0x000002ACE3E382...erience', 'directions': [], 'id': UUID('2684d0f5-57b0-4f60-a685-ed69e0df6bdd'), 'kind': 'base', ...}, 10833393936, ...)
+next_prompt_sent = True
+
+    @pytest.mark.parametrize('next_prompt_sent', [False, True])
+    async def test_new_receipt_after_retirement_preserves_previous_answer(env, next_prompt_sent):
+        from types import SimpleNamespace
+        from gim.shared_gateway import enqueue_events
+        from gim.shared_service import SharedService
+        from gim_db.outbox import SQLQueue, run_once
+    
+        bot,worker,staff,recruitment,_,vk,_=env
+        actor=vk+200
+        with psycopg.connect(DSN) as c:
+            rid=c.execute("""INSERT INTO gim.recruitments(group_id,title,questionnaire_version,rubric_version,rubric)
+                VALUES(%s,'Synthetic late receipt','museum-v1','test',%s) RETURNING id""",
+                (recruitment['group_id'],Jsonb(recruitment['rubric']))).fetchone()[0]
+            templates={}
+            for position,slot in [(1,'consent'),(7,'university'),(8,'university_other'),(9,'faculty')]:
+                templates[slot]=c.execute("""INSERT INTO gim.question_templates
+                    (recruitment_id,code,kind,text,position,required,target_slot)
+                    VALUES(%s,%s,'base',%s,%s,true,%s) RETURNING id""",(rid,slot,slot,position,slot)).fetchone()[0]
+            c.execute("UPDATE gim.recruitments SET status='active',opened_at=now() WHERE id=%s",(rid,))
+        app=await bot.start_application(rid,actor)
+        await bot.set_consent(app['id'],'test')
+        for revision,slot,text in [(0,'consent','Согласен'),(1,'university','Сохранённый университет')]:
+            question=await bot.prepare_question(app['id'],request_key=slot,expected_revision=revision,template_id=templates[slot])
+            await bot.record_answer(app['id'],question['id'],group_id=recruitment['group_id'],event_id=str(uuid.uuid4()),
+                                    text=text,expected_revision=revision)
+        retired=await bot.prepare_question(app['id'],request_key='old-visible',expected_revision=2,template_id=templates['university_other'])
+        with psycopg.connect(DSN) as c:
+            c.execute("UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=20 WHERE id=%s",(retired['id'],))
+            migration=Path(__file__).parents[1]/'supabase/migrations/20261022030000_questionnaire_revision.sql'
+            c.execute(migration.read_text(encoding='utf-8'),prepare=False)
+        faculty=None
+        if next_prompt_sent:
+            faculty=await bot.prepare_question(app['id'],request_key='next-visible',expected_revision=2,template_id=templates['faculty'])
+            with psycopg.connect(DSN) as c:
+                c.execute("UPDATE gim.dialog_questions SET asked_at=now(),sent_cmid=22 WHERE id=%s",(faculty['id'],))
+        event_id=str(uuid.uuid4())
+        event={'type':'message_new','group_id':recruitment['group_id'],'event_id':event_id,
+               'object':{'message':{'from_id':actor,'peer_id':actor,'conversation_message_id':23 if next_prompt_sent else 21,
+                                    'text':'История, музеология' if next_prompt_sent else 'Поздний ответ на удалённый вопрос'}}}
+        async with bot.pool.connection() as c,c.transaction():
+            await enqueue_events(c,[event],recruitment['group_id'],'')
+        with psycopg.connect(DSN) as c:
+>           receipt=c.execute("SELECT payload->'receipt' FROM gim.outbox_events WHERE dedupe_key=%s",
+                              (f"vk-in:{recruitment['group_id']}:{event_id}",)).fetchone()[0]
+E           TypeError: 'NoneType' object is not subscriptable
+
+database\tests\test_questionnaire_revision.py:111: TypeError
+=========================== short test summary info ===========================
+FAILED database\tests\test_questionnaire_revision.py::test_new_receipt_after_retirement_preserves_previous_answer[False]
+FAILED database\tests\test_questionnaire_revision.py::test_new_receipt_after_retirement_preserves_previous_answer[True]
+2 failed, 2 passed in 1.56s
