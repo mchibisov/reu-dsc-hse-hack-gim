@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    import asyncio,os; from gim.db import Database; asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()); exec('async def setup():\n db=Database(os.environ[\
+                                                                                                                                  ^
+SyntaxError: unterminated string literal (detected at line 1)

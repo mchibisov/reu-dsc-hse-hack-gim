@@ -1,0 +1,9 @@
+usage: shared_main.py [-h] {check-db,check-vk,run,gateway,worker}
+
+VK-бот: private PostgreSQL, SQL очередь, без Redis
+
+positional arguments:
+  {check-db,check-vk,run,gateway,worker}
+
+options:
+  -h, --help            show this help message and exit

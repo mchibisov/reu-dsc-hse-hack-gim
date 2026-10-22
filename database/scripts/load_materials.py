@@ -10,7 +10,7 @@ from gim_db.materials import questionnaire_from_docx,direction_text_from_pdf
 p=argparse.ArgumentParser(description='Load private museum bank; team supplies approved rubric/direction mapping')
 p.add_argument('--docx',required=True);p.add_argument('--directions-pdf',required=True)
 p.add_argument('--config',required=True,help='Private JSON: group_id,title,questionnaire_version,rubric_version,rubric,direction_info,followup_policy')
-a=p.parse_args();config=json.loads(Path(a.config).read_text())
+a=p.parse_args();config=json.loads(Path(a.config).read_text(encoding='utf-8-sig'))
 # No demo weights are silently promoted to official rules.
 if not config['rubric'].get('approved_by') or not config['rubric'].get('scoring_rule'):
     raise ValueError('Team-approved rubric and explicit score mapping required')

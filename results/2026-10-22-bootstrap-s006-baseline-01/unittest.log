@@ -1,0 +1,233 @@
+test_examples_are_balanced_private_and_outcome_free (test_calibration.CalibrationTests.test_examples_are_balanced_private_and_outcome_free) ... ok
+test_five_fixed_groups_total_three_and_provenance_is_explicit (test_calibration.CalibrationTests.test_five_fixed_groups_total_three_and_provenance_is_explicit) ... ok
+test_holdout_stable_disjoint_and_never_reference_example (test_calibration.CalibrationTests.test_holdout_stable_disjoint_and_never_reference_example) ... ok
+test_migration_settings_accept_unconfigured_vk (test_config.ConfigTests.test_migration_settings_accept_unconfigured_vk) ... ok
+test_blank_answer_does_not_advance (test_core.DialogTests.test_blank_answer_does_not_advance) ... ok
+test_complete_funds_application (test_core.DialogTests.test_complete_funds_application) ... ok
+test_invalid_direction_keeps_question (test_core.DialogTests.test_invalid_direction_keeps_question) ... ok
+test_no_data_before_consent (test_core.DialogTests.test_no_data_before_consent) ... ok
+test_long_summary_is_not_lost (test_core.ExcelTests.test_long_summary_is_not_lost) ... ok
+test_untrusted_text_is_literal_and_xml_valid (test_core.ExcelTests.test_untrusted_text_is_literal_and_xml_valid) ... ok
+test_dashboard_is_in_excel (test_dashboard.DashboardTests.test_dashboard_is_in_excel) ... ok
+test_no_evaluation_never_invents_graph (test_dashboard.DashboardTests.test_no_evaluation_never_invents_graph) ... ok
+test_three_stored_dimensions_without_model_call (test_dashboard.DashboardTests.test_three_stored_dimensions_without_model_call) ... ok
+test_unknown_is_not_shown_as_zero (test_dashboard.DashboardTests.test_unknown_is_not_shown_as_zero) ... ok
+test_configured_admin_is_promoted_even_after_first_contact (test_db.DatabaseTests.test_configured_admin_is_promoted_even_after_first_contact) ... skipped 'TEST_DATABASE_URL not set'
+test_duplicate_event_creates_one_job (test_db.DatabaseTests.test_duplicate_event_creates_one_job) ... skipped 'TEST_DATABASE_URL not set'
+test_expired_lease_cannot_be_acknowledged_by_old_worker (test_db.DatabaseTests.test_expired_lease_cannot_be_acknowledged_by_old_worker) ... skipped 'TEST_DATABASE_URL not set'
+test_history_import_is_idempotent_and_does_not_create_vk_jobs (test_db.DatabaseTests.test_history_import_is_idempotent_and_does_not_create_vk_jobs) ... skipped 'TEST_DATABASE_URL not set'
+test_last_crashed_attempt_becomes_failed (test_db.DatabaseTests.test_last_crashed_attempt_becomes_failed) ... skipped 'TEST_DATABASE_URL not set'
+test_longpoll_cursor_commits_with_events (test_db.DatabaseTests.test_longpoll_cursor_commits_with_events) ... skipped 'TEST_DATABASE_URL not set'
+test_outgoing_messages_keep_order_even_when_first_is_delayed (test_db.DatabaseTests.test_outgoing_messages_keep_order_even_when_first_is_delayed) ... skipped 'TEST_DATABASE_URL not set'
+test_parallel_workers_do_not_claim_same_job (test_db.DatabaseTests.test_parallel_workers_do_not_claim_same_job) ... skipped 'TEST_DATABASE_URL not set'
+test_enhancement_preserves_pinned_score_and_adds_evidence (test_enhanced_report.EnhancedReport.test_enhancement_preserves_pinned_score_and_adds_evidence) ... ok
+test_report_outage_preserves_already_verified_base_evaluation (test_enhanced_report.EnhancedReport.test_report_outage_preserves_already_verified_base_evaluation) ... enhancement_unavailable error_type=ModelUnavailable
+ok
+test_fact_requires_exact_candidate_quote (test_evidence.EvidenceTests.test_fact_requires_exact_candidate_quote) ... ok
+test_fixed_fact_classifier_calculates_class_from_pinned_coefficients (test_evidence.EvidenceTests.test_fixed_fact_classifier_calculates_class_from_pinned_coefficients) ... ok
+test_report_cannot_invent_strength_evidence (test_evidence.EvidenceTests.test_report_cannot_invent_strength_evidence) ... ok
+test_transparent_calculation_and_unknown_evidence (test_evidence.EvidenceTests.test_transparent_calculation_and_unknown_evidence) ... ok
+test_unknown_is_neutral_and_cannot_fake_zero_on_provider_failure (test_evidence.EvidenceTests.test_unknown_is_neutral_and_cannot_fake_zero_on_provider_failure) ... ok
+test_base_question_shows_progress (test_final_features.FinalFeatures.test_base_question_shows_progress) ... ok
+test_expectations_check_prevents_repeating_alternative_question (test_final_features.FinalFeatures.test_expectations_check_prevents_repeating_alternative_question) ... ok
+test_export_is_a_readable_working_list_with_numeric_scores (test_final_features.FinalFeatures.test_export_is_a_readable_working_list_with_numeric_scores) ... ok
+test_model_can_finish_without_unnecessary_question (test_followups.FollowupTests.test_model_can_finish_without_unnecessary_question) ... ok
+test_model_question_is_preserved_without_keyword_routing (test_followups.FollowupTests.test_model_question_is_preserved_without_keyword_routing) ... ok
+test_provider_cannot_repeat_or_change_direction (test_followups.FollowupTests.test_provider_cannot_repeat_or_change_direction) ... ok
+test_unknown_action_is_rejected (test_followups.FollowupTests.test_unknown_action_is_rejected) ... ok
+test_blank_formatted_rows_are_not_imported (test_history.HistoryTests.test_blank_formatted_rows_are_not_imported) ... ok
+test_future_outcomes_are_never_candidate_answers (test_history.HistoryTests.test_future_outcomes_are_never_candidate_answers) ... ok
+test_zero_score_is_not_missing (test_history.HistoryTests.test_zero_score_is_not_missing) ... ok
+test_abstentions_do_not_inflate_full_sample_accuracy_and_zero_is_valid (test_history_metrics.HistoryMetrics.test_abstentions_do_not_inflate_full_sample_accuracy_and_zero_is_valid) ... ok
+test_empty_sample_has_no_invented_accuracy (test_history_metrics.HistoryMetrics.test_empty_sample_has_no_invented_accuracy) ... ok
+test_cloud_router_cannot_serve_source_as_static_file (test_http_security.HTTPTests.test_cloud_router_cannot_serve_source_as_static_file) ... ok
+test_http_headers_restrict_embedding_and_type_sniffing (test_http_security.HTTPTests.test_http_headers_restrict_embedding_and_type_sniffing) ... ok
+test_private_and_unknown_paths_are_not_pages (test_http_security.HTTPTests.test_private_and_unknown_paths_are_not_pages) ... ok
+test_full_history_is_sent_as_data_and_one_question_returned (test_llm.LLMTests.test_full_history_is_sent_as_data_and_one_question_returned) ... ok
+test_no_key_never_substitutes_pattern_question (test_llm.LLMTests.test_no_key_never_substitutes_pattern_question) ... ok
+test_structured_extraction_can_disable_reasoning_per_call (test_llm.LLMTests.test_structured_extraction_can_disable_reasoning_per_call) ... ok
+test_nested_directions_cannot_crash_report_validation (test_model_safety.ModelSafetyTests.test_nested_directions_cannot_crash_report_validation) ... ok
+test_non_string_codes_are_rejected_as_validation_errors (test_model_safety.ModelSafetyTests.test_non_string_codes_are_rejected_as_validation_errors) ... ok
+test_non_string_source_ids_are_rejected (test_model_safety.ModelSafetyTests.test_non_string_source_ids_are_rejected) ... ok
+test_redaction_placeholder_is_not_a_quote_of_the_original (test_ranking.RankingEvidenceTests.test_redaction_placeholder_is_not_a_quote_of_the_original) ... ok
+test_exact_example_and_rounding (test_ranking.RankingTests.test_exact_example_and_rounding) ... ok
+test_fractional_ranking_precedes_integer_and_curator_wins (test_ranking.RankingTests.test_fractional_ranking_precedes_integer_and_curator_wins) ... ok
+test_full_score_and_explicit_penalty (test_ranking.RankingTests.test_full_score_and_explicit_penalty) ... ok
+test_no_double_negative_or_invented_zero (test_ranking.RankingTests.test_no_double_negative_or_invented_zero) ... ok
+test_reject_fabricated_evidence (test_ranking.RankingTests.test_reject_fabricated_evidence) ... ok
+test_extra_criterion_and_wrong_total_are_rejected (test_rubric.RubricTests.test_extra_criterion_and_wrong_total_are_rejected) ... ok
+test_positive_points_require_source_quote (test_rubric.RubricTests.test_positive_points_require_source_quote) ... ok
+test_provider_cannot_replace_rubric (test_rubric.RubricTests.test_provider_cannot_replace_rubric) ... ok
+test_unapproved_or_invalid_rubric_is_rejected (test_rubric.RubricTests.test_unapproved_or_invalid_rubric_is_rejected) ... ok
+test_concurrency_must_be_bounded (test_runtime.EnvironmentTests.test_concurrency_must_be_bounded) ... ok
+test_dotenv_loads_without_overriding_deployment_environment (test_runtime.EnvironmentTests.test_dotenv_loads_without_overriding_deployment_environment) ... ERROR
+test_keyboard_is_role_aware_and_random_id_stable (test_runtime.VKRequestTests.test_keyboard_is_role_aware_and_random_id_stable) ... ok
+test_vk_errors_do_not_expose_token (test_runtime.VKRequestTests.test_vk_errors_do_not_expose_token) ... ok
+test_fabricated_quote_is_rejected (test_scoring.ScoringTests.test_fabricated_quote_is_rejected) ... ok
+test_invalid_score_and_direction_are_rejected (test_scoring.ScoringTests.test_invalid_score_and_direction_are_rejected) ... ok
+test_valid_citation (test_scoring.ScoringTests.test_valid_citation) ... ok
+test_confirmation_is_authenticated_and_does_not_connect (test_serverless.CallbackTests.test_confirmation_is_authenticated_and_does_not_connect) ... ok
+test_unauthenticated_requests_never_open_database (test_serverless.CallbackTests.test_unauthenticated_requests_never_open_database) ... ok
+test_answers_and_submission_survive_new_service_instance (test_service.ServiceTests.test_answers_and_submission_survive_new_service_instance) ... skipped 'TEST_DATABASE_URL not set'
+test_completed_application_has_contextual_question_snapshot (test_service.ServiceTests.test_completed_application_has_contextual_question_snapshot) ... skipped 'TEST_DATABASE_URL not set'
+test_direct_model_builds_final_summary_from_full_dialog (test_service.ServiceTests.test_direct_model_builds_final_summary_from_full_dialog) ... skipped 'TEST_DATABASE_URL not set'
+test_export_can_be_opened_and_contains_saved_answers (test_service.ServiceTests.test_export_can_be_opened_and_contains_saved_answers) ... skipped 'TEST_DATABASE_URL not set'
+test_export_retry_uses_published_snapshot (test_service.ServiceTests.test_export_retry_uses_published_snapshot) ... skipped 'TEST_DATABASE_URL not set'
+test_export_uses_campaign_from_request_after_restart (test_service.ServiceTests.test_export_uses_campaign_from_request_after_restart) ... skipped 'TEST_DATABASE_URL not set'
+test_extra_message_while_model_thinks_is_saved_and_stale_result_ignored (test_service.ServiceTests.test_extra_message_while_model_thinks_is_saved_and_stale_result_ignored) ... skipped 'TEST_DATABASE_URL not set'
+test_followup_service_failure_preserves_answers_without_pattern_fallback (test_service.ServiceTests.test_followup_service_failure_preserves_answers_without_pattern_fallback) ... skipped 'TEST_DATABASE_URL not set'
+test_limit_finishes_clarifications_without_another_model_call (test_service.ServiceTests.test_limit_finishes_clarifications_without_another_model_call) ... skipped 'TEST_DATABASE_URL not set'
+test_no_consent_text_starts_with_name (test_service.ServiceTests.test_no_consent_text_starts_with_name) ... skipped 'TEST_DATABASE_URL not set'
+test_only_staff_can_retry_failed_job (test_service.ServiceTests.test_only_staff_can_retry_failed_job) ... skipped 'TEST_DATABASE_URL not set'
+test_optional_consent_mode_does_not_save_first_message_attachment (test_service.ServiceTests.test_optional_consent_mode_does_not_save_first_message_attachment) ... skipped 'TEST_DATABASE_URL not set'
+test_pre_upgrade_job_without_revision_remains_processable (test_service.ServiceTests.test_pre_upgrade_job_without_revision_remains_processable) ... skipped 'TEST_DATABASE_URL not set'
+test_question_snapshot_survives_new_question_version (test_service.ServiceTests.test_question_snapshot_survives_new_question_version) ... skipped 'TEST_DATABASE_URL not set'
+test_queued_addition_prevents_publication_of_stale_question (test_service.ServiceTests.test_queued_addition_prevents_publication_of_stale_question) ... skipped 'TEST_DATABASE_URL not set'
+test_resume_document_is_linked_without_advancing_empty_answer (test_service.ServiceTests.test_resume_document_is_linked_without_advancing_empty_answer) ... skipped 'TEST_DATABASE_URL not set'
+test_revoked_staff_cannot_receive_export (test_service.ServiceTests.test_revoked_staff_cannot_receive_export) ... skipped 'TEST_DATABASE_URL not set'
+test_scoring_adapter_cannot_invent_criteria_or_skip_evidence (test_service.ServiceTests.test_scoring_adapter_cannot_invent_criteria_or_skip_evidence) ... skipped 'TEST_DATABASE_URL not set'
+test_scoring_contract_stores_evidence_and_omits_future_outcomes (test_service.ServiceTests.test_scoring_contract_stores_evidence_and_omits_future_outcomes) ... skipped 'TEST_DATABASE_URL not set'
+test_slash_start_resumes_questionnaire (test_service.ServiceTests.test_slash_start_resumes_questionnaire) ... skipped 'TEST_DATABASE_URL not set'
+test_staff_reply_carries_permission_guard (test_service.ServiceTests.test_staff_reply_carries_permission_guard) ... skipped 'TEST_DATABASE_URL not set'
+test_stale_export_cannot_publish_file (test_service.ServiceTests.test_stale_export_cannot_publish_file) ... skipped 'TEST_DATABASE_URL not set'
+test_analysis_receives_historical_experts_and_real_direction_tasks (test_shared_analysis.AnalysisIntegration.test_analysis_receives_historical_experts_and_real_direction_tasks) ... ok
+test_bad_evidence_fractional_score_and_invented_criterion_rejected (test_shared_analysis.AnalysisIntegration.test_bad_evidence_fractional_score_and_invented_criterion_rejected) ... analysis_repair validation=Unverifiable evidence
+analysis_repair validation=Integer score 0�3 required
+analysis_repair validation=Unknown or duplicate criterion
+analysis_repair validation=Score differs from criterion sum
+ok
+test_external_payload_excludes_identity_and_historical_outcomes (test_shared_analysis.AnalysisIntegration.test_external_payload_excludes_identity_and_historical_outcomes) ... ok
+test_invalid_model_json_has_one_bounded_repair_with_same_sources (test_shared_analysis.AnalysisIntegration.test_invalid_model_json_has_one_bounded_repair_with_same_sources) ... analysis_repair validation=Unverifiable evidence
+ok
+test_partial_rubric_normalizes_observed_groups_and_marks_missing (test_shared_analysis.AnalysisIntegration.test_partial_rubric_normalizes_observed_groups_and_marks_missing) ... ok
+test_partial_rubric_rejects_insufficient_weight_or_fake_missing_points (test_shared_analysis.AnalysisIntegration.test_partial_rubric_rejects_insufficient_weight_or_fake_missing_points) ... analysis_repair validation=Insufficient observed criterion weight; manual review required
+analysis_repair validation=Missing criterion must be explicitly excluded, not assigned points
+ok
+test_personal_contribution_cannot_repeat_under_different_topic (test_shared_analysis.AnalysisIntegration.test_personal_contribution_cannot_repeat_under_different_topic) ... ok
+test_personal_question_cannot_repeat_preference_from_base_answer (test_shared_analysis.AnalysisIntegration.test_personal_question_cannot_repeat_preference_from_base_answer) ... ok
+test_personal_question_cannot_rephrase_same_topic (test_shared_analysis.AnalysisIntegration.test_personal_question_cannot_rephrase_same_topic) ... ok
+test_personal_question_requires_exact_anchor_and_does_not_repeat (test_shared_analysis.AnalysisIntegration.test_personal_question_requires_exact_anchor_and_does_not_repeat) ... ok
+test_provider_failure_is_retryable_never_a_fake_zero (test_shared_analysis.AnalysisIntegration.test_provider_failure_is_retryable_never_a_fake_zero) ... ok
+test_review_marker_must_be_a_json_boolean (test_shared_analysis.AnalysisIntegration.test_review_marker_must_be_a_json_boolean) ... analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+analysis_repair validation=needs_review must be a JSON boolean
+ok
+test_shared_worker_actually_returns_persistable_analysis (test_shared_analysis.AnalysisIntegration.test_shared_worker_actually_returns_persistable_analysis) ... ok
+test_unapproved_formula_is_not_silently_replaced (test_shared_analysis.AnalysisIntegration.test_unapproved_formula_is_not_silently_replaced) ... ok
+test_unknown_information_is_not_automatically_zero (test_shared_analysis.AnalysisIntegration.test_unknown_information_is_not_automatically_zero) ... analysis_repair validation=Missing criterion must be explicitly excluded, not assigned points
+ok
+test_check_db_with_three_real_runtime_logins (test_shared_bootstrap.BootstrapIntegration.test_check_db_with_three_real_runtime_logins) ... skipped '����� ��������� ��������� TEST_DATABASE_URL'
+test_bare_export_has_no_grant (test_shared_export_access.AccessProofTests.test_bare_export_has_no_grant) ... ok
+test_code_is_not_persisted_and_proof_is_identity_bound (test_shared_export_access.AccessProofTests.test_code_is_not_persisted_and_proof_is_identity_bound) ... ok
+test_excel_alias_seals_code_before_persistence (test_shared_export_access.AccessProofTests.test_excel_alias_seals_code_before_persistence) ... ok
+test_already_answered_topic_not_asked_again (test_shared_followups.LibraryFollowups.test_already_answered_topic_not_asked_again) ... ok
+test_library_does_not_repeat_explicit_preferences_and_schedule (test_shared_followups.LibraryFollowups.test_library_does_not_repeat_explicit_preferences_and_schedule) ... ok
+test_negated_learning_goal_does_not_claim_expectations_are_clear (test_shared_followups.LibraryFollowups.test_negated_learning_goal_does_not_claim_expectations_are_clear) ... ok
+test_no_speculative_exams_or_limit_overflow (test_shared_followups.LibraryFollowups.test_no_speculative_exams_or_limit_overflow) ... ok
+test_relevant_museum_question_does_not_require_prior_experience (test_shared_followups.LibraryFollowups.test_relevant_museum_question_does_not_require_prior_experience) ... ok
+test_specific_learning_goal_is_already_covered (test_shared_followups.LibraryFollowups.test_specific_learning_goal_is_already_covered) ... ok
+test_vague_expectations_still_allow_goal_clarification (test_shared_followups.LibraryFollowups.test_vague_expectations_still_allow_goal_clarification) ... ok
+test_group_mismatch_cannot_advance_cursor (test_shared_gateway.GatewayIntegration.test_group_mismatch_cannot_advance_cursor) ... skipped '����� ��������� TEST_DATABASE_URL �� localhost'
+test_singleton_checkpoint_and_event_replay (test_shared_gateway.GatewayIntegration.test_singleton_checkpoint_and_event_replay) ... skipped '����� ��������� TEST_DATABASE_URL �� localhost'
+test_gateway_does_not_need_a_writable_file_directory (test_shared_runtime.MainTests.test_gateway_does_not_need_a_writable_file_directory) ... ok
+test_sigterm_cancellation_runs_cleanup_and_unregisters_handler (test_shared_runtime.MainTests.test_sigterm_cancellation_runs_cleanup_and_unregisters_handler) ... ok
+test_missing_connections_names_are_clear_and_secret_free (test_shared_runtime.SettingsTests.test_missing_connections_names_are_clear_and_secret_free) ... ok
+test_runtime_rejects_operator_login (test_shared_runtime.SettingsTests.test_runtime_rejects_operator_login) ... ok
+test_three_service_logins_and_bounded_concurrency (test_shared_runtime.SettingsTests.test_three_service_logins_and_bounded_concurrency) ... ok
+test_objects_immutable_and_retry_safe (test_shared_runtime.StorageTests.test_objects_immutable_and_retry_safe) ... ok
+test_read_detects_corrupted_export (test_shared_runtime.StorageTests.test_read_detects_corrupted_export) ... ok
+test_rejects_paths_outside_private_root (test_shared_runtime.StorageTests.test_rejects_paths_outside_private_root) ... ok
+test_analysis_ready_notification_contains_ai_summary (test_shared_service.BoundaryTests.test_analysis_ready_notification_contains_ai_summary) ... ok
+test_binding_uses_current_lease_and_keeps_original (test_shared_service.BoundaryTests.test_binding_uses_current_lease_and_keeps_original) ... ok
+test_expired_lease_cannot_record_binding (test_shared_service.BoundaryTests.test_expired_lease_cannot_record_binding) ... ok
+test_export_ready_reuses_immutable_file_and_checks_acl_twice (test_shared_service.BoundaryTests.test_export_ready_reuses_immutable_file_and_checks_acl_twice) ... ok
+test_export_rejects_incomplete_snapshot_before_writing_file (test_shared_service.BoundaryTests.test_export_rejects_incomplete_snapshot_before_writing_file) ... ok
+test_export_uses_snapshot_then_finishes_before_vk (test_shared_service.BoundaryTests.test_export_uses_snapshot_then_finishes_before_vk) ... ok
+test_long_reply_split_losslessly_with_distinct_dedupe_keys (test_shared_service.BoundaryTests.test_long_reply_split_losslessly_with_distinct_dedupe_keys) ... ok
+test_new_application_notifies_admin_plus_one_with_card_command (test_shared_service.BoundaryTests.test_new_application_notifies_admin_plus_one_with_card_command) ... ok
+test_reply_is_an_outbox_intention (test_shared_service.BoundaryTests.test_reply_is_an_outbox_intention) ... ok
+test_staff_send_rechecks_membership (test_shared_service.BoundaryTests.test_staff_send_rechecks_membership) ... ok
+test_vk_question_includes_clickable_personal_profile (test_shared_service.BoundaryTests.test_vk_question_includes_clickable_personal_profile) ... ok
+test_age_and_directions (test_shared_service.DomainTests.test_age_and_directions) ... ok
+test_followup_direction_does_not_invent_past_experience (test_shared_service.DomainTests.test_followup_direction_does_not_invent_past_experience) ... ok
+test_followups_are_from_library_and_at_most_three (test_shared_service.DomainTests.test_followups_are_from_library_and_at_most_three) ... ok
+test_xlsx_headers_are_readable_for_curator (test_shared_service.DomainTests.test_xlsx_headers_are_readable_for_curator) ... ok
+test_xlsx_preserves_full_text_and_no_formula (test_shared_service.DomainTests.test_xlsx_preserves_full_text_and_no_formula) ... ok
+test_completed_dialog_sets_provenance_before_submit (test_shared_service.MoreDialogTests.test_completed_dialog_sets_provenance_before_submit) ... ok
+test_consent_denial_does_not_collect_contacts (test_shared_service.MoreDialogTests.test_consent_denial_does_not_collect_contacts) ... ok
+test_consent_denial_then_agreement_is_not_dropped (test_shared_service.MoreDialogTests.test_consent_denial_then_agreement_is_not_dropped) ... ok
+test_crash_after_answer_before_next_question_recovers_same_binding (test_shared_service.MoreDialogTests.test_crash_after_answer_before_next_question_recovers_same_binding) ... ok
+test_curator_card_keeps_interview_after_long_summary (test_shared_service.MoreDialogTests.test_curator_card_keeps_interview_after_long_summary) ... ok
+test_delayed_receipt_after_submission_does_not_rewrite_form (test_shared_service.MoreDialogTests.test_delayed_receipt_after_submission_does_not_rewrite_form) ... ok
+test_fast_fragments_do_not_answer_the_next_question (test_shared_service.MoreDialogTests.test_fast_fragments_do_not_answer_the_next_question) ... ok
+test_followup_provider_outage_does_not_block_submission (test_shared_service.MoreDialogTests.test_followup_provider_outage_does_not_block_submission) ... followup_fallback error_type=TimeoutError
+ok
+test_group_and_payload_actor_are_not_authorization (test_shared_service.MoreDialogTests.test_group_and_payload_actor_are_not_authorization) ... ok
+test_hanging_followup_provider_is_bounded_and_submission_continues (test_shared_service.MoreDialogTests.test_hanging_followup_provider_is_bounded_and_submission_continues) ... followup_fallback error_type=TimeoutError
+ok
+test_invalid_date_is_preserved_and_corrected_without_losing_history (test_shared_service.MoreDialogTests.test_invalid_date_is_preserved_and_corrected_without_losing_history) ... ok
+test_invalid_direction_then_valid_choice_is_not_dropped (test_shared_service.MoreDialogTests.test_invalid_direction_then_valid_choice_is_not_dropped) ... ok
+test_missing_key_keeps_analysis_retryable (test_shared_service.MoreDialogTests.test_missing_key_keeps_analysis_retryable) ... ok
+test_new_person_gets_bot_welcome_on_start_button (test_shared_service.MoreDialogTests.test_new_person_gets_bot_welcome_on_start_button) ... ok
+test_own_vk_profile_button_saves_real_link (test_shared_service.MoreDialogTests.test_own_vk_profile_button_saves_real_link) ... ok
+test_persisted_question_precedes_external_send (test_shared_service.MoreDialogTests.test_persisted_question_precedes_external_send) ... ok
+test_raw_is_never_truncated_and_contacts_require_consent (test_shared_service.MoreDialogTests.test_raw_is_never_truncated_and_contacts_require_consent) ... ok
+test_replay_after_advance_never_answers_next_question (test_shared_service.MoreDialogTests.test_replay_after_advance_never_answers_next_question) ... ok
+test_top_contains_short_ai_summary_and_readable_status (test_shared_service.MoreDialogTests.test_top_contains_short_ai_summary_and_readable_status) ... ok
+test_five_bad_codes_block_even_correct_code (test_shared_service.SharedDatabaseIntegration.test_five_bad_codes_block_even_correct_code) ... skipped 'TEST_DATABASE_URL not provided'
+test_real_private_roles_replay_followups_submit_export (test_shared_service.SharedDatabaseIntegration.test_real_private_roles_replay_followups_submit_export) ... skipped 'TEST_DATABASE_URL not provided'
+test_rotation_revokes_pending_delivery_and_retry_does_not_duplicate_file (test_shared_service.SharedDatabaseIntegration.test_rotation_revokes_pending_delivery_and_retry_does_not_duplicate_file) ... skipped 'TEST_DATABASE_URL not provided'
+test_secret_code_exports_without_staff_membership (test_shared_service.SharedDatabaseIntegration.test_secret_code_exports_without_staff_membership) ... skipped 'TEST_DATABASE_URL not provided'
+test_completed_dialog_sets_provenance_before_submit (test_shared_service.SharedServiceTests.test_completed_dialog_sets_provenance_before_submit) ... ok
+test_consent_denial_does_not_collect_contacts (test_shared_service.SharedServiceTests.test_consent_denial_does_not_collect_contacts) ... ok
+test_curator_card_keeps_interview_after_long_summary (test_shared_service.SharedServiceTests.test_curator_card_keeps_interview_after_long_summary) ... ok
+test_delayed_receipt_after_submission_does_not_rewrite_form (test_shared_service.SharedServiceTests.test_delayed_receipt_after_submission_does_not_rewrite_form) ... ok
+test_fast_fragments_do_not_answer_the_next_question (test_shared_service.SharedServiceTests.test_fast_fragments_do_not_answer_the_next_question) ... ok
+test_followup_provider_outage_does_not_block_submission (test_shared_service.SharedServiceTests.test_followup_provider_outage_does_not_block_submission) ... followup_fallback error_type=TimeoutError
+ok
+test_group_and_payload_actor_are_not_authorization (test_shared_service.SharedServiceTests.test_group_and_payload_actor_are_not_authorization) ... ok
+test_hanging_followup_provider_is_bounded_and_submission_continues (test_shared_service.SharedServiceTests.test_hanging_followup_provider_is_bounded_and_submission_continues) ... followup_fallback error_type=TimeoutError
+ok
+test_missing_key_keeps_analysis_retryable (test_shared_service.SharedServiceTests.test_missing_key_keeps_analysis_retryable) ... ok
+test_new_person_gets_bot_welcome_on_start_button (test_shared_service.SharedServiceTests.test_new_person_gets_bot_welcome_on_start_button) ... ok
+test_own_vk_profile_button_saves_real_link (test_shared_service.SharedServiceTests.test_own_vk_profile_button_saves_real_link) ... ok
+test_persisted_question_precedes_external_send (test_shared_service.SharedServiceTests.test_persisted_question_precedes_external_send) ... ok
+test_raw_is_never_truncated_and_contacts_require_consent (test_shared_service.SharedServiceTests.test_raw_is_never_truncated_and_contacts_require_consent) ... ok
+test_replay_after_advance_never_answers_next_question (test_shared_service.SharedServiceTests.test_replay_after_advance_never_answers_next_question) ... ok
+test_top_contains_short_ai_summary_and_readable_status (test_shared_service.SharedServiceTests.test_top_contains_short_ai_summary_and_readable_status) ... ok
+test_export_bytes_are_identical_after_time_changes (test_shared_service.SnapshotRepeatTests.test_export_bytes_are_identical_after_time_changes) ... ok
+test_xml_control_character_is_recoverable (test_shared_service.WorkbookEncodingTests.test_xml_control_character_is_recoverable) ... ok
+test_disabled_keyboard_does_not_lose_message_or_file (test_vk.VKDeliveryTests.test_disabled_keyboard_does_not_lose_message_or_file) ... vk_keyboard_disabled group_id=17
+ok
+test_error_code_is_safe_for_durable_logs (test_vk.VKDeliveryTests.test_error_code_is_safe_for_durable_logs) ... ok
+test_every_candidate_has_navigation_and_personal_profile_buttons (test_vk.VKDeliveryTests.test_every_candidate_has_navigation_and_personal_profile_buttons) ... ok
+test_question_delivery_returns_conversation_order (test_vk.VKDeliveryTests.test_question_delivery_returns_conversation_order) ... ok
+test_event_without_event_id_uses_stable_message_identifier (test_vk.VKTests.test_event_without_event_id_uses_stable_message_identifier) ... ok
+test_longpoll_lost_ts_and_expired_key (test_vk.VKTests.test_longpoll_lost_ts_and_expired_key) ... ok
+test_only_private_incoming_messages_are_accepted (test_vk.VKTests.test_only_private_incoming_messages_are_accepted) ... ok
+
+======================================================================
+ERROR: test_dotenv_loads_without_overriding_deployment_environment (test_runtime.EnvironmentTests.test_dotenv_loads_without_overriding_deployment_environment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\User\PycharmProjects\meaningful_code\gim_main\tests\test_runtime.py", line 21, in test_dotenv_loads_without_overriding_deployment_environment
+    load_dotenv(path)
+  File "C:\Users\User\PycharmProjects\meaningful_code\gim_main\gim\config.py", line 11, in load_dotenv
+    for line in file.read_text(encoding='utf-8-sig').splitlines():
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\pathlib.py", line 1028, in read_text
+    return f.read()
+           ^^^^^^^^
+  File "<frozen codecs>", line 322, in decode
+  File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\encodings\utf_8_sig.py", line 69, in _buffer_decode
+    return codecs.utf_8_decode(input, errors, final)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd2 in position 71: invalid continuation byte
+
+----------------------------------------------------------------------
+Ran 190 tests in 2.193s
+
+FAILED (errors=1, skipped=37)

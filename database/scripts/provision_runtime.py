@@ -11,7 +11,7 @@ import psycopg
 from psycopg import sql
 
 p=argparse.ArgumentParser();p.add_argument('credentials_file');a=p.parse_args()
-config=json.loads(Path(a.credentials_file).read_text())
+config=json.loads(Path(a.credentials_file).read_text(encoding='utf-8-sig'))
 with psycopg.connect(os.environ['DATABASE_ADMIN_URL']) as c:
     for service in ('bot','worker','staff'):
         entry=config[service];login=entry['login'];password=entry['password']

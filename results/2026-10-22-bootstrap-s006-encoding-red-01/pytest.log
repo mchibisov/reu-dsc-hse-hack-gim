@@ -1,0 +1,99 @@
+FF.                                                                      [100%]
+================================== FAILURES ===================================
+______________ test_private_jsonl_is_utf8_and_preserves_unicode _______________
+
+tmp_path = WindowsPath('C:/Users/User/AppData/Local/Temp/pytest-of-User/pytest-27/test_private_jsonl_is_utf8_and0')
+
+    def test_private_jsonl_is_utf8_and_preserves_unicode(tmp_path):
+        from gim_db.materials import write_private_jsonl
+        import json
+        path = tmp_path / 'history.jsonl'
+        records = [{'id': 'synthetic', 'features': {'experience': '\u041c\u0443\u0437\u0435\u0439 \U0001f3db'}, 'expert_score': 2}]
+>       write_private_jsonl(path, records)
+
+database\tests\test_materials.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+database\src\gim_db\materials.py:64: in write_private_jsonl
+    for r in records:f.write(json.dumps(r,ensure_ascii=False)+'\n')
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <encodings.cp1251.IncrementalEncoder object at 0x000001F60869ACC0>
+input = '{"id": "synthetic", "features": {"experience": "\u041c\u0443\u0437\u0435\u0439 \U0001f3db"}, "expert_score": 2}\\r\\n'
+final = False
+
+    def encode(self, input, final=False):
+>       return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f3db' in position 54: character maps to <undefined>
+
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\encodings\cp1251.py:19: UnicodeEncodeError
+_____________ test_utf8_bom_recruitment_import_on_empty_database ______________
+
+tmp_path = WindowsPath('C:/Users/User/AppData/Local/Temp/pytest-of-User/pytest-27/test_utf8_bom_recruitment_impo0')
+
+    def test_utf8_bom_recruitment_import_on_empty_database(tmp_path):
+        import json
+        import os
+        import subprocess
+        import sys
+        import uuid
+        import pytest
+        import psycopg
+        from docx import Document
+        from pypdf import PdfWriter
+        dsn = os.environ.get('TEST_DATABASE_URL')
+        if not dsn:
+            pytest.skip('disposable PostgreSQL required')
+        root = Path(__file__).resolve().parents[2]
+        document = Document()
+        headings = ['��� ��������', '���', '����������� �����', '������ �� ��������',
+                    '���� ��������', '��� �������� ������', '���', '��� (������)',
+                    '���������', '����', '����� ������� ���������', '���� ������',
+                    '�������� ������������ �������', '������ �� �������', '���� �� ��������',
+                    '������� �������', '���� �����', '� ������ ������ �����������', '������ �� ������']
+        for heading in headings:
+            document.add_paragraph(heading)
+        document.add_paragraph('�������� ������')
+        document.add_paragraph('���������� �������')
+        for number in range(11):
+            document.add_paragraph(f'������������� ��������� {number + 1}?')
+        document.save(tmp_path / 'questionnaire.docx')
+        writer = PdfWriter()
+        writer.add_blank_page(width=100, height=100)
+        writer.write(tmp_path / 'directions.pdf')
+        rubric = json.loads((root / 'config/ranking-50-35-15.json').read_text(encoding='utf-8'))
+        config = {'group_id': uuid.uuid4().int % 1000000000 + 1, 'title': '\u0422\u0435\u0441\u0442\u043e\u0432\u044b\u0439 \u043c\u0443\u0437\u0435\u0439 \U0001f3db',
+                  'questionnaire_version': 'synthetic', 'rubric_version': rubric['version'],
+                  'rubric': rubric['rubric'], 'followup_policy': {'max_followups': 3},
+                  'direction_info': {key: '������������� ��������' for key in
+                                     ('organizational', 'project', 'collections', 'inclusive', 'media')}}
+        config_path = tmp_path / 'recruitment.json'
+        config_path.write_text(json.dumps(config, ensure_ascii=False), encoding='utf-8-sig')
+        result = subprocess.run([sys.executable, 'database/scripts/load_materials.py',
+                                 '--docx', str(tmp_path / 'questionnaire.docx'),
+                                 '--directions-pdf', str(tmp_path / 'directions.pdf'),
+                                 '--config', str(config_path)], cwd=root,
+                                env={**os.environ, 'DATABASE_ADMIN_URL': dsn},
+                                capture_output=True, text=True, timeout=30)
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "C:\Users\User\PycharmProjects\meaningful_code\gim_main\database\scripts\load_materials.py", line 13, in <module>
+E             a=p.parse_args();config=json.loads(Path(a.config).read_text())
+E                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\pathlib.py", line 1028, in read_text
+E             return f.read()
+E                    ^^^^^^^^
+E           File "C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\encodings\cp1251.py", line 23, in decode
+E             return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         UnicodeDecodeError: 'charmap' codec can't decode byte 0x98 in position 436: character maps to <undefined>
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['C:\\Users\\User\\PycharmProjects\\meaningful_code\\gim_main\\.venv\\Scripts\\python.exe', 'dat...^^^^^\nUnicodeDecodeError: \'charmap\' codec can\'t decode byte 0x98 in position 436: character maps to <undefined>\n').returncode
+
+database\tests\test_materials.py:58: AssertionError
+=========================== short test summary info ===========================
+FAILED database\tests\test_materials.py::test_private_jsonl_is_utf8_and_preserves_unicode
+FAILED database\tests\test_materials.py::test_utf8_bom_recruitment_import_on_empty_database
+2 failed, 1 passed in 0.54s

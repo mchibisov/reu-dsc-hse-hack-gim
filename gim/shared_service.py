@@ -130,7 +130,7 @@ class SharedService:
             await self._emit(event,actor,'Активный набор недоступен. Обратитесь к оператору сообщества.')
             return
         if app.get('answers_revision')==0 and getattr(self.settings,'analysis_rubric_path',''):
-            configured=json.loads(Path(self.settings.analysis_rubric_path).read_text())
+            configured=json.loads(Path(self.settings.analysis_rubric_path).read_text(encoding='utf-8-sig'))
             await self.bot_repo.pin_rubric(app['id'],configured['rubric'],configured['version'])
         ctx=await self.bot_repo.dialog_context(app['id'])
         if not ctx['questions'] and command!='/status':

@@ -60,7 +60,7 @@ def write_private_jsonl(path,records):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
     import os
     fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
-    with os.fdopen(fd,'w') as f:
+    with os.fdopen(fd,'w',encoding='utf-8') as f:
         for r in records:f.write(json.dumps(r,ensure_ascii=False)+'\n')
 
 

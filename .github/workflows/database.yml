@@ -37,3 +37,15 @@ jobs:
       - run: docker build -t gim-db:test .
       - run: docker build -t gim-bot:test .
         working-directory: .
+      - name: Verify packaged default rubric
+        working-directory: .
+        run: >-
+          docker run --rm gim-bot:test python -c
+          "import json; from pathlib import Path; from gim.shared_config import SharedSettings;
+          rubric = json.loads(Path(SharedSettings.__dataclass_fields__['analysis_rubric_path'].default).read_text(encoding='utf-8-sig'));
+          assert rubric['rubric']['scoring_method'] == 'binary_50_35_15'"
+      - run: docker build -f Dockerfile.shared -t gim-shared:test .
+        working-directory: .
+      - name: Verify shared image entry point
+        working-directory: .
+        run: docker run --rm gim-shared:test python -m gim.shared_main --help

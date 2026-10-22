@@ -16,7 +16,7 @@ class EnvironmentTests(unittest.TestCase):
         from gim.config import load_dotenv
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / '.env'
-            path.write_text('VK_GROUP_ID=242476311\nVK_TOKEN="local-token"\n# comment\nCONSENT_TEXT=Тест\\nВторая строка\n')
+            path.write_text('VK_GROUP_ID=242476311\nVK_TOKEN="local-token"\n# comment\nCONSENT_TEXT=Тест\\nВторая строка\n', encoding='utf-8')
             with patch.dict(os.environ, {'VK_GROUP_ID': '999'}, clear=True):
                 load_dotenv(path)
                 self.assertEqual(os.environ['VK_GROUP_ID'], '999')

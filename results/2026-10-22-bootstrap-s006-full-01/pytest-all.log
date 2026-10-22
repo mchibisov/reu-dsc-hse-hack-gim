@@ -1,0 +1,627 @@
+FFFFF..FFFFFFFFFFFFFFFFFFFFFFF.....FFFFFFFFFFFFFFFFF.FF................. [ 29%]
+........................................................................ [ 58%]
+........................................................................ [ 87%]
+..............................                                           [100%]
+================================== FAILURES ===================================
+__________________ test_staff_admin_scoping_and_unsubscribe ___________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________ test_frozen_config_and_question_and_worker_cannot_be_curator _________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____________ test_zero_is_not_missing_and_no_100_application_cap _____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________ test_worker_login_cannot_impersonate_curator _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________________ test_real_login_provisioning _________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________ test_question_saved_and_reused_before_answer _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________________ test_duplicate_and_concurrent_events _____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________ test_submission_checks_required_consent_age _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____________ test_evidence_manual_priority_and_staff_revocation ______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________ test_cross_candidate_and_stale_answer_rejected ________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________________ test_50_concurrent_candidates ________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________________ test_export_request_freezes_data _______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________ test_cannot_submit_with_unfinished_resume __________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________ test_bot_cannot_reopen_submitted_application _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______ test_analysis_ready_notification_is_transactional_and_idempotent _______
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________ test_reset_requires_admin_preserves_attempt_and_is_idempotent ________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________ test_expectation_check_does_not_consume_ai_followup_budget __________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________ test_archived_attempt_rejects_delayed_write _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____ test_rubric_pinned_once_before_answers_keeps_recruitment_unchanged ______
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________ test_delivery_lane_does_not_claim_slow_analysis _______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________ test_code_export_excludes_archived_attempts _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________ test_gateway_captures_same_prompt_for_rapid_fragments ____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________ test_postgres_exports_are_private_immutable_and_retry_safe __________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________ test_delayed_callback_uses_vk_order_not_arrival_time _____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________ test_bounded_dispatcher_hands_off_slow_work_without_idle_spin ________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______ test_terminal_analysis_failure_notifies_once_without_fake_score _______
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________ test_final_expired_analysis_lease_notifies_once _______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________ test_staff_can_finish_explicit_archived_application_export __________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________________ test_claim_is_exclusive_and_serial_fifo ___________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________ test_expired_lease_recovers_with_fencing ___________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______ test_serial_retry_blocks_next_message_but_not_another_candidate _______
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________ test_failure_and_crash_have_finite_attempts _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________ test_worker_group_never_claims_another_community _______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______ test_outgoing_retry_preserves_order_between_reply_and_question ________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______ test_question_dispatch_loads_exact_saved_question_and_marks_asked ______
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________ test_answered_question_is_not_sent_by_delayed_job ______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________ test_notification_checks_revocation_at_send_boundary _____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________ test_stale_analyzer_cannot_persist_or_acknowledge ______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________ test_disabled_analysis_acknowledges_without_evaluation ____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________ test_handler_failure_records_only_exception_type _______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________ test_cancellation_keeps_event_retryable_and_propagates ____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________________ test_timeout_releases_for_retry _______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____________ test_lost_lease_stops_handler_before_retry_receipt ______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________ test_export_without_ready_file_is_never_acknowledged _____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________ test_analysis_commit_receives_claim_token __________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________________ test_resume_snapshot_and_export_scope ____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________ test_private_bucket_and_no_upsert_and_short_url _______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+============================== warnings summary ===============================
+database/tests/test_access.py::test_staff_admin_scoping_and_unsubscribe
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_staff_admin_scoping_and_unsubscribe' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_access.py::test_frozen_config_and_question_and_worker_cannot_be_curator
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_frozen_config_and_question_and_worker_cannot_be_curator' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_access.py::test_zero_is_not_missing_and_no_100_application_cap
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_zero_is_not_missing_and_no_100_application_cap' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_access.py::test_worker_login_cannot_impersonate_curator
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_worker_login_cannot_impersonate_curator' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_access.py::test_real_login_provisioning
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_real_login_provisioning' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_question_saved_and_reused_before_answer
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_question_saved_and_reused_before_answer' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_duplicate_and_concurrent_events
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_duplicate_and_concurrent_events' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_submission_checks_required_consent_age
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_submission_checks_required_consent_age' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_evidence_manual_priority_and_staff_revocation
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_evidence_manual_priority_and_staff_revocation' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_cross_candidate_and_stale_answer_rejected
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_cross_candidate_and_stale_answer_rejected' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_50_concurrent_candidates
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_50_concurrent_candidates' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_export_request_freezes_data
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_export_request_freezes_data' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_cannot_submit_with_unfinished_resume
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_cannot_submit_with_unfinished_resume' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_bot_cannot_reopen_submitted_application
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_bot_cannot_reopen_submitted_application' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_database.py::test_analysis_ready_notification_is_transactional_and_idempotent
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_analysis_ready_notification_is_transactional_and_idempotent' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_reset_requires_admin_preserves_attempt_and_is_idempotent
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_reset_requires_admin_preserves_attempt_and_is_idempotent' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_expectation_check_does_not_consume_ai_followup_budget
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_expectation_check_does_not_consume_ai_followup_budget' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_archived_attempt_rejects_delayed_write
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_archived_attempt_rejects_delayed_write' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_rubric_pinned_once_before_answers_keeps_recruitment_unchanged
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_rubric_pinned_once_before_answers_keeps_recruitment_unchanged' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_delivery_lane_does_not_claim_slow_analysis
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_delivery_lane_does_not_claim_slow_analysis' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_code_export_excludes_archived_attempts
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_code_export_excludes_archived_attempts' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_gateway_captures_same_prompt_for_rapid_fragments
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_gateway_captures_same_prompt_for_rapid_fragments' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_postgres_exports_are_private_immutable_and_retry_safe
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_postgres_exports_are_private_immutable_and_retry_safe' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_delayed_callback_uses_vk_order_not_arrival_time
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_delayed_callback_uses_vk_order_not_arrival_time' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_bounded_dispatcher_hands_off_slow_work_without_idle_spin
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_bounded_dispatcher_hands_off_slow_work_without_idle_spin' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_terminal_analysis_failure_notifies_once_without_fake_score
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_terminal_analysis_failure_notifies_once_without_fake_score' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_final_expired_analysis_lease_notifies_once
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_final_expired_analysis_lease_notifies_once' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_final_contracts.py::test_staff_can_finish_explicit_archived_application_export
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_staff_can_finish_explicit_archived_application_export' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_claim_is_exclusive_and_serial_fifo
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_claim_is_exclusive_and_serial_fifo' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_expired_lease_recovers_with_fencing
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_expired_lease_recovers_with_fencing' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_serial_retry_blocks_next_message_but_not_another_candidate
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_serial_retry_blocks_next_message_but_not_another_candidate' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_failure_and_crash_have_finite_attempts
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_failure_and_crash_have_finite_attempts' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_worker_group_never_claims_another_community
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_worker_group_never_claims_another_community' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_outgoing_retry_preserves_order_between_reply_and_question
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_outgoing_retry_preserves_order_between_reply_and_question' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_question_dispatch_loads_exact_saved_question_and_marks_asked
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_question_dispatch_loads_exact_saved_question_and_marks_asked' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_answered_question_is_not_sent_by_delayed_job
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_answered_question_is_not_sent_by_delayed_job' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_notification_checks_revocation_at_send_boundary
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_notification_checks_revocation_at_send_boundary' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_outbox.py::test_stale_analyzer_cannot_persist_or_acknowledge
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_stale_analyzer_cannot_persist_or_acknowledge' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+database/tests/test_storage.py::test_resume_snapshot_and_export_scope
+  C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\_pytest\fixtures.py:1182: PytestRemovedIn9Warning: 'test_resume_snapshot_and_export_scope' requested an async fixture 'env', with no plugin or hook that handled it. This is usually an error, as pytest does not natively support it. This will turn into an error in pytest 9.
+  See: https://docs.pytest.org/en/stable/deprecations.html#sync-test-depending-on-async-fixture
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED database/tests/test_access.py::test_staff_admin_scoping_and_unsubscribe
+FAILED database/tests/test_access.py::test_frozen_config_and_question_and_worker_cannot_be_curator
+FAILED database/tests/test_access.py::test_zero_is_not_missing_and_no_100_application_cap
+FAILED database/tests/test_access.py::test_worker_login_cannot_impersonate_curator
+FAILED database/tests/test_access.py::test_real_login_provisioning - Failed: ...
+FAILED database/tests/test_database.py::test_question_saved_and_reused_before_answer
+FAILED database/tests/test_database.py::test_duplicate_and_concurrent_events
+FAILED database/tests/test_database.py::test_submission_checks_required_consent_age
+FAILED database/tests/test_database.py::test_evidence_manual_priority_and_staff_revocation
+FAILED database/tests/test_database.py::test_cross_candidate_and_stale_answer_rejected
+FAILED database/tests/test_database.py::test_50_concurrent_candidates - Faile...
+FAILED database/tests/test_database.py::test_export_request_freezes_data - Fa...
+FAILED database/tests/test_database.py::test_cannot_submit_with_unfinished_resume
+FAILED database/tests/test_database.py::test_bot_cannot_reopen_submitted_application
+FAILED database/tests/test_database.py::test_analysis_ready_notification_is_transactional_and_idempotent
+FAILED database/tests/test_final_contracts.py::test_reset_requires_admin_preserves_attempt_and_is_idempotent
+FAILED database/tests/test_final_contracts.py::test_expectation_check_does_not_consume_ai_followup_budget
+FAILED database/tests/test_final_contracts.py::test_archived_attempt_rejects_delayed_write
+FAILED database/tests/test_final_contracts.py::test_rubric_pinned_once_before_answers_keeps_recruitment_unchanged
+FAILED database/tests/test_final_contracts.py::test_delivery_lane_does_not_claim_slow_analysis
+FAILED database/tests/test_final_contracts.py::test_code_export_excludes_archived_attempts
+FAILED database/tests/test_final_contracts.py::test_gateway_captures_same_prompt_for_rapid_fragments
+FAILED database/tests/test_final_contracts.py::test_postgres_exports_are_private_immutable_and_retry_safe
+FAILED database/tests/test_final_contracts.py::test_delayed_callback_uses_vk_order_not_arrival_time
+FAILED database/tests/test_final_contracts.py::test_bounded_dispatcher_hands_off_slow_work_without_idle_spin
+FAILED database/tests/test_final_contracts.py::test_terminal_analysis_failure_notifies_once_without_fake_score
+FAILED database/tests/test_final_contracts.py::test_final_expired_analysis_lease_notifies_once
+FAILED database/tests/test_final_contracts.py::test_staff_can_finish_explicit_archived_application_export
+FAILED database/tests/test_outbox.py::test_claim_is_exclusive_and_serial_fifo
+FAILED database/tests/test_outbox.py::test_expired_lease_recovers_with_fencing
+FAILED database/tests/test_outbox.py::test_serial_retry_blocks_next_message_but_not_another_candidate
+FAILED database/tests/test_outbox.py::test_failure_and_crash_have_finite_attempts
+FAILED database/tests/test_outbox.py::test_worker_group_never_claims_another_community
+FAILED database/tests/test_outbox.py::test_outgoing_retry_preserves_order_between_reply_and_question
+FAILED database/tests/test_outbox.py::test_question_dispatch_loads_exact_saved_question_and_marks_asked
+FAILED database/tests/test_outbox.py::test_answered_question_is_not_sent_by_delayed_job
+FAILED database/tests/test_outbox.py::test_notification_checks_revocation_at_send_boundary
+FAILED database/tests/test_outbox.py::test_stale_analyzer_cannot_persist_or_acknowledge
+FAILED database/tests/test_sql_runtime.py::test_disabled_analysis_acknowledges_without_evaluation
+FAILED database/tests/test_sql_runtime.py::test_handler_failure_records_only_exception_type
+FAILED database/tests/test_sql_runtime.py::test_cancellation_keeps_event_retryable_and_propagates
+FAILED database/tests/test_sql_runtime.py::test_timeout_releases_for_retry - ...
+FAILED database/tests/test_sql_runtime.py::test_lost_lease_stops_handler_before_retry_receipt
+FAILED database/tests/test_sql_runtime.py::test_export_without_ready_file_is_never_acknowledged
+FAILED database/tests/test_sql_runtime.py::test_analysis_commit_receives_claim_token
+FAILED database/tests/test_storage.py::test_resume_snapshot_and_export_scope
+FAILED database/tests/test_storage_http.py::test_private_bucket_and_no_upsert_and_short_url
+47 failed, 199 passed, 39 warnings in 16.05s

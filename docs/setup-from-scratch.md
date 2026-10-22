@@ -60,6 +60,8 @@ python database/scripts/provision_runtime.py runtime/runtime-credentials.json
 
 Создайте `runtime/recruitment.json`. Возьмите `rubric` и `version` из `config/ranking-50-35-15.json`. Пример заполнения структуры:
 
+Сохраняйте JSON и `.env` в UTF-8; BOM поддерживается, в том числе после сохранения через Windows PowerShell. Приватные JSONL-выгрузки также записываются в UTF-8.
+
 ```json
 {
   "group_id": 123456789,
