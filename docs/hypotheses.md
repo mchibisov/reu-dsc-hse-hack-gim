@@ -35,3 +35,5 @@
 | 22.10.2026 | S010: текущее состояние/IT-критерии/сохранность продуктовых фишек | [s010-features-01](../results/2026-10-22-bootstrap-s010-features-01/report.md) |
 | 22.10.2026 | S010 повтор: отдельный pytest temp/cache после WinError5 | [s010-features-02](../results/2026-10-22-bootstrap-s010-features-02/report.md) |
 | 22.10.2026 | S011: пользовательский токен, реальная диагностика VK и доступность runtime | [s011-live-vk-01](../results/2026-10-22-bootstrap-s011-live-vk-01/report.md) |
+| 22.10.2026 | S011: read-only проверка диалога указанного пользователем VK ID | [s011-live-vk-02](../results/2026-10-22-bootstrap-s011-live-vk-02/report.md) |
+| 22.10.2026 | Публикация полного актуального контекста и переносимого HANDOFF | [handoff-publication-01](../results/2026-10-22-bootstrap-handoff-publication-01/report.md) |
