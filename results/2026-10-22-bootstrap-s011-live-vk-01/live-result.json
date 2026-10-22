@@ -1,0 +1,43 @@
+{
+  "runtime_missing": [
+    "RECRUITMENT_ID",
+    "DATABASE_BOT_URL",
+    "DATABASE_WORKER_URL",
+    "DATABASE_STAFF_URL",
+    "LLM_API_KEY"
+  ],
+  "token_valid": true,
+  "permissions": [
+    "photos",
+    "docs",
+    "messages",
+    "wall",
+    "manage",
+    "stories",
+    "market"
+  ],
+  "community": {
+    "target_found": true
+  },
+  "callback": {
+    "count": 2,
+    "servers": [
+      {
+        "status": "unconfigured",
+        "expected_host": false
+      },
+      {
+        "status": "ok",
+        "expected_host": true
+      }
+    ]
+  },
+  "longpoll": {
+    "enabled": true,
+    "message_new": true
+  },
+  "messages": {
+    "api_readable": true,
+    "conversation_count": 5
+  }
+}

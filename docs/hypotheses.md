@@ -34,3 +34,4 @@
 | 22.10.2026 | Docker: повтор после сообщения пользователя об установке Linux | [docker-local-02](../results/2026-10-22-bootstrap-docker-local-02/report.md) |
 | 22.10.2026 | S010: текущее состояние/IT-критерии/сохранность продуктовых фишек | [s010-features-01](../results/2026-10-22-bootstrap-s010-features-01/report.md) |
 | 22.10.2026 | S010 повтор: отдельный pytest temp/cache после WinError5 | [s010-features-02](../results/2026-10-22-bootstrap-s010-features-02/report.md) |
+| 22.10.2026 | S011: пользовательский токен, реальная диагностика VK и доступность runtime | [s011-live-vk-01](../results/2026-10-22-bootstrap-s011-live-vk-01/report.md) |

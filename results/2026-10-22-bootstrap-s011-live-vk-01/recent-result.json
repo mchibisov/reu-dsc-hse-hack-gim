@@ -1,0 +1,60 @@
+{
+  "callback_message_new": true,
+  "callback_api_version": "5.199",
+  "recent_conversations": [
+    {
+      "outgoing_in_recent_history": 14,
+      "incoming_in_recent_history": 6,
+      "latest_outgoing_age_seconds": 2937,
+      "observed_progress": [],
+      "start_to_next_outgoing_seconds": []
+    },
+    {
+      "outgoing_in_recent_history": 10,
+      "incoming_in_recent_history": 10,
+      "latest_outgoing_age_seconds": 4479,
+      "observed_progress": [
+        {
+          "question": 17,
+          "total": 19
+        },
+        {
+          "question": 18,
+          "total": 19
+        },
+        {
+          "question": 19,
+          "total": 19
+        }
+      ],
+      "start_to_next_outgoing_seconds": []
+    },
+    {
+      "outgoing_in_recent_history": 10,
+      "incoming_in_recent_history": 10,
+      "latest_outgoing_age_seconds": 6298,
+      "observed_progress": [],
+      "start_to_next_outgoing_seconds": [
+        8,
+        6
+      ]
+    },
+    {
+      "outgoing_in_recent_history": 12,
+      "incoming_in_recent_history": 8,
+      "latest_outgoing_age_seconds": 25301,
+      "observed_progress": [],
+      "start_to_next_outgoing_seconds": [
+        3,
+        1
+      ]
+    },
+    {
+      "outgoing_in_recent_history": 12,
+      "incoming_in_recent_history": 8,
+      "latest_outgoing_age_seconds": 28788,
+      "observed_progress": [],
+      "start_to_next_outgoing_seconds": []
+    }
+  ]
+}
