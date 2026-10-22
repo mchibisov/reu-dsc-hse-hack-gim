@@ -2,6 +2,10 @@
 
 Рабочий адрес: https://gim-volunteer-bot.vercel.app. Сообщество: https://vk.me/club242476311. Проект Vercel: `gim-volunteer-bot`, аккаунт публикации `mchibisov`. Используется Callback API сервера №2; Long Poll как действующий обработчик остановлен.
 
+## Новая установка
+
+Начните с [подготовки новой БД, ролей, материалов и администратора](setup-from-scratch.md). Наличие облачного проекта само по себе не означает готовности данных. Инструкция ниже выполняется после этого этапа.
+
 ## Облако
 
 1. Установить Python-зависимости из `requirements.txt`; код private Repository включён из `database/src`.
@@ -9,6 +13,20 @@
 3. Развернуть `api/index.py` по `vercel.json`. Настроить encrypted production-переменные из `.env.shared.example` и `VK_CALLBACK_SECRET`, `VK_CONFIRMATION`, `WORKER_DISPATCH_KEY`. Не копировать секреты в Git, логи, чат или публичную страницу.
 4. Для этого облачного режима применить `deploy/supabase-dispatch.sql`. Сохранить URL `/work` и ключ в Vault с именами `gim_worker_url`/`gim_worker_key`. Создать обязательное минутное расписание `gim-worker-recovery` из комментария в этом файле. В рабочем проекте расписание уже включено.
 5. Callback подтверждает VK только после транзакции записи в outbox. pg_net запускает ограниченный HTTP-worker; Cron подхватывает потерянное пробуждение, отложенную попытку или истёкшую аренду. Вне активной очереди Vercel-worker не вызывается. Завершённые формы не зависят от жизни HTTP-процесса.
+
+В Supabase включите Vault и сохраните два секрета через его защищённый интерфейс:
+
+- `gim_worker_url`: `https://ВАШ-ПРОЕКТ.vercel.app/work` (поддерживается стандартный домен vercel.app).
+- `gim_worker_key`: то же значение, что `WORKER_DISPATCH_KEY` в Vercel.
+
+Оператор применяет `deploy/supabase-dispatch.sql` к своему проекту. Затем в SQL Editor создаёт расписание, заменяя числовой пример своим VK_GROUP_ID:
+
+```sql
+SELECT cron.schedule('gim-worker-recovery', '* * * * *',
+  'SELECT gim.wake_worker(123456789)');
+```
+
+Не создавайте дубли расписания на уже настроенном проекте. В настройках Callback своего сообщества VK укажите `https://ВАШ-ПРОЕКТ.vercel.app/callback`, совпадающий `VK_CALLBACK_SECRET`, код подтверждения из VK в `VK_CONFIRMATION`; подтвердите сервер и включите `message_new`. Все три runtime DSN, VK/Polza ключи и конфигурация набора должны быть в production env до подтверждения. Файлы runtime, .env и пароли в загрузку исходников не включаются.
 
 Контроль: GET `/health`; `/status`, `/jobs`, пробная `/export` в VK; очередь, cron.job_run_details и net._http_response в Supabase; ошибки Vercel. Health подтверждает доступность приложения, а не всю цепочку БД/LLM — проверяйте команды и экспорт отдельно.
 
