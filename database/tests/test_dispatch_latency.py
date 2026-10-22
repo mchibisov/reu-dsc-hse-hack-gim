@@ -184,3 +184,15 @@ async def test_callback_commits_receipt_before_wake_to_close_exit_race(env):
     with patch.dict('os.environ',{'VK_CALLBACK_SECRET':'test'}),patch('gim.serverless.create_pool',existing):
         assert await receive(event,settings)==(200,'ok')
     assert observed==[True]
+
+async def test_scheduled_delivery_retry_does_not_wait_for_minute_cron(env):
+    delivered=asyncio.Event()
+    async def send(event):
+        delivered.set()
+    await emit_event(env,'vk.send',peer_id=123,text='retry')
+    _,worker,_,recruitment,*_=env
+    async with worker.pool.connection() as c:
+        await c.execute("UPDATE gim.outbox_events SET available_at=now()+interval '1 second',attempts=1 WHERE payload->>'group_id'=%s AND topic='vk.send'",(str(recruitment['group_id']),))
+    async with dispatcher(env,{'vk.send':send},budget=10) as task:
+        await asyncio.wait_for(delivered.wait(),timeout=3)
+        assert await asyncio.wait_for(task,timeout=2)=='drained'

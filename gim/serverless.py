@@ -96,7 +96,7 @@ async def drain(settings,*,budget=245):
         WHERE COALESCE(r.group_id,fr.group_id,(e.payload->>'group_id')::bigint)=%s
         AND e.completed_at IS NULL AND e.failed_at IS NULL
         AND (e.lease_until>now() OR (
-         e.available_at<=now() AND (e.lease_until IS NULL OR e.lease_until<=now())
+         e.available_at<=now()+interval '15 seconds' AND (e.lease_until IS NULL OR e.lease_until<=now())
          AND (%s::text[] IS NULL OR e.topic=ANY(%s::text[]))))) pending""",
         (settings.group_id,eligible,eligible))
       if not pending['pending']:return
