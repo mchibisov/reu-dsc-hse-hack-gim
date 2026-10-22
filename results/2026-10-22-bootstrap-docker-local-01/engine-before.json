@@ -1,0 +1,16 @@
+{
+  "wsl_status": {
+    "exit_code": 50,
+    "stdout": "",
+    "stderr": "Этот подсистема Windows для Linux не установлен. Для установки выполните команду \"wsl.exe --install\".\r\r\nДополнительные сведения см. в https://aka.ms/wslinstall\r\r\n"
+  },
+  "wsl_version": {
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "Этот подсистема Windows для Linux не установлен. Для установки выполните команду \"wsl.exe --install\".\r\r\nДополнительные сведения см. в https://aka.ms/wslinstall\r\r\n"
+  },
+  "docker_version": {
+    "state": "timeout",
+    "timeout_seconds": 30
+  }
+}

@@ -1,0 +1,131 @@
+late-dialog analysis_count=1 seconds=0.656
+.late-dialog analysis_count=3 seconds=0.656
+.F.........F...
+================================== FAILURES ===================================
+___________ test_short_remaining_budget_still_handles_plain_dialog ____________
+
+env = (<gim_db.repository.Repository object at 0x000001DD4B09FAA0>, <gim_db.repository.Repository object at 0x000001DD4B09FA...erience', 'directions': [], 'id': UUID('9c9bfcd6-61e1-4aab-987e-f68b6f838ba9'), 'kind': 'base', ...}, 10496497079, ...)
+
+    async def test_short_remaining_budget_still_handles_plain_dialog(env):
+        delivered = []
+    
+        async def incoming(event):
+            await emit_event(env, 'vk.send', peer_id=123, text='synthetic tail reply')
+    
+        async def send(event):
+            delivered.append(event['payload']['text'])
+    
+        await emit_event(env, 'vk.incoming', peer_id=123)
+        async with dispatcher(env, {'vk.incoming': incoming, 'vk.send': send}, budget=10) as task:
+>           assert await asyncio.wait_for(task, timeout=3) == 'drained'
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+database\tests\test_dispatch_latency.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\asyncio\tasks.py:520: in wait_for
+    return await fut
+           ^^^^^^^^^
+gim\serverless.py:102: in drain
+    await asyncio.gather(*(lane(i) for i in range(4)))
+gim\serverless.py:87: in lane
+    pending=await one(c,"""SELECT EXISTS(
+database\src\gim_db\repository.py:26: in one
+    return await (await c.execute(query,args)).fetchone()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <psycopg.AsyncConnection [ACTIVE] (host=127.0.0.1 port=55439 user=s006_operator database=postgres) at 0x1dd4b0c4050>
+query = 'SELECT EXISTS(\n        SELECT FROM gim.outbox_events e\n        LEFT JOIN gim.applications a ON a.id=e.application_i....lease_until IS NULL OR e.lease_until<=now())\n         AND (%s::text[] IS NULL OR e.topic=ANY(%s::text[]))))) pending'
+params = (496497079, ('vk.send', 'question.send', 'staff.notify', 'file.export', 'vk.incoming'), ('vk.send', 'question.send', 'staff.notify', 'file.export', 'vk.incoming'))
+
+    async def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> AsyncCursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            return await cur.execute(query, params, prepare=prepare)
+    
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.InvalidTextRepresentation: malformed array literal: "(vk.send,question.send,staff.notify,file.export,vk.incoming)"
+E           DETAIL:  Array value must start with "{" or dimension information.
+E           CONTEXT:  unnamed portal parameter $2 = '...'
+
+.venv\Lib\site-packages\psycopg\connection_async.py:295: InvalidTextRepresentation
+________ test_bounded_dispatcher_hands_off_slow_work_without_idle_spin ________
+
+env = (<gim_db.repository.Repository object at 0x000001DD4B04F800>, <gim_db.repository.Repository object at 0x000001DD4B04FA...erience', 'directions': [], 'id': UUID('cf6f8bd3-b7cc-493c-854d-3a963e838b6f'), 'kind': 'base', ...}, 10149144855, ...)
+
+    async def test_bounded_dispatcher_hands_off_slow_work_without_idle_spin(env):
+        import time
+        from contextlib import asynccontextmanager
+        from types import SimpleNamespace
+        from unittest.mock import patch,AsyncMock
+        from gim.serverless import drain
+        from gim_db.repository import emit
+        bot,worker,staff,r,t,admin,sid=env
+        with psycopg.connect(DSN) as c:
+            c.execute("""CREATE OR REPLACE FUNCTION gim.wake_worker(bigint) RETURNS bigint LANGUAGE sql AS $$
+              INSERT INTO gim.audit_log(action,details) VALUES('test.cloud_wake',jsonb_build_object('group',$1)) RETURNING 1::bigint $$""")
+            c.execute('REVOKE ALL ON FUNCTION gim.wake_worker(bigint) FROM PUBLIC')
+            c.execute('GRANT EXECUTE ON FUNCTION gim.wake_worker(bigint) TO gim_bot')
+        async with worker.pool.connection() as c:await emit(c,None,'application.analyze','handoff-'+str(uuid.uuid4()),{'group_id':r['group_id']})
+        @asynccontextmanager
+        async def existing(dsn,**kwargs):yield {'bot':bot.pool,'worker':worker.pool,'staff':staff.pool}[dsn]
+        settings=SimpleNamespace(database_bot_url='bot',database_worker_url='worker',database_staff_url='staff',group_id=r['group_id'])
+        started=time.monotonic()
+        with patch('gim.serverless.create_pool',existing),patch('gim.serverless.VK',return_value=SimpleNamespace(close=AsyncMock())):
+>           assert await drain(settings,budget=10)=='drained'
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+database\tests\test_final_contracts.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+gim\serverless.py:102: in drain
+    await asyncio.gather(*(lane(i) for i in range(4)))
+gim\serverless.py:87: in lane
+    pending=await one(c,"""SELECT EXISTS(
+database\src\gim_db\repository.py:26: in one
+    return await (await c.execute(query,args)).fetchone()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <psycopg.AsyncConnection [IDLE] (host=127.0.0.1 port=55439 user=s006_operator database=postgres) at 0x1dd4b085040>
+query = 'SELECT EXISTS(\n        SELECT FROM gim.outbox_events e\n        LEFT JOIN gim.applications a ON a.id=e.application_i....lease_until IS NULL OR e.lease_until<=now())\n         AND (%s::text[] IS NULL OR e.topic=ANY(%s::text[]))))) pending'
+params = (149144855, ('vk.send', 'question.send', 'staff.notify', 'file.export', 'vk.incoming'), ('vk.send', 'question.send', 'staff.notify', 'file.export', 'vk.incoming'))
+
+    async def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> AsyncCursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            return await cur.execute(query, params, prepare=prepare)
+    
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.InvalidTextRepresentation: malformed array literal: "(vk.send,question.send,staff.notify,file.export,vk.incoming)"
+E           DETAIL:  Array value must start with "{" or dimension information.
+E           CONTEXT:  unnamed portal parameter $2 = '...'
+
+.venv\Lib\site-packages\psycopg\connection_async.py:295: InvalidTextRepresentation
+=========================== short test summary info ===========================
+FAILED database\tests\test_dispatch_latency.py::test_short_remaining_budget_still_handles_plain_dialog
+FAILED database\tests\test_final_contracts.py::test_bounded_dispatcher_hands_off_slow_work_without_idle_spin
+2 failed, 14 passed in 5.33s

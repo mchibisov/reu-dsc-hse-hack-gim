@@ -14,6 +14,9 @@ from gim.vk import VK
 from gim_db.repository import Repository,create_pool,one
 from gim_db.outbox import SQLQueue,run_once
 
+DELIVERY_TOPICS = ('vk.send', 'question.send', 'staff.notify', 'file.export')
+FAST_TOPICS = (*DELIVERY_TOPICS, 'vk.incoming')
+
 
 def callback_allowed(event,settings):
  secret=os.environ.get('VK_CALLBACK_SECRET','')
@@ -69,18 +72,36 @@ async def drain(settings,*,budget=245):
    end=time.monotonic()+budget
    queue=SQLQueue(pools[1],settings.group_id)
    ctx={'repository':service.worker_repo,'handlers':service.handlers}
-   async def lane(delivery=False):
+   async def lane(index):
     while time.monotonic()<end:
      remaining=end-time.monotonic()
-     # Don't claim a new analysis unless there is enough time to finish it.
-     topics=['vk.send','question.send','staff.notify','file.export'] if delivery or remaining<185 else None
+     # Reserve delivery and dialog capacity even while analyses occupy the
+     # other lanes. Only new analysis needs the full 185-second runway.
+     eligible = None if remaining >= 185 else list(FAST_TOPICS)
+     topics = DELIVERY_TOPICS if index == 0 else ('vk.incoming',) if index == 1 else eligible
      if not await run_once(ctx,queue,limit=1,topics=topics):
       async with pools[1].connection() as c:
-       pending=await one(c,"""SELECT EXISTS(SELECT FROM gim.outbox_events e LEFT JOIN gim.applications a ON a.id=e.application_id LEFT JOIN gim.recruitments r ON r.id=a.recruitment_id LEFT JOIN gim.files f ON f.id=e.file_id LEFT JOIN gim.recruitments fr ON fr.id=f.recruitment_id WHERE COALESCE(r.group_id,fr.group_id,(e.payload->>'group_id')::bigint)=%s AND e.completed_at IS NULL AND e.failed_at IS NULL AND e.available_at<=now() AND (e.lease_until IS NULL OR e.lease_until<=now()) AND (%s::text[] IS NULL OR e.topic=ANY(%s::text[]))) pending""",(settings.group_id,topics,topics))
+       # Temporary emptiness is not completion: an in-flight handler can
+       # receive new callbacks or enqueue replies. Check invocation-wide
+       # work, not just this lane, including live leases from sibling lanes.
+       pending=await one(c,"""SELECT EXISTS(
+        SELECT FROM gim.outbox_events e
+        LEFT JOIN gim.applications a ON a.id=e.application_id
+        LEFT JOIN gim.recruitments r ON r.id=a.recruitment_id
+        LEFT JOIN gim.files f ON f.id=e.file_id
+        LEFT JOIN gim.recruitments fr ON fr.id=f.recruitment_id
+        WHERE COALESCE(r.group_id,fr.group_id,(e.payload->>'group_id')::bigint)=%s
+        AND e.completed_at IS NULL AND e.failed_at IS NULL
+        AND (e.lease_until>now() OR (
+         e.available_at<=now() AND (e.lease_until IS NULL OR e.lease_until<=now())
+         AND (%s::text[] IS NULL OR e.topic=ANY(%s::text[]))))) pending""",
+        (settings.group_id,eligible,eligible))
       if not pending['pending']:return
       await asyncio.sleep(.4)
    async with asyncio.timeout(budget+5):
-    await asyncio.gather(*(lane(i==0) for i in range(4)))
+    async with asyncio.TaskGroup() as tasks:
+     for i in range(4):
+      tasks.create_task(lane(i))
    return 'drained'
   finally:
    async with pools[1].connection() as c:

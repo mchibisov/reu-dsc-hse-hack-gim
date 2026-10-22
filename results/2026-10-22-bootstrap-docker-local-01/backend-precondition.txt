@@ -1,0 +1,15 @@
+Источник: Docker Desktop host/com.docker.backend.exe.log, прочитан 22.10.2026.
+starting engine: engine linux/wsl failed to start: checking preconditions: Virtual Machine Platform not enabled
+No virtualization available
+noVirtualizationReason: WslVirtualMachinePlatformNotEnabled
+API proxy is serving requests (no virtualization available)
+
+Дополнительные read-only наблюдения:
+WSL --status и --version: подсистема Windows для Linux не установлена, предлагается wsl.exe --install.
+Win32_Processor.VirtualizationFirmwareEnabled: true.
+Win32_ComputerSystem.HypervisorPresent: true.
+CIM Win32_OptionalFeature.InstallState: VirtualMachinePlatform=1, Microsoft-Windows-Subsystem-Linux=1, Microsoft-Hyper-V-All=1.
+Службы WslService/LxssManager/vmcompute/hns не найдены; com.docker.service остановлена.
+Get-WindowsOptionalFeature -Online: текущий процесс не администратор, чтение требует повышения.
+
+Вывод: флажки компонентов в CIM не означают работающий WSL runtime; точное состояние pending reboot через DISM не прочитано. Из этого не следует, что нужно менять BIOS: firmware virtualization уже true.
