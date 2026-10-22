@@ -1,0 +1,9 @@
+# S010 — повтор с изолированным каталогом pytest
+
+Состояние: выполняется. Причина повтора — конфликт прав Windows на прежний pytest temp/cache (run01), не дефект приложения. Тот же кодc84b0a4, только disposable PostgreSQL/gim_s010_features, --basetemp runtime/s010-pytest-temp и -p no:cacheprovider. Критерий: все207tests исполняются без skips/errors. Отдельно фиксируется соответствие каждой фишки текущей реализации/тестам и сохранённому snapshot.
+
+Итог: **207 passed in29.80s**, без skips/errors ([pytest.log](pytest.log)). Private SQL-миграции,18 основных вопросов, персональные/fallback уточнения, анализ с синтетическим ответом модели, уведомления, история/повтор, ручной балл, protected export, XLSX и delayed-cmid сценарии прошли. Внешние реальные VK/LLM не вызывались. Отдельная PostgreSQL остановлена pg_ctl fast stop exit0 после проверки.
+
+Аудит [feature-preservation.json](feature-preservation.json): все14 ключевых функций7 преимуществ присутствуют;13 имеют идентичное AST относительно working-version-2026-10-22. _advance изменён только передачей ctx['templates'] в question_text при resume для корректного нового прогресса; ветка проверки ожиданий не менялась. Первый инспекционный assert предполагал одинаковость всех14 AST и завершился AssertionError; сравнение с git diff выявило именно это ожидаемое изменение, отрицательный результат не выдан за отсутствие изменений. Проверка dashboard сначала использовала ошибочное предполагаемое имя shared_dashboard.py; фактический модуль dashboard.py существует и входит в аудит/тесты.
+
+Продуктовые флаги expectations_check/enhanced_reports по умолчанию true; ranking рубрика50/35/15 и выбранная модель сохранены. Ни одна заявленная фишка не выведена из активного пути. Удалён старый public-runtime, но его названия admin/scoring/xlsx не означают удаление актуальных shared_service/ranking/shared_xlsx.

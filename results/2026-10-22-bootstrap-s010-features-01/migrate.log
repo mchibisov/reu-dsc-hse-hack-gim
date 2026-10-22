@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\User\PycharmProjects\meaningful_code\gim_main\database\src\gim_db\migrate.py", line 36, in <module>
+    migrate(os.environ['DATABASE_ADMIN_URL'])
+  File "C:\Users\User\PycharmProjects\meaningful_code\gim_main\database\src\gim_db\migrate.py", line 13, in migrate
+    with psycopg.connect(dsn, autocommit=True) as c:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\PycharmProjects\meaningful_code\gim_main\.venv\Lib\site-packages\psycopg\connection.py", line 120, in connect
+    raise last_ex.with_traceback(None)
+psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 52782 failed: Permission denied (0x0000271D/10013)
+	Is the server running on that host and accepting TCP/IP connections?

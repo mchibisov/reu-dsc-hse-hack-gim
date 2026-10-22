@@ -1,0 +1,121 @@
+[
+  {
+    "feature": "Оценка50/35/15 с цитатами",
+    "checks": [
+      {
+        "path": "gim/ranking.py",
+        "symbol": "validate",
+        "present": true,
+        "same_ast_as_saved_version": true
+      },
+      {
+        "path": "gim/ranking.py",
+        "symbol": "calculate",
+        "present": true,
+        "same_ast_as_saved_version": true
+      },
+      {
+        "path": "gim/ranking.py",
+        "symbol": "analyze",
+        "present": true,
+        "same_ast_as_saved_version": true
+      }
+    ]
+  },
+  {
+    "feature": "Персональные уточнения и fallback",
+    "checks": [
+      {
+        "path": "gim/shared_service.py",
+        "symbol": "personal_question",
+        "present": true,
+        "same_ast_as_saved_version": true
+      },
+      {
+        "path": "gim/shared_domain.py",
+        "symbol": "select_followups",
+        "present": true,
+        "same_ast_as_saved_version": true
+      }
+    ]
+  },
+  {
+    "feature": "Проверка ожиданий и переходы",
+    "checks": [
+      {
+        "path": "gim/shared_service.py",
+        "symbol": "_advance",
+        "present": true,
+        "same_ast_as_saved_version": false
+      }
+    ]
+  },
+  {
+    "feature": "Меню куратора, рейтинг, ручной балл",
+    "checks": [
+      {
+        "path": "gim/shared_service.py",
+        "symbol": "_staff_command",
+        "present": true,
+        "same_ast_as_saved_version": true
+      },
+      {
+        "path": "gim/shared_service.py",
+        "symbol": "notify",
+        "present": true,
+        "same_ast_as_saved_version": true
+      }
+    ]
+  },
+  {
+    "feature": "Профиль трёх измерений",
+    "checks": [
+      {
+        "path": "gim/dashboard.py",
+        "symbol": "dimensions",
+        "present": true,
+        "same_ast_as_saved_version": true
+      },
+      {
+        "path": "gim/dashboard.py",
+        "symbol": "dashboard",
+        "present": true,
+        "same_ast_as_saved_version": true
+      }
+    ]
+  },
+  {
+    "feature": "Excel5листов и приватная выдача",
+    "checks": [
+      {
+        "path": "gim/shared_xlsx.py",
+        "symbol": "snapshot_xlsx",
+        "present": true,
+        "same_ast_as_saved_version": true
+      },
+      {
+        "path": "gim/shared_service.py",
+        "symbol": "export",
+        "present": true,
+        "same_ast_as_saved_version": true
+      }
+    ]
+  },
+  {
+    "feature": "Скрытый кодовый Excel",
+    "checks": [
+      {
+        "path": "gim/shared_export_access.py",
+        "symbol": "seal_export",
+        "present": true,
+        "same_ast_as_saved_version": true
+      },
+      {
+        "path": "gim/shared_export_access.py",
+        "symbol": "request_code_export",
+        "present": true,
+        "same_ast_as_saved_version": true
+      }
+    ]
+  }
+]
