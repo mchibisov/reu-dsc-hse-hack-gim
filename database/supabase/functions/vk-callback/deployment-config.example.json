@@ -1,0 +1,1 @@
+{"groupId":123456789,"secretSha256":"REPLACE_WITH_SHA256_OF_CALLBACK_SECRET","confirmation":"REPLACE_WITH_CURRENT_VK_CONFIRMATION_CODE","upstream":"https://your-project.vercel.app/callback"}

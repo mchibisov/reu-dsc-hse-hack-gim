@@ -20,3 +20,6 @@ _env.*
 .superpowers/
 
 !.env.quickstart.example
+
+# Per-installation callback fingerprint/configuration
+database/supabase/functions/vk-callback/deployment-config.json

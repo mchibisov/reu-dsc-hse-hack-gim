@@ -22,3 +22,7 @@ jobs:
       - run: python -m pip install -r requirements.shared.txt
       - run: python -m unittest discover -s tests -q
       - run: python -m compileall -q gim api
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/callback-edge.test.mjs
